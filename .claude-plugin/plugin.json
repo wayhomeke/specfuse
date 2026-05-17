@@ -1,0 +1,11 @@
+{
+  "name": "specfuse",
+  "description": "OpenSpec + Superpowers fusion methodology - scaffold and enforce spec-driven AI development",
+  "version": "0.1.0",
+  "author": {
+    "name": "specfuse"
+  },
+  "repository": "https://github.com/specfuse/create-specfuse",
+  "license": "MIT",
+  "keywords": ["openspec", "superpowers", "tdd", "spec-driven", "ai-coding", "claude-code"]
+}
