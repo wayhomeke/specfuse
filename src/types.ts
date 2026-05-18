@@ -27,6 +27,7 @@ export interface ProjectConfig {
   initGit: boolean;
   initOpenspec: boolean;
   targetDir: string;
+  isExisting: boolean;
 }
 
 export interface TemplateContext {
