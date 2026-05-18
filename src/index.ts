@@ -10,7 +10,7 @@ program
   .name('create-specfuse')
   .description('Scaffold a project with OpenSpec + Superpowers specfuse methodology')
   .version('0.1.0')
-  .argument('[project-name]', 'Project directory name')
+  .argument('[project-name]', 'Project directory name (omit to init in current directory)')
   .option('--stack <id>', 'Use a built-in stack (rust, go, typescript-react, python-fastapi)')
   .option('--stack-from <path>', 'Load a custom stack profile from YAML/JSON file')
   .option('-y, --yes', 'Skip confirmation prompts (use defaults)')
