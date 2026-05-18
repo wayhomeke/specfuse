@@ -4,11 +4,10 @@
   "description": "Scaffold projects with OpenSpec + Superpowers fusion methodology",
   "type": "module",
   "bin": {
-    "create-specfuse": "./bin/create-specfuse.js"
+    "create-specfuse": "./dist/index.js"
   },
   "files": [
-    "dist",
-    "bin"
+    "dist"
   ],
   "engines": {
     "node": ">=18.0.0"
