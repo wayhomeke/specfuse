@@ -21,7 +21,8 @@ cd specfuse && npm install && npm run build && npm link
 ## 更新
 
 ```bash
-# git 仓库全局安装方式：重新运行安装命令即可
+# git 仓库全局安装方式：先卸载再重新安装
+npm uninstall -g create-specfuse
 npm install -g git+ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
 
 # npm link 方式：拉取最新代码并重新构建，无需重新 link
