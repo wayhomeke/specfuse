@@ -6,6 +6,8 @@ OpenSpec + Superpowers 融合方法论的项目脚手架工具。
 
 ## 安装
 
+### SpecFuse 脚手架
+
 ```bash
 # 方式 1：npx 直接运行（零安装）（TODO：需先发布到 npm）
 # npx create-specfuse
@@ -14,6 +16,21 @@ OpenSpec + Superpowers 融合方法论的项目脚手架工具。
 git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
 cd specfuse && npm install && npm run build && npm link
 ```
+
+### 依赖组件（可选）
+
+SpecFuse 生成的项目依赖以下组件实现完整工作流：
+
+```bash
+# OpenSpec CLI — spec-driven 工作流引擎
+npm install -g @fission-ai/openspec
+
+# Superpowers — Claude Code 行为约束插件（在 Claude Code 内执行）
+/plugins add obra/superpowers
+```
+
+> OpenSpec 和 Superpowers 不是硬依赖。即使未安装，SpecFuse 生成的 CLAUDE.md 仍然有效，
+> 只是 `/opsx:*` 命令和 Superpowers 技能不可用。
 
 ## 更新
 
