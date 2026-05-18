@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { input, select, confirm } from '@inquirer/prompts';
 import { getBuiltinStacks } from './stacks/index.js';
 import type { StackProfile, ProjectConfig } from './types.js';
@@ -8,14 +9,21 @@ export async function collectProjectConfig(
   customStack?: StackProfile,
   skipPrompts?: boolean,
 ): Promise<ProjectConfig> {
-  const projectName =
-    projectNameArg ??
-    (skipPrompts
-      ? (() => { throw new Error('Project name is required with --yes'); })()
-      : await input({
-          message: 'Project name:',
-          validate: (v) => /^[a-zA-Z0-9_-]+$/.test(v) || 'Only letters, digits, hyphens, underscores',
-        }));
+  const isExisting = projectNameArg === undefined || projectNameArg === '.';
+
+  let projectName: string;
+  let targetDir: string;
+
+  if (isExisting) {
+    targetDir = process.cwd();
+    projectName = path.basename(targetDir);
+  } else {
+    projectName = projectNameArg;
+    if (!/^[a-zA-Z0-9_-]+$/.test(projectName)) {
+      throw new Error('Project name can only contain letters, digits, hyphens, underscores');
+    }
+    targetDir = path.join(process.cwd(), projectName);
+  }
 
   let stack: StackProfile;
   if (customStack) {
@@ -38,9 +46,11 @@ export async function collectProjectConfig(
     stack = stacks.find((s) => s.id === stackId)!;
   }
 
-  const initGit = skipPrompts ? true : await confirm({ message: 'Initialize git repository?', default: true });
+  const initGit = isExisting
+    ? false
+    : (skipPrompts ? true : await confirm({ message: 'Initialize git repository?', default: true }));
+
   const initOpenspec = skipPrompts ? true : await confirm({ message: 'Initialize OpenSpec?', default: true });
 
-  const targetDir = `${process.cwd()}/${projectName}`;
-  return { projectName, stack, initGit, initOpenspec, targetDir };
+  return { projectName, stack, initGit, initOpenspec, targetDir, isExisting };
 }
