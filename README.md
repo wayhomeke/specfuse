@@ -4,28 +4,59 @@ OpenSpec + Superpowers 融合方法论的项目脚手架工具。
 
 将 AI 氛围编码改造为工业级流水线：**OpenSpec 定方向，Superpowers 定纪律**。
 
-## 安装与使用
-
-### 方式 1：npm 脚手架
+## 安装
 
 ```bash
-# 交互式
-npx create-specfuse my-app
+# 方式 1：npx 直接运行（零安装）
+npx create-specfuse
+
+# 方式 2：从 git 仓库全局安装
+npm install -g git+ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
+
+# 方式 3：npm link 本地开发
+git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
+cd specfuse && npm install && npm run build && npm link
+```
+
+## 使用
+
+### 新建项目（绿地模式）
+
+```bash
+# 交互式（逐步问答）
+create-specfuse my-app
 
 # 指定技术栈
-npx create-specfuse my-app --stack rust
+create-specfuse my-app --stack rust
 
 # 自定义栈
-npx create-specfuse my-app --stack-from ./my-java-stack.yaml
+create-specfuse my-app --stack-from ./my-java-stack.yaml
 
 # 非交互模式（CI 友好）
-npx create-specfuse my-app --stack go --yes
+create-specfuse my-app --stack go --yes
 
 # npm 简写
 npm create specfuse my-app
 ```
 
-### 方式 2：Claude Code 技能
+### 已有项目（初始化模式）
+
+```bash
+cd existing-project
+create-specfuse --stack rust
+```
+
+省略项目名即在**当前目录**初始化，已有文件会智能合并而非覆盖：
+
+| 文件 | 已存在时的行为 |
+|---|---|
+| `CLAUDE.md` | 有 `<!-- FUSION:START/END -->` 标记 → 只替换标记内的方法论段落；无标记 → 追加到末尾 |
+| `.gitignore` | 只追加缺失的模式，不重复已有条目 |
+| `.claude/settings.local.json` | 合并权限列表，保留用户已有的自定义权限 |
+| `openspec/config.yaml` | 已存在 → 跳过不碰；不存在 → 新建 |
+| `openspec/changes/*` | 完全不碰 |
+
+### Claude Code 技能（交互式）
 
 ```bash
 # 安装（一次性）
@@ -98,7 +129,7 @@ openspecRules:
 然后：
 
 ```bash
-npx create-specfuse my-app --stack-from ./java-spring.yaml
+create-specfuse my-app --stack-from ./java-spring.yaml
 ```
 
 ## 融合方法论工作流
@@ -129,12 +160,13 @@ npx create-specfuse my-app --stack-from ./java-spring.yaml
 
 ## 两种分发方式对比
 
-| 维度 | npm (`npx create-specfuse`) | 技能 (`/init-specfuse`) |
+| 维度 | npm (`create-specfuse`) | 技能 (`/init-specfuse`) |
 |---|---|---|
 | 运行环境 | 任意终端 | Claude Code 内 |
 | 输出一致性 | 代码硬编码，每次一致 | AI 解读指令执行 |
 | 自定义栈 | `--stack-from file.yaml` | 对话中描述，AI 现场组装 |
 | CI 友好 | `--yes` 非交互模式 | 不支持 |
+| 已有项目 | 智能合并，不覆盖 | 同上 |
 
 ## 开发
 
