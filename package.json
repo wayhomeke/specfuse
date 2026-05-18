@@ -14,7 +14,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
     "prepare": "npm run build",
     "test": "vitest run",
     "dev": "tsc --watch"
