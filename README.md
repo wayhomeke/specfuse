@@ -18,6 +18,16 @@ git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
 cd specfuse && npm install && npm run build && npm link
 ```
 
+## 更新
+
+```bash
+# git 仓库全局安装方式：重新运行安装命令即可
+npm install -g git+ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
+
+# npm link 方式：拉取最新代码并重新构建，无需重新 link
+cd specfuse && git pull && npm run build
+```
+
 ## 使用
 
 ### 新建项目（绿地模式）
