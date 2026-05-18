@@ -7,8 +7,8 @@ OpenSpec + Superpowers 融合方法论的项目脚手架工具。
 ## 安装
 
 ```bash
-# 方式 1：npx 直接运行（零安装）
-npx create-specfuse
+# 方式 1：npx 直接运行（零安装）（TODO：需先发布到 npm）
+# npx create-specfuse
 
 # 方式 2：从 git 仓库全局安装
 npm install -g git+ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
@@ -35,8 +35,8 @@ create-specfuse my-app --stack-from ./my-java-stack.yaml
 # 非交互模式（CI 友好）
 create-specfuse my-app --stack go --yes
 
-# npm 简写
-npm create specfuse my-app
+# npm 简写（TODO：需先发布到 npm）
+# npm create specfuse my-app
 ```
 
 ### 已有项目（初始化模式）
