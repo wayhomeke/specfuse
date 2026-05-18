@@ -10,10 +10,7 @@ OpenSpec + Superpowers 融合方法论的项目脚手架工具。
 # 方式 1：npx 直接运行（零安装）（TODO：需先发布到 npm）
 # npx create-specfuse
 
-# 方式 2：从 git 仓库全局安装
-npm install -g git+ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
-
-# 方式 3：npm link 本地开发
+# 方式 2：从 git 仓库安装
 git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
 cd specfuse && npm install && npm run build && npm link
 ```
@@ -21,11 +18,7 @@ cd specfuse && npm install && npm run build && npm link
 ## 更新
 
 ```bash
-# git 仓库全局安装方式：先卸载再重新安装
-npm uninstall -g create-specfuse
-npm install -g git+ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
-
-# npm link 方式：拉取最新代码并重新构建，无需重新 link
+# 拉取最新代码并重新构建，无需重新 link
 cd specfuse && git pull && npm run build
 ```
 
