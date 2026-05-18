@@ -1,0 +1,1 @@
+{"version":3,"file":"openspec-config.js","sourceRoot":"","sources":["../../src/templates/openspec-config.ts"],"names":[],"mappings":"AAEA,MAAM,UAAU,qBAAqB,CAAC,GAAoB;IACxD,OAAO;QACL,MAAM,EAAE,aAAa;QACrB,OAAO,EAAE,GAAG,CAAC,KAAK,CAAC,eAAe;QAClC,KAAK,EAAE,GAAG,CAAC,KAAK,CAAC,aAAa;KAC/B,CAAC;AACJ,CAAC"}
