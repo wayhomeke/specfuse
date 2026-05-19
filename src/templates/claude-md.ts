@@ -45,15 +45,12 @@ function renderPathB(): string {
 
 When \`/opsx:new\` is invoked:
 
-1. **MUST activate Superpowers \`brainstorming\` as a pre-requisite skill BEFORE creating the change.**
-   - Use Socratic questioning to clarify the user's intent and scope.
-   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
-   - Do NOT rush to \`openspec new change\`. First understand WHAT and WHY.
-   - Only after the user confirms scope, derive a kebab-case name and create the change directory.
+1. Follow the \`openspec-new-change\` skill steps normally: ask what to build, create the change directory, show status.
 
-2. After \`openspec new change\`, STOP at showing the first artifact template.
-   - Do NOT auto-generate any artifact content. Wait for user direction.
-   - Show the schema workflow, artifact sequence, and current status.
+2. **BEFORE drafting the first artifact (proposal), MUST activate Superpowers \`brainstorming\`.**
+   - Use Socratic questioning to clarify scope, non-goals, and trade-offs.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
+   - Only after the user confirms the approach, draft the proposal artifact.
 
 3. When \`/opsx:continue\` is invoked to advance to the next artifact:
    - Read current \`openspec status --change <name>\` to find the next "ready" artifact.
