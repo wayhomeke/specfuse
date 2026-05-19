@@ -31,6 +31,7 @@ When \`/opsx:propose\` is invoked:
 1. **MUST activate Superpowers \`brainstorming\` as a pre-requisite skill.**
    - Ask ONE question at a time (Socratic method). Never fire multiple questions in a single turn.
    - Proactively present 2-3 architectural alternatives with explicit trade-offs.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
    - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
 
 2. Every proposal artifact MUST contain:
@@ -46,6 +47,7 @@ When \`/opsx:new\` is invoked:
 
 1. **MUST activate Superpowers \`brainstorming\` as a pre-requisite skill BEFORE creating the change.**
    - Use Socratic questioning to clarify the user's intent and scope.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
    - Do NOT rush to \`openspec new change\`. First understand WHAT and WHY.
    - Only after the user confirms scope, derive a kebab-case name and create the change directory.
 
