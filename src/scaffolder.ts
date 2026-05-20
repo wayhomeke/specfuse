@@ -115,13 +115,13 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
 
   // OpenSpec
   if (config.initOpenspec) {
+    spinner.text = 'Setting up OpenSpec...';
+    await createDir(path.join(targetDir, 'openspec', 'specs'));
+    await createDir(path.join(targetDir, 'openspec', 'changes', 'archive'));
     const configYamlPath = path.join(targetDir, 'openspec', 'config.yaml');
     if (await fileExists(configYamlPath)) {
       spinner.text = 'OpenSpec config.yaml already exists, skipping...';
     } else {
-      spinner.text = 'Setting up OpenSpec...';
-      await createDir(path.join(targetDir, 'openspec', 'specs'));
-      await createDir(path.join(targetDir, 'openspec', 'changes', 'archive'));
       await writeYAML(configYamlPath, composeOpenspecConfig(ctx));
     }
   }
