@@ -114,6 +114,7 @@ Before \`/opsx:archive\`:
 function renderGeneralRules(): string {
   return `### General Rules
 
+- **Always run \`openspec\` commands from the project root directory.**
 - **Never skip TDD.** Even for "simple" changes. Especially for "simple" changes.
 - **Never trust memory over terminal output.** Always verify current state.
 - **One concern per commit.** Keep commits atomic and reversible.
