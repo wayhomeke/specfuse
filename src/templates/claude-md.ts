@@ -73,7 +73,13 @@ When \`/opsx:explore\` is invoked:
 
 1. Enter thinking-partner mode. No artifact creation, no directory scaffolding.
 2. Activate Superpowers \`brainstorming\` for structured exploration.
-3. Output is conversational — conclusions can later feed into Path A or Path B.`;
+3. Output is conversational — conclusions can later feed into Path A or Path B.
+
+4. **Worktree isolation (exploration):**
+   When exploration needs to produce actual code (PoC, prototype), SHOULD create a worktree:
+   - Exploration may generate substantial code that will ultimately be discarded
+   - Exploration involves modifying existing code to validate hypotheses
+   Discarding a worktree costs zero — prevents exploration artifacts from polluting the main branch.`;
 }
 
 function renderApplyPhase(stack: StackProfile): string {
@@ -98,7 +104,32 @@ When \`/opsx:apply\` is invoked:
 3. **Subagent discipline** (when using parallel agents):
    - Each subagent works in its own git worktree
    - Each subagent runs its own tests independently
-   - Main agent verifies integration after merging subagent work`;
+   - Main agent verifies integration after merging subagent work
+
+4. **Subagent-Driven Development trigger conditions:**
+   When ALL of the following are met, SHOULD enable subagent mode:
+   - \`tasks.md\` contains ≥ 6 pending implementation tasks
+   - Most tasks have no \`blocked by\` dependency on each other
+   - Tasks map to different modules/files with clear module boundaries
+   - Session context window is >40% consumed
+
+   Execution discipline when enabled:
+   - Each subagent works in its own isolated git worktree
+   - Each subagent independently follows TDD and runs its own tests
+   - Main agent performs two-stage review per subagent output (spec compliance → code quality)
+   - Main agent runs full integration tests after merging
+   - Subagents MUST NOT implement the same module in parallel; independent modules may be parallelized
+
+5. **Git Worktree isolation trigger conditions:**
+   When ANY of the following are met, SHOULD create a worktree before apply begins:
+   - Change involves destructive refactoring (replacing core modules, migrating data structures)
+   - Multiple \`/opsx:new\` changes are being worked on in parallel
+   - Rollback cost of failure is high (change affects multiple consumers)
+
+   Worktree is NOT needed when:
+   - Single-file bugfix
+   - Adding a new independent module (no impact on existing code)
+   - Documentation or configuration adjustments`;
 }
 
 function renderVerifyPhase(stack: StackProfile): string {
