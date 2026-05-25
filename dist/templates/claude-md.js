@@ -25,6 +25,7 @@ When \`/opsx:propose\` is invoked:
 1. **MUST activate Superpowers \`brainstorming\` as a pre-requisite skill.**
    - Ask ONE question at a time (Socratic method). Never fire multiple questions in a single turn.
    - Proactively present 2-3 architectural alternatives with explicit trade-offs.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
    - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
 
 2. Every proposal artifact MUST contain:
@@ -37,14 +38,12 @@ function renderPathB() {
 
 When \`/opsx:new\` is invoked:
 
-1. **MUST activate Superpowers \`brainstorming\` as a pre-requisite skill BEFORE creating the change.**
-   - Use Socratic questioning to clarify the user's intent and scope.
-   - Do NOT rush to \`openspec new change\`. First understand WHAT and WHY.
-   - Only after the user confirms scope, derive a kebab-case name and create the change directory.
+1. Follow the \`openspec-new-change\` skill steps normally: ask what to build, create the change directory, show status.
 
-2. After \`openspec new change\`, STOP at showing the first artifact template.
-   - Do NOT auto-generate any artifact content. Wait for user direction.
-   - Show the schema workflow, artifact sequence, and current status.
+2. **BEFORE drafting the first artifact (proposal), MUST activate Superpowers \`brainstorming\`.**
+   - Use Socratic questioning to clarify scope, non-goals, and trade-offs.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
+   - Only after the user confirms the approach, draft the proposal artifact.
 
 3. When \`/opsx:continue\` is invoked to advance to the next artifact:
    - Read current \`openspec status --change <name>\` to find the next "ready" artifact.
@@ -66,7 +65,13 @@ When \`/opsx:explore\` is invoked:
 
 1. Enter thinking-partner mode. No artifact creation, no directory scaffolding.
 2. Activate Superpowers \`brainstorming\` for structured exploration.
-3. Output is conversational — conclusions can later feed into Path A or Path B.`;
+3. Output is conversational — conclusions can later feed into Path A or Path B.
+
+4. **Worktree isolation (exploration):**
+   When exploration needs to produce actual code (PoC, prototype), SHOULD create a worktree:
+   - Exploration may generate substantial code that will ultimately be discarded
+   - Exploration involves modifying existing code to validate hypotheses
+   Discarding a worktree costs zero — prevents exploration artifacts from polluting the main branch.`;
 }
 function renderApplyPhase(stack) {
     return `### Phase 2: Apply / Implement
@@ -90,7 +95,32 @@ When \`/opsx:apply\` is invoked:
 3. **Subagent discipline** (when using parallel agents):
    - Each subagent works in its own git worktree
    - Each subagent runs its own tests independently
-   - Main agent verifies integration after merging subagent work`;
+   - Main agent verifies integration after merging subagent work
+
+4. **Subagent-Driven Development trigger conditions:**
+   When ALL of the following are met, SHOULD enable subagent mode:
+   - \`tasks.md\` contains ≥ 6 pending implementation tasks
+   - Most tasks have no \`blocked by\` dependency on each other
+   - Tasks map to different modules/files with clear module boundaries
+   - Session context window is >40% consumed
+
+   Execution discipline when enabled:
+   - Each subagent works in its own isolated git worktree
+   - Each subagent independently follows TDD and runs its own tests
+   - Main agent performs two-stage review per subagent output (spec compliance → code quality)
+   - Main agent runs full integration tests after merging
+   - Subagents MUST NOT implement the same module in parallel; independent modules may be parallelized
+
+5. **Git Worktree isolation trigger conditions:**
+   When ANY of the following are met, SHOULD create a worktree before apply begins:
+   - Change involves destructive refactoring (replacing core modules, migrating data structures)
+   - Multiple \`/opsx:new\` changes are being worked on in parallel
+   - Rollback cost of failure is high (change affects multiple consumers)
+
+   Worktree is NOT needed when:
+   - Single-file bugfix
+   - Adding a new independent module (no impact on existing code)
+   - Documentation or configuration adjustments`;
 }
 function renderVerifyPhase(stack) {
     return `### Phase 3: Verify / Archive
@@ -104,6 +134,7 @@ Before \`/opsx:archive\`:
 function renderGeneralRules() {
     return `### General Rules
 
+- **Always run \`openspec\` commands from the project root directory.**
 - **Never skip TDD.** Even for "simple" changes. Especially for "simple" changes.
 - **Never trust memory over terminal output.** Always verify current state.
 - **One concern per commit.** Keep commits atomic and reversible.
