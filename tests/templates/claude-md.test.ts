@@ -43,6 +43,22 @@ describe('CLAUDE.md template', () => {
       it('contains commit convention', () => {
         expect(output).toContain('conventional commits');
       });
+
+      it('contains subagent trigger rules', () => {
+        expect(output).toContain('Subagent-Driven Development trigger');
+        expect(output).toContain('tasks.md');
+        expect(output).toContain('blocked by');
+      });
+
+      it('contains worktree trigger rules in apply phase', () => {
+        expect(output).toContain('Git Worktree isolation trigger');
+        expect(output).toContain('destructive refactoring');
+      });
+
+      it('contains worktree trigger rules in explore phase', () => {
+        expect(output).toContain('Worktree isolation (exploration)');
+        expect(output).toContain('PoC');
+      });
     });
   }
 });
