@@ -1,1 +1,1 @@
-{"version":3,"file":"typescript-react.d.ts","sourceRoot":"","sources":["../../src/stacks/typescript-react.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAEhD,eAAO,MAAM,oBAAoB,EAAE,YAgElC,CAAC"}
+{"version":3,"file":"typescript-react.d.ts","sourceRoot":"","sources":["../../src/stacks/typescript-react.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAChD,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAEnD,eAAO,MAAM,oBAAoB,EAAE,YAgElC,CAAC;AAEF,eAAO,MAAM,8BAA8B,EAAE,eAM5C,CAAC"}

@@ -1,1 +1,1 @@
-{"version":3,"file":"python-fastapi.d.ts","sourceRoot":"","sources":["../../src/stacks/python-fastapi.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAEhD,eAAO,MAAM,kBAAkB,EAAE,YAkEhC,CAAC"}
+{"version":3,"file":"python-fastapi.d.ts","sourceRoot":"","sources":["../../src/stacks/python-fastapi.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAChD,OAAO,KAAK,EAAE,eAAe,EAAE,MAAM,aAAa,CAAC;AAEnD,eAAO,MAAM,kBAAkB,EAAE,YAkEhC,CAAC;AAEF,eAAO,MAAM,4BAA4B,EAAE,eAM1C,CAAC"}

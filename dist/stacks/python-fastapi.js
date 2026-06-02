@@ -65,4 +65,11 @@ Concurrency: Python asyncio + FastAPI async endpoints`,
         ],
     },
 };
+export const pythonFastapiDetectionConfig = {
+    stackId: 'python-fastapi',
+    markerFiles: ['requirements.txt', 'pyproject.toml', 'setup.py', 'Pipfile'],
+    markerDirs: [],
+    fileExtensions: ['.py'],
+    priority: 10,
+};
 //# sourceMappingURL=python-fastapi.js.map

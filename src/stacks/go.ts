@@ -1,4 +1,5 @@
 import type { StackProfile } from '../types.js';
+import type { DetectionConfig } from './detect.js';
 
 export const goStack: StackProfile = {
   id: 'go',
@@ -59,4 +60,12 @@ Concurrency: Go goroutines + channels`,
       'Mark blocking dependencies explicitly between tasks',
     ],
   },
+};
+
+export const goDetectionConfig: DetectionConfig = {
+  stackId: 'go',
+  markerFiles: ['go.mod', 'go.sum'],
+  markerDirs: [],
+  fileExtensions: ['.go'],
+  priority: 10,
 };
