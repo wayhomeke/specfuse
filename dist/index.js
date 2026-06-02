@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { collectProjectConfig } from './prompts.js';
 import { scaffold } from './scaffolder.js';
 import { loadCustomStack } from './stacks/index.js';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(resolve(__dirname, '..', 'package.json'), 'utf-8'));
 const program = new Command();
 program
     .name('create-specfuse')
     .description('Scaffold a project with OpenSpec + Superpowers specfuse methodology')
-    .version('0.1.0')
+    .version(pkg.version)
     .argument('[project-name]', 'Project directory name (omit to init in current directory)')
-    .option('--stack <id>', 'Use a built-in stack (rust, go, typescript-react, python-fastapi)')
+    .option('--stack <id>', 'Use a built-in stack (rust, go, typescript-react, python-fastapi, bash, java-maven, java-gradle, cpp-cmake, ruby, php, kotlin, swift, elixir, scala-sbt, dotnet)')
     .option('--stack-from <path>', 'Load a custom stack profile from YAML/JSON file')
     .option('-y, --yes', 'Skip confirmation prompts (use defaults)')
     .action(async (projectName, opts) => {
