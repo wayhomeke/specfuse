@@ -1,4 +1,5 @@
 import type { StackProfile } from '../types.js';
+import type { DetectionConfig } from './detect.js';
 
 export const typescriptReactStack: StackProfile = {
   id: 'typescript-react',
@@ -64,4 +65,12 @@ Concurrency: React concurrent features + async/await`,
       'Mark blocking dependencies explicitly between tasks',
     ],
   },
+};
+
+export const typescriptReactDetectionConfig: DetectionConfig = {
+  stackId: 'typescript-react',
+  markerFiles: ['package.json', 'tsconfig.json'],
+  markerDirs: [],
+  fileExtensions: ['.tsx', '.ts'],
+  priority: 20,
 };

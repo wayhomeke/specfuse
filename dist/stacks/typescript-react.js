@@ -63,4 +63,11 @@ Concurrency: React concurrent features + async/await`,
         ],
     },
 };
+export const typescriptReactDetectionConfig = {
+    stackId: 'typescript-react',
+    markerFiles: ['package.json', 'tsconfig.json'],
+    markerDirs: [],
+    fileExtensions: ['.tsx', '.ts'],
+    priority: 20,
+};
 //# sourceMappingURL=typescript-react.js.map

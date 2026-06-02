@@ -1,5 +1,7 @@
 import type { StackProfile } from '../types.js';
+import type { DetectionConfig } from './detect.js';
 export declare function getBuiltinStacks(): StackProfile[];
 export declare function getStack(id: string): StackProfile | undefined;
+export declare function getDetectionConfigs(): DetectionConfig[];
 export declare function loadCustomStack(filePath: string): Promise<StackProfile>;
 //# sourceMappingURL=index.d.ts.map

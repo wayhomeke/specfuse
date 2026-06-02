@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { select, confirm } from '@inquirer/prompts';
 import { getBuiltinStacks } from './stacks/index.js';
+import { detectStacks } from './stacks/detect.js';
 export async function collectProjectConfig(projectNameArg, stackArg, customStack, skipPrompts) {
     const isExisting = projectNameArg === undefined || projectNameArg === '.';
     let projectName;
@@ -31,18 +32,48 @@ export async function collectProjectConfig(projectNameArg, stackArg, customStack
     else if (skipPrompts) {
         throw new Error('--stack is required with --yes');
     }
+    else if (isExisting) {
+        stack = await detectAndSelect(targetDir);
+    }
     else {
-        const stacks = getBuiltinStacks();
-        const stackId = await select({
-            message: 'Tech stack:',
-            choices: stacks.map((s) => ({ name: s.label, value: s.id })),
-        });
-        stack = stacks.find((s) => s.id === stackId);
+        stack = await promptFullStackList();
     }
     const initGit = isExisting
         ? false
         : (skipPrompts ? true : await confirm({ message: 'Initialize git repository?', default: true }));
     const initOpenspec = skipPrompts ? true : await confirm({ message: 'Initialize OpenSpec?', default: true });
     return { projectName, stack, initGit, initOpenspec, targetDir, isExisting };
+}
+async function detectAndSelect(targetDir) {
+    const detected = await detectStacks(targetDir);
+    const stacks = getBuiltinStacks();
+    if (detected.length === 1) {
+        const found = stacks.find((s) => s.id === detected[0]);
+        if (found)
+            return found;
+    }
+    if (detected.length > 1) {
+        const detectedStacks = detected
+            .map((id) => stacks.find((s) => s.id === id))
+            .filter((s) => !!s);
+        const choices = [
+            ...detectedStacks.map((s) => ({ name: `${s.label} (detected)`, value: s.id })),
+            { name: 'Other...', value: '__other__' },
+        ];
+        const stackId = await select({ message: 'Detected multiple stacks. Select primary:', choices });
+        if (stackId === '__other__') {
+            return promptFullStackList();
+        }
+        return stacks.find((s) => s.id === stackId);
+    }
+    return promptFullStackList();
+}
+async function promptFullStackList() {
+    const stacks = getBuiltinStacks();
+    const stackId = await select({
+        message: 'Tech stack:',
+        choices: stacks.map((s) => ({ name: s.label, value: s.id })),
+    });
+    return stacks.find((s) => s.id === stackId);
 }
 //# sourceMappingURL=prompts.js.map

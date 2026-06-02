@@ -55,4 +55,11 @@ Concurrency: Rust async (tokio) + channels`,
         ],
     },
 };
+export const rustDetectionConfig = {
+    stackId: 'rust',
+    markerFiles: ['Cargo.toml', 'Cargo.lock'],
+    markerDirs: [],
+    fileExtensions: ['.rs'],
+    priority: 10,
+};
 //# sourceMappingURL=rust.js.map

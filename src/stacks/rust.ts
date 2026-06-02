@@ -1,4 +1,5 @@
 import type { StackProfile } from '../types.js';
+import type { DetectionConfig } from './detect.js';
 
 export const rustStack: StackProfile = {
   id: 'rust',
@@ -56,4 +57,12 @@ Concurrency: Rust async (tokio) + channels`,
       'Mark blocking dependencies explicitly between tasks',
     ],
   },
+};
+
+export const rustDetectionConfig: DetectionConfig = {
+  stackId: 'rust',
+  markerFiles: ['Cargo.toml', 'Cargo.lock'],
+  markerDirs: [],
+  fileExtensions: ['.rs'],
+  priority: 10,
 };
