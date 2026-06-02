@@ -49,8 +49,12 @@ async function detectAndSelect(targetDir) {
     const stacks = getBuiltinStacks();
     if (detected.length === 1) {
         const found = stacks.find((s) => s.id === detected[0]);
-        if (found)
-            return found;
+        if (found) {
+            const useDetected = await confirm({ message: `Detected stack: ${found.label}. Use it?`, default: true });
+            if (useDetected)
+                return found;
+            return promptFullStackList();
+        }
     }
     if (detected.length > 1) {
         const detectedStacks = detected
