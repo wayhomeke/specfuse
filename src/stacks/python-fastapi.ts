@@ -1,4 +1,5 @@
 import type { StackProfile } from '../types.js';
+import type { DetectionConfig } from './detect.js';
 
 export const pythonFastapiStack: StackProfile = {
   id: 'python-fastapi',
@@ -66,4 +67,12 @@ Concurrency: Python asyncio + FastAPI async endpoints`,
       'Mark blocking dependencies explicitly between tasks',
     ],
   },
+};
+
+export const pythonFastapiDetectionConfig: DetectionConfig = {
+  stackId: 'python-fastapi',
+  markerFiles: ['requirements.txt', 'pyproject.toml', 'setup.py', 'Pipfile'],
+  markerDirs: [],
+  fileExtensions: ['.py'],
+  priority: 10,
 };

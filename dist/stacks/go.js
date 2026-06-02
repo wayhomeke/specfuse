@@ -58,4 +58,11 @@ Concurrency: Go goroutines + channels`,
         ],
     },
 };
+export const goDetectionConfig = {
+    stackId: 'go',
+    markerFiles: ['go.mod', 'go.sum'],
+    markerDirs: [],
+    fileExtensions: ['.go'],
+    priority: 10,
+};
 //# sourceMappingURL=go.js.map
