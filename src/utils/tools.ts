@@ -1,11 +1,11 @@
-import { execFile } from 'node:child_process';
+import { exec as execCb } from 'node:child_process';
 import { promisify } from 'node:util';
 
-const exec = promisify(execFile);
+const execShell = promisify(execCb);
 
 export async function detectCodegraph(): Promise<boolean> {
   try {
-    await exec('codegraph', ['--version']);
+    await execShell('codegraph --version');
     return true;
   } catch {
     return false;
@@ -17,7 +17,7 @@ export async function installCodegraph(): Promise<boolean> {
     return false;
   }
   try {
-    await exec('sh', ['-c', 'curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh']);
+    await execShell('curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh');
     return true;
   } catch {
     return false;
@@ -26,8 +26,8 @@ export async function installCodegraph(): Promise<boolean> {
 
 export async function initCodegraph(cwd: string): Promise<boolean> {
   try {
-    await exec('codegraph', ['init', '-i'], { cwd });
-    await exec('codegraph', ['install', '-y'], { cwd });
+    await execShell('codegraph init -i', { cwd, env: { ...process.env, CI: 'true' } });
+    await execShell('codegraph install -y', { cwd, env: { ...process.env, CI: 'true' } });
     return true;
   } catch {
     return false;
@@ -36,7 +36,7 @@ export async function initCodegraph(cwd: string): Promise<boolean> {
 
 export async function detectOpenspec(): Promise<boolean> {
   try {
-    await exec('openspec', ['--version']);
+    await execShell('openspec --version');
     return true;
   } catch {
     return false;
@@ -45,7 +45,7 @@ export async function detectOpenspec(): Promise<boolean> {
 
 export async function installOpenspec(): Promise<boolean> {
   try {
-    await exec('npm', ['install', '-g', '@fission-ai/openspec']);
+    await execShell('npm install -g @fission-ai/openspec');
     return true;
   } catch {
     return false;
@@ -54,7 +54,7 @@ export async function installOpenspec(): Promise<boolean> {
 
 export async function initOpenspec(cwd: string): Promise<boolean> {
   try {
-    await exec('openspec', ['init', '--tools', 'claude', '--force'], { cwd });
+    await execShell('openspec init --tools claude --force', { cwd });
     await configureOpenspecProfile();
     return true;
   } catch {
@@ -64,7 +64,7 @@ export async function initOpenspec(cwd: string): Promise<boolean> {
 
 async function configureOpenspecProfile(): Promise<void> {
   try {
-    await exec('openspec', ['config', 'set', 'profile', 'custom']);
+    await execShell('openspec config set profile custom');
     const workflows = ['propose', 'explore', 'new', 'continue', 'apply', 'ff', 'sync', 'archive', 'bulk-archive', 'verify', 'onboard'];
     const { readFileSync, writeFileSync } = await import('node:fs');
     const { execSync } = await import('node:child_process');
@@ -73,6 +73,6 @@ async function configureOpenspecProfile(): Promise<void> {
     config.workflows = workflows;
     writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
   } catch {
-    // non-fatal: profile config is a convenience, not a requirement
+    // non-fatal
   }
 }
