@@ -30,22 +30,22 @@ function mockExecFailure(message = 'not found') {
 describe('detectCodegraph', () => {
   beforeEach(() => { vi.resetAllMocks(); });
 
-  it('returns true when codegraph is on PATH', async () => {
-    mockExecSuccess('/usr/local/bin/codegraph');
+  it('returns true when codegraph is available', async () => {
+    mockExecSuccess('0.9.9');
     const { detectCodegraph } = await import('../../src/utils/tools.js');
     const result = await detectCodegraph();
     expect(result).toBe(true);
   });
 
-  it('returns false when codegraph is not on PATH', async () => {
+  it('returns false when codegraph is not available', async () => {
     mockExecFailure('not found');
     const { detectCodegraph } = await import('../../src/utils/tools.js');
     const result = await detectCodegraph();
     expect(result).toBe(false);
   });
 
-  it('returns false when which command itself fails', async () => {
-    mockExecFailure('command not found: which');
+  it('returns false when codegraph execution fails', async () => {
+    mockExecFailure('command not found');
     const { detectCodegraph } = await import('../../src/utils/tools.js');
     const result = await detectCodegraph();
     expect(result).toBe(false);
