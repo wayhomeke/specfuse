@@ -28,7 +28,7 @@ export async function installCodegraph(): Promise<boolean> {
 export async function initCodegraph(cwd: string): Promise<boolean> {
   try {
     await exec('codegraph', ['init', '-i'], { cwd });
-    await exec('codegraph', ['install'], { cwd });
+    await exec('codegraph', ['install', '-y'], { cwd });
     return true;
   } catch {
     return false;
