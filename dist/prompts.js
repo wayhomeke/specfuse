@@ -42,7 +42,8 @@ export async function collectProjectConfig(projectNameArg, stackArg, customStack
         ? false
         : (skipPrompts ? true : await confirm({ message: 'Initialize git repository?', default: true }));
     const initOpenspec = skipPrompts ? true : await confirm({ message: 'Initialize OpenSpec?', default: true });
-    return { projectName, stack, initGit, initOpenspec, targetDir, isExisting };
+    const initCodegraph = skipPrompts ? true : await confirm({ message: 'Enable CodeGraph code knowledge graph?', default: true });
+    return { projectName, stack, initGit, initOpenspec, initCodegraph, targetDir, isExisting };
 }
 async function detectAndSelect(targetDir) {
     const detected = await detectStacks(targetDir);
@@ -74,10 +75,29 @@ async function detectAndSelect(targetDir) {
 }
 async function promptFullStackList() {
     const stacks = getBuiltinStacks();
+    const choices = [
+        { name: 'Skip (decide later)', value: '__skip__' },
+        ...stacks.map((s) => ({ name: s.label, value: s.id })),
+    ];
     const stackId = await select({
         message: 'Tech stack:',
-        choices: stacks.map((s) => ({ name: s.label, value: s.id })),
+        choices,
     });
+    if (stackId === '__skip__') {
+        return {
+            id: 'generic',
+            label: 'Generic',
+            languages: [],
+            architecture: 'Not specified',
+            commands: { build: 'echo "no build configured"', test: 'echo "no test configured"', lint: 'echo "no lint configured"' },
+            errorHandling: 'Not specified',
+            concurrency: 'Not specified',
+            permissions: [],
+            gitignorePatterns: [],
+            openspecContext: 'Tech stack not yet configured. Set up later with create-specfuse --stack <id>',
+            openspecRules: {},
+        };
+    }
     return stacks.find((s) => s.id === stackId);
 }
 //# sourceMappingURL=prompts.js.map
