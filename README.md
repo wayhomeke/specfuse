@@ -6,16 +6,44 @@ OpenSpec + Superpowers 融合方法论的项目脚手架工具。
 
 ## 安装
 
+### 前置依赖：Node.js
+
+SpecFuse 需要 Node.js >= 18。推荐使用 **NVM** 安装最新 LTS 版本（适合开发环境，无需 sudo）：
+
+```bash
+# 1. 安装 NVM
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+
+# 2. 安装最新 LTS 版 Node.js（内置 npm）
+nvm install --lts
+nvm alias default 'lts/*'
+
+# 3. 验证
+node -v
+npm -v
+```
+
+> 国内服务器下载慢时，在 `nvm install` 前执行：
+> ```bash
+> export NODE_MIRROR=https://npmmirror.com/mirrors/node/
+> ```
+
 ### SpecFuse 脚手架
 
 ```bash
-# 方式 1：npx 直接运行（零安装）（TODO：需先发布到 npm）
-# npx create-specfuse
-
-# 方式 2：从 git 仓库安装
+# 从 git 仓库安装
 git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
-cd specfuse && npm install && npm run build && npm link
+cd specfuse/create-specfuse && npm install && npm run build && npm link
 ```
+
+> 如果 `npm link` 报权限错误（EACCES），先配置 npm 全局目录到用户空间：
+> ```bash
+> npm config set prefix ~/.npm-global
+> echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
+> source ~/.bashrc
+> npm link
+> ```
 
 ### 依赖组件（可选）
 
