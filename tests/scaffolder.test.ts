@@ -1,10 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { scaffold } from '../src/scaffolder.js';
 import { getBuiltinStacks } from '../src/stacks/index.js';
 import type { ProjectConfig } from '../src/types.js';
+
+vi.mock('../src/utils/tools.js', () => ({
+  detectCodegraph: vi.fn().mockResolvedValue(false),
+  installCodegraph: vi.fn().mockResolvedValue(false),
+  initCodegraph: vi.fn().mockResolvedValue(true),
+}));
 
 describe('scaffolder integration', () => {
   let tmpDir: string;
@@ -28,6 +34,7 @@ describe('scaffolder integration', () => {
         stack,
         initGit: false,
         initOpenspec: true,
+        initCodegraph: false,
         targetDir: tmpDir,
         isExisting: false,
       };
@@ -49,6 +56,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -68,6 +76,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -87,6 +96,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -106,6 +116,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -128,6 +139,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -152,6 +164,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -178,6 +191,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -199,6 +213,7 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: true,
+      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -207,5 +222,67 @@ describe('scaffolder integration', () => {
 
     const result = readFileSync(path.join(tmpDir, 'openspec', 'config.yaml'), 'utf-8');
     expect(result).toBe('schema: custom\n');
+  });
+
+  // --- CodeGraph integration ---
+
+  it('codegraph: skips when initCodegraph is false', async () => {
+    const { detectCodegraph } = await import('../src/utils/tools.js');
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: false,
+      targetDir: tmpDir,
+      isExisting: false,
+    };
+
+    await scaffold(config);
+
+    expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
+    expect(detectCodegraph).not.toHaveBeenCalled();
+  });
+
+  it('codegraph: attempts detection and install when initCodegraph is true', async () => {
+    const { detectCodegraph, installCodegraph } = await import('../src/utils/tools.js');
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: true,
+      targetDir: tmpDir,
+      isExisting: false,
+    };
+
+    await scaffold(config);
+
+    expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
+    expect(detectCodegraph).toHaveBeenCalled();
+    expect(installCodegraph).toHaveBeenCalled();
+  });
+
+  it('codegraph: calls initCodegraph when already installed', async () => {
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectCodegraph).mockClear();
+    vi.mocked(tools.installCodegraph).mockClear();
+    vi.mocked(tools.initCodegraph).mockClear();
+    vi.mocked(tools.detectCodegraph).mockResolvedValueOnce(true);
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: true,
+      targetDir: tmpDir,
+      isExisting: false,
+    };
+
+    await scaffold(config);
+
+    expect(tools.detectCodegraph).toHaveBeenCalled();
+    expect(tools.initCodegraph).toHaveBeenCalledWith(tmpDir);
+    expect(tools.installCodegraph).not.toHaveBeenCalled();
   });
 });
