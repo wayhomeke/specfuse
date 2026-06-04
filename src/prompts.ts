@@ -92,8 +92,8 @@ async function detectAndSelect(targetDir: string): Promise<StackProfile> {
 async function promptFullStackList(): Promise<StackProfile> {
   const stacks = getBuiltinStacks();
   const choices = [
-    ...stacks.map((s) => ({ name: s.label, value: s.id })),
     { name: 'Skip (decide later)', value: '__skip__' },
+    ...stacks.map((s) => ({ name: s.label, value: s.id })),
   ];
   const stackId = await select({
     message: 'Tech stack:',
