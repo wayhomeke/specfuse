@@ -10,6 +10,9 @@ vi.mock('../src/utils/tools.js', () => ({
   detectCodegraph: vi.fn().mockResolvedValue(false),
   installCodegraph: vi.fn().mockResolvedValue(false),
   initCodegraph: vi.fn().mockResolvedValue(true),
+  detectOpenspec: vi.fn().mockResolvedValue(false),
+  installOpenspec: vi.fn().mockResolvedValue(false),
+  initOpenspec: vi.fn().mockResolvedValue(true),
 }));
 
 describe('scaffolder integration', () => {
