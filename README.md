@@ -34,7 +34,7 @@ npm -v
 ```bash
 # 从 git 仓库安装
 git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
-cd specfuse/create-specfuse && npm install && npm run build && npm link
+cd specfuse && npm install && npm run build && npm link
 ```
 
 > 如果 `npm link` 报权限错误（EACCES），先配置 npm 全局目录到用户空间：
