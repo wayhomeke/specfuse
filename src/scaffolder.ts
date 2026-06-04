@@ -8,8 +8,8 @@ import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
-import { gitInit, gitInitialCommit, tryOpenspecInit } from './utils/git.js';
-import { detectCodegraph, installCodegraph, initCodegraph } from './utils/tools.js';
+import { gitInit, gitInitialCommit } from './utils/git.js';
+import { detectCodegraph, installCodegraph, initCodegraph, detectOpenspec, installOpenspec, initOpenspec } from './utils/tools.js';
 
 async function fileExists(filePath: string): Promise<boolean> {
   try {
@@ -136,12 +136,27 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
 
   // OpenSpec skills
   if (config.initOpenspec) {
-    spinner.text = 'Installing OpenSpec skills...';
-    const ok = await tryOpenspecInit(targetDir);
-    if (!ok) {
-      spinner.warn(
-        'OpenSpec CLI not found. Install it to enable skills: npm i -g @fission-ai/openspec && openspec init',
-      );
+    spinner.text = 'Setting up OpenSpec...';
+    const hasOpenspec = await detectOpenspec();
+
+    if (hasOpenspec) {
+      const ok = await initOpenspec(targetDir);
+      if (!ok) {
+        spinner.warn('OpenSpec init failed. Run manually: openspec init --tools claude --force');
+      }
+    } else {
+      spinner.text = 'Installing OpenSpec CLI...';
+      const installed = await installOpenspec();
+      if (installed) {
+        const ok = await initOpenspec(targetDir);
+        if (!ok) {
+          spinner.warn('OpenSpec installed but init failed. Run manually: openspec init --tools claude --force');
+        }
+      } else {
+        spinner.warn(
+          'OpenSpec CLI installation failed. Install manually: npm i -g @fission-ai/openspec && openspec init',
+        );
+      }
     }
   }
 
