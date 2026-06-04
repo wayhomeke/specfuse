@@ -1,1 +1,1 @@
-{"version":3,"file":"scaffolder.d.ts","sourceRoot":"","sources":["../src/scaffolder.ts"],"names":[],"mappings":"AAIA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,YAAY,CAAC;AA6DhD,wBAAsB,QAAQ,CAAC,MAAM,EAAE,aAAa,GAAG,OAAO,CAAC,IAAI,CAAC,CAoGnE"}
+{"version":3,"file":"scaffolder.d.ts","sourceRoot":"","sources":["../src/scaffolder.ts"],"names":[],"mappings":"AAIA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,YAAY,CAAC;AA8DhD,wBAAsB,QAAQ,CAAC,MAAM,EAAE,aAAa,GAAG,OAAO,CAAC,IAAI,CAAC,CA2JnE"}
