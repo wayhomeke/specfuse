@@ -91,9 +91,28 @@ async function detectAndSelect(targetDir: string): Promise<StackProfile> {
 
 async function promptFullStackList(): Promise<StackProfile> {
   const stacks = getBuiltinStacks();
+  const choices = [
+    ...stacks.map((s) => ({ name: s.label, value: s.id })),
+    { name: 'Skip (decide later)', value: '__skip__' },
+  ];
   const stackId = await select({
     message: 'Tech stack:',
-    choices: stacks.map((s) => ({ name: s.label, value: s.id })),
+    choices,
   });
+  if (stackId === '__skip__') {
+    return {
+      id: 'generic',
+      label: 'Generic',
+      languages: [],
+      architecture: 'Not specified',
+      commands: { build: 'echo "no build configured"', test: 'echo "no test configured"', lint: 'echo "no lint configured"' },
+      errorHandling: 'Not specified',
+      concurrency: 'Not specified',
+      permissions: [],
+      gitignorePatterns: [],
+      openspecContext: 'Tech stack not yet configured. Set up later with create-specfuse --stack <id>',
+      openspecRules: {},
+    };
+  }
   return stacks.find((s) => s.id === stackId)!;
 }
