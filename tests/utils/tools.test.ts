@@ -1,14 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { execFile } from 'node:child_process';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { exec } from 'node:child_process';
 
 vi.mock('node:child_process', () => ({
-  execFile: vi.fn(),
+  exec: vi.fn(),
+  execSync: vi.fn().mockReturnValue('/tmp/fake-config.json'),
 }));
 
-const mockExecFile = vi.mocked(execFile);
+const mockExec = vi.mocked(exec);
 
 function mockExecSuccess(stdout = '') {
-  mockExecFile.mockImplementation((_cmd, _args, _opts, cb?: any) => {
+  mockExec.mockImplementation((_cmd: any, _opts: any, cb?: any) => {
     const callback = cb || _opts;
     if (typeof callback === 'function') {
       callback(null, stdout, '');
@@ -18,7 +19,7 @@ function mockExecSuccess(stdout = '') {
 }
 
 function mockExecFailure(message = 'not found') {
-  mockExecFile.mockImplementation((_cmd, _args, _opts, cb?: any) => {
+  mockExec.mockImplementation((_cmd: any, _opts: any, cb?: any) => {
     const callback = cb || _opts;
     if (typeof callback === 'function') {
       callback(new Error(message), '', '');
@@ -61,7 +62,7 @@ describe('installCodegraph', () => {
     const { installCodegraph } = await import('../../src/utils/tools.js');
     const result = await installCodegraph();
     expect(result).toBe(false);
-    expect(mockExecFile).not.toHaveBeenCalled();
+    expect(mockExec).not.toHaveBeenCalled();
     Object.defineProperty(process, 'platform', { value: originalPlatform });
   });
 
@@ -87,7 +88,7 @@ describe('installCodegraph', () => {
 describe('initCodegraph', () => {
   beforeEach(() => { vi.resetAllMocks(); });
 
-  it('runs codegraph init -i and codegraph install, returns true on success', async () => {
+  it('runs codegraph init and install, returns true on success', async () => {
     mockExecSuccess();
     const { initCodegraph } = await import('../../src/utils/tools.js');
     const result = await initCodegraph('/tmp/test-project');
