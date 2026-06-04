@@ -9,6 +9,7 @@ import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit, tryOpenspecInit } from './utils/git.js';
+import { detectCodegraph, installCodegraph, initCodegraph } from './utils/tools.js';
 
 async function fileExists(filePath: string): Promise<boolean> {
   try {
@@ -141,6 +142,34 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
       spinner.warn(
         'OpenSpec CLI not found. Install it to enable skills: npm i -g @fission-ai/openspec && openspec init',
       );
+    }
+  }
+
+  // CodeGraph
+  if (config.initCodegraph) {
+    spinner.text = 'Setting up CodeGraph...';
+    const hasCodegraph = await detectCodegraph();
+
+    if (hasCodegraph) {
+      const ok = await initCodegraph(targetDir);
+      if (ok) {
+        spinner.text = 'CodeGraph initialized.';
+      } else {
+        spinner.warn('CodeGraph init failed. Run manually: codegraph init -i && codegraph install');
+      }
+    } else {
+      spinner.text = 'Installing CodeGraph...';
+      const installed = await installCodegraph();
+      if (installed) {
+        const ok = await initCodegraph(targetDir);
+        if (!ok) {
+          spinner.warn('CodeGraph installed but init failed. Run manually: codegraph init -i && codegraph install');
+        }
+      } else {
+        spinner.warn(
+          'CodeGraph installation failed. Install manually:\n  curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh\n  Then run: codegraph init -i && codegraph install',
+        );
+      }
     }
   }
 
