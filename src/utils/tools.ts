@@ -34,3 +34,31 @@ export async function initCodegraph(cwd: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function detectOpenspec(): Promise<boolean> {
+  try {
+    const cmd = process.platform === 'win32' ? 'where' : 'which';
+    await exec(cmd, ['openspec']);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function installOpenspec(): Promise<boolean> {
+  try {
+    await exec('npm', ['install', '-g', '@fission-ai/openspec']);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function initOpenspec(cwd: string): Promise<boolean> {
+  try {
+    await exec('openspec', ['init', '--tools', 'claude', '--force'], { cwd });
+    return true;
+  } catch {
+    return false;
+  }
+}
