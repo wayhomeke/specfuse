@@ -3,9 +3,13 @@ import { promisify } from 'node:util';
 
 const execShell = promisify(execCb);
 
+const homedir = process.env.HOME || process.env.USERPROFILE || '';
+const LOCAL_BIN = `${homedir}/.local/bin`;
+const ENV_WITH_LOCAL_BIN = { ...process.env, PATH: `${LOCAL_BIN}:${process.env.PATH}` };
+
 export async function detectCodegraph(): Promise<boolean> {
   try {
-    await execShell('codegraph --version');
+    await execShell('codegraph --version', { env: ENV_WITH_LOCAL_BIN });
     return true;
   } catch {
     return false;
@@ -26,8 +30,9 @@ export async function installCodegraph(): Promise<boolean> {
 
 export async function initCodegraph(cwd: string): Promise<boolean> {
   try {
-    await execShell('codegraph init -i', { cwd, env: { ...process.env, CI: 'true' } });
-    await execShell('codegraph install -y', { cwd, env: { ...process.env, CI: 'true' } });
+    const env = { ...ENV_WITH_LOCAL_BIN, CI: 'true' };
+    await execShell('codegraph init -i', { cwd, env });
+    await execShell('codegraph install -y', { cwd, env });
     return true;
   } catch {
     return false;
