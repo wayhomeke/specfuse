@@ -5,8 +5,7 @@ const exec = promisify(execFile);
 
 export async function detectCodegraph(): Promise<boolean> {
   try {
-    const cmd = process.platform === 'win32' ? 'where' : 'which';
-    await exec(cmd, ['codegraph']);
+    await exec('codegraph', ['--version']);
     return true;
   } catch {
     return false;
@@ -37,8 +36,7 @@ export async function initCodegraph(cwd: string): Promise<boolean> {
 
 export async function detectOpenspec(): Promise<boolean> {
   try {
-    const cmd = process.platform === 'win32' ? 'where' : 'which';
-    await exec(cmd, ['openspec']);
+    await exec('openspec', ['--version']);
     return true;
   } catch {
     return false;
