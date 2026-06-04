@@ -49,5 +49,10 @@ describe('gitignore template', () => {
         expect(output).toContain(pattern);
       }
     });
+
+    it(`${stack.id}: includes .codegraph/ in shared patterns`, () => {
+      const output = composeGitignore(stack);
+      expect(output).toContain('.codegraph/');
+    });
   }
 });

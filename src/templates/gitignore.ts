@@ -20,6 +20,9 @@ const SHARED_PATTERNS = [
   '# Logs',
   '*.log',
   '',
+  '# CodeGraph',
+  '.codegraph/',
+  '',
   '# Temporary',
   '/tmp/',
 ];
