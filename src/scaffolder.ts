@@ -206,5 +206,17 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   if (!isExisting) console.log(`    cd ${projectName}`);
   console.log('    claude');
   console.log('    /opsx:propose   # start your first change');
+
+  if (config.initCodegraph) {
+    const localBin = path.join(process.env.HOME || '', '.local', 'bin');
+    const inPath = (process.env.PATH || '').split(':').includes(localBin);
+    if (!inPath) {
+      console.log('');
+      console.log(chalk.yellow('  Note: ~/.local/bin is not in your PATH.'));
+      console.log(chalk.dim('  Add it to use codegraph directly:'));
+      console.log(chalk.dim('    echo \'export PATH="$HOME/.local/bin:$PATH"\' >> ~/.bashrc && source ~/.bashrc'));
+    }
+  }
+
   console.log('');
 }
