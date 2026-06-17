@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { access, readFile } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
 import chalk from 'chalk';
 import ora from 'ora';
 import { composeGitignore } from './templates/gitignore.js';
@@ -10,6 +11,18 @@ import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
 import { detectCodegraph, installCodegraph, initCodegraph, detectOpenspec, installOpenspec, initOpenspec } from './utils/tools.js';
+function hasSuperpowersPlugin() {
+    const pluginsPath = path.join(process.env.HOME || '', '.claude', 'plugins', 'installed_plugins.json');
+    if (!existsSync(pluginsPath))
+        return false;
+    try {
+        const data = JSON.parse(readFileSync(pluginsPath, 'utf-8'));
+        return Object.keys(data.plugins || {}).some((k) => k.startsWith('superpowers'));
+    }
+    catch {
+        return false;
+    }
+}
 async function fileExists(filePath) {
     try {
         await access(filePath);
@@ -207,6 +220,13 @@ export async function scaffold(config) {
             console.log(chalk.dim('  Add it to use codegraph directly:'));
             console.log(chalk.dim('    echo \'export PATH="$HOME/.local/bin:$PATH"\' >> ~/.bashrc && source ~/.bashrc'));
         }
+    }
+    if (!hasSuperpowersPlugin()) {
+        console.log('');
+        console.log(chalk.yellow('  Note: Superpowers plugin not detected.'));
+        console.log(chalk.dim('  The workflow requires the brainstorming skill from Superpowers.'));
+        console.log(chalk.dim('  Install in Claude Code:'));
+        console.log(chalk.dim('    /plugin install superpowers@claude-plugins-official'));
     }
     console.log('');
 }
