@@ -5,6 +5,7 @@ import ora from 'ora';
 import { composeGitignore } from './templates/gitignore.js';
 import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
+import { composeGrillMeSkill } from './templates/grill-me-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -102,6 +103,14 @@ export async function scaffold(config) {
     }
     else {
         await writeJSON(settingsPath, generatedSettings);
+    }
+    // Grill-me skill
+    spinner.text = 'Writing .claude/skills/grill-me/SKILL.md...';
+    const grillSkillPath = path.join(targetDir, '.claude', 'skills', 'grill-me', 'SKILL.md');
+    const existingGrillSkill = await readTextSafe(grillSkillPath);
+    if (!existingGrillSkill) {
+        await createDir(path.join(targetDir, '.claude', 'skills', 'grill-me'));
+        await writeText(grillSkillPath, composeGrillMeSkill());
     }
     // OpenSpec
     if (config.initOpenspec) {
