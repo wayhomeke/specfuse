@@ -23,6 +23,9 @@ const SHARED_PATTERNS = [
   '# CodeGraph',
   '.codegraph/',
   '',
+  '# Grill review backups',
+  '.grill-backup/',
+  '',
   '# Temporary',
   '/tmp/',
 ];

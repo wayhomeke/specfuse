@@ -142,6 +142,71 @@ Before \`/opsx:archive\`:
 3. Run linter (\`${stack.commands.lint}\`) with zero warnings`;
 }
 
+export function renderGrillReview(): string {
+  return `### Pre-Apply Review (Grill)
+
+When all artifacts (proposal, design, specs, tasks) are complete, the AI MUST prompt:
+> "All artifacts are ready. Recommend running \`/grill-me\` for a pre-apply review before implementation. Or run \`/opsx:apply\` directly to skip review."
+
+If the user runs \`/opsx:apply\` without prior grill, this is treated as an implicit skip — no blocking.
+
+**Protocol:**
+
+1. **Backup**: Copy the change directory to \`.grill-backup/\` before grill begins. Clean stale backups if present.
+2. **Review**: Ask ONE question at a time. Each question includes:
+   - Problem classification: \`[blocking]\` or \`[non-blocking]\`
+   - The specific issue found
+   - A recommended answer
+   - A modification preview (dry-run diff showing what will change)
+3. **User response**: If the user accepts, write the change. Core principle: **user must see the final diff before any write.**
+4. **Cleanup**: Delete \`.grill-backup/\` after successful completion.
+
+**Review Dimensions** (select by relevance, not all required):
+- Scope boundary — are goals/non-goals clear with no ambiguity?
+- Error paths — are exceptions, edge cases, and failures covered?
+- Dependency risk — new dependencies assessed? Impact on existing modules?
+- Testability — can every spec be verified with current test infrastructure?
+- Security — input validation, permissions, data exposure risks?
+- Performance impact — O(n²), blocking IO, memory pressure?
+- Backward compatibility — any breaking changes to existing APIs/behaviors?
+
+**Problem Classification:**
+- **Blocking** (must resolve before apply): artifact contradictions, uncovered edge cases, missing error handling, security risks, untestable specs. User may override with explicit acknowledgment.
+- **Non-blocking** (recorded, not enforced): naming style, optional optimizations, alternative approaches, documentation wording.
+
+**Exit Commands:**
+- \`grill-stop\`: Exit grill, keep all modifications made so far.
+- \`grill-abort\`: Exit grill, rollback all modifications from \`.grill-backup/\`.
+- Ambiguous expressions ("stop", "算了"): AI MUST ask for clarification — "exit grill review, or abandon the entire change?"
+
+**Soft Limit:** After 15 questions, self-assess whether remaining issues are blocking-level. If none remain, proceed to summary.
+
+**Consistency Scan** (before summary):
+Run a final check across all artifacts for:
+- Reference integrity — every goal in proposal maps to design/specs/tasks
+- Terminology consistency — same concepts use same names throughout
+- Logical conflict detection — no artifact contradicts another
+
+If scan finds issues, continue grill to resolve them.
+
+**Summary Format** (on completion):
+\`\`\`
+## Grill Review Summary
+
+Blocking (resolved):
+- [dimension] description of resolved issue
+
+Suggestions (recorded, non-blocking):
+- [dimension] description of suggestion
+
+Modified artifacts: <list of changed files>
+
+Consistency scan: ✅ PASS
+
+Run /opsx:apply to start implementation.
+\`\`\``;
+}
+
 function renderGeneralRules(): string {
   return `### General Rules
 
@@ -174,6 +239,8 @@ export function composeCLAUDEmd(ctx: TemplateContext): string {
     renderPathB(),
     '',
     renderExploration(),
+    '',
+    renderGrillReview(),
     '',
     renderApplyPhase(ctx.stack),
     '',
