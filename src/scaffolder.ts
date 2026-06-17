@@ -245,7 +245,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     console.log(chalk.yellow('  Note: Superpowers plugin not detected.'));
     console.log(chalk.dim('  The workflow requires the brainstorming skill from Superpowers.'));
     console.log(chalk.dim('  Install in Claude Code:'));
-    console.log(chalk.dim('    /plugin install superpowers@claude-plugins-official'));
+    console.log(chalk.dim('    /plugins add obra/superpowers'));
   }
 
   console.log('');
