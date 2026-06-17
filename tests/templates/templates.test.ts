@@ -54,5 +54,10 @@ describe('gitignore template', () => {
       const output = composeGitignore(stack);
       expect(output).toContain('.codegraph/');
     });
+
+    it(`${stack.id}: includes .grill-backup/ in shared patterns`, () => {
+      const output = composeGitignore(stack);
+      expect(output).toContain('.grill-backup/');
+    });
   }
 });
