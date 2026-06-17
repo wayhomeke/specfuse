@@ -53,6 +53,44 @@ describe('scaffolder integration', () => {
     });
   }
 
+  it('greenfield: creates .claude/skills/grill-me/SKILL.md', async () => {
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: false,
+      targetDir: tmpDir,
+      isExisting: false,
+    };
+
+    await scaffold(config);
+
+    expect(existsSync(path.join(tmpDir, '.claude', 'skills', 'grill-me', 'SKILL.md'))).toBe(true);
+    const content = readFileSync(path.join(tmpDir, '.claude', 'skills', 'grill-me', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('name: grill-me');
+  });
+
+  it('existing: does not overwrite existing grill-me skill', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'skills', 'grill-me'), { recursive: true });
+    writeFileSync(path.join(tmpDir, '.claude', 'skills', 'grill-me', 'SKILL.md'), 'custom content');
+
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: false,
+      targetDir: tmpDir,
+      isExisting: true,
+    };
+
+    await scaffold(config);
+
+    const content = readFileSync(path.join(tmpDir, '.claude', 'skills', 'grill-me', 'SKILL.md'), 'utf-8');
+    expect(content).toBe('custom content');
+  });
+
   it('greenfield: CLAUDE.md contains methodology invariants', async () => {
     const config: ProjectConfig = {
       projectName: 'test-project',
