@@ -1,0 +1,205 @@
+# Project CLAUDE.md
+
+## Tech Stack
+- Language: TypeScript
+- Framework: React
+- Architecture: Component-based / Feature-sliced
+- Build: `npm run build`
+- Test: `npx vitest run`
+- Lint: `npx eslint .`
+- Format: `npx prettier --write .`
+- Typecheck: `npx tsc --noEmit`
+
+## Commit Convention
+- Use conventional commits: feat:, fix:, refactor:, test:, docs:, chore:
+- All commit messages in English
+
+---
+
+<!-- FUSION:START -->
+## OpenSpec & Superpowers Composite Workflow Constraints
+
+This project enforces a fused OpenSpec + Superpowers engineering pipeline.
+AI agents MUST follow these rules without exception.
+
+### Path A: One-Shot Proposal
+
+When `/opsx:propose` is invoked:
+
+1. **MUST activate Superpowers `brainstorming` as a pre-requisite skill.**
+   - Ask ONE question at a time (Socratic method). Never fire multiple questions in a single turn.
+   - Proactively present 2-3 architectural alternatives with explicit trade-offs.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to `docs/superpowers/specs/`. All spec files are managed exclusively by OpenSpec.
+   - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
+
+2. Every proposal artifact MUST contain:
+   - **Non-goals** section (what this change explicitly does NOT do)
+   - **Trade-offs** section (alternatives considered and why they were rejected)
+   - **Verification strategy** (how we know this change works)
+
+### Path B: Step-by-Step Change
+
+When `/opsx:new` is invoked:
+
+1. Follow the `openspec-new-change` skill steps normally: ask what to build, create the change directory, show status.
+
+2. **BEFORE drafting the first artifact (proposal), MUST activate Superpowers `brainstorming`.**
+   - Use Socratic questioning to clarify scope, non-goals, and trade-offs.
+   - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to `docs/superpowers/specs/`. All spec files are managed exclusively by OpenSpec.
+   - Only after the user confirms the approach, draft the proposal artifact.
+
+3. When `/opsx:continue` is invoked to advance to the next artifact:
+   - Read current `openspec status --change <name>` to find the next "ready" artifact.
+   - Fetch instructions via `openspec instructions <artifact-id> --change <name>`.
+   - For **proposal** artifacts: apply brainstorming rules (Non-goals, Trade-offs, Verification strategy).
+   - For **design** artifacts: MUST include dependency diagram, public API surface, error handling strategy.
+   - For **specs** artifacts: each spec must be independently testable with success + failure behaviors.
+   - For **tasks** artifacts: enforce TDD order, max 2-hour chunks, verification commands per task.
+   - After drafting each artifact, STOP and wait for user review before advancing.
+
+4. **Pace control: one artifact per `/opsx:continue` invocation.**
+   - Never auto-advance to the next artifact without explicit user confirmation.
+   - This is the key difference from Path A — the user controls the rhythm.
+
+### Exploration
+
+When `/opsx:explore` is invoked:
+
+1. Enter thinking-partner mode. No artifact creation, no directory scaffolding.
+2. Activate Superpowers `brainstorming` for structured exploration.
+3. Output is conversational — conclusions can later feed into Path A or Path B.
+
+4. **Worktree isolation (exploration):**
+   When exploration needs to produce actual code (PoC, prototype), SHOULD create a worktree:
+   - Exploration may generate substantial code that will ultimately be discarded
+   - Exploration involves modifying existing code to validate hypotheses
+   Discarding a worktree costs zero — prevents exploration artifacts from polluting the main branch.
+
+### Pre-Apply Review (Grill)
+
+When all artifacts (proposal, design, specs, tasks) are complete, the AI MUST prompt:
+> "All artifacts are ready. Recommend running `/grill-me` for a pre-apply review before implementation. Or run `/opsx:apply` directly to skip review."
+
+If the user runs `/opsx:apply` without prior grill, this is treated as an implicit skip — no blocking.
+
+**Protocol:**
+
+1. **Backup**: Copy the change directory to `.grill-backup/` before grill begins. Clean stale backups if present.
+2. **Review**: Ask ONE question at a time. Each question includes:
+   - Problem classification: `[blocking]` or `[non-blocking]`
+   - The specific issue found
+   - A recommended answer
+   - A modification preview (dry-run diff showing what will change)
+3. **User response**: If the user accepts, write the change. Core principle: **user must see the final diff before any write.**
+4. **Cleanup**: Delete `.grill-backup/` after successful completion.
+
+**Review Dimensions** (select by relevance, not all required):
+- Scope boundary — are goals/non-goals clear with no ambiguity?
+- Error paths — are exceptions, edge cases, and failures covered?
+- Dependency risk — new dependencies assessed? Impact on existing modules?
+- Testability — can every spec be verified with current test infrastructure?
+- Security — input validation, permissions, data exposure risks?
+- Performance impact — O(n²), blocking IO, memory pressure?
+- Backward compatibility — any breaking changes to existing APIs/behaviors?
+
+**Problem Classification:**
+- **Blocking** (must resolve before apply): artifact contradictions, uncovered edge cases, missing error handling, security risks, untestable specs. User may override with explicit acknowledgment.
+- **Non-blocking** (recorded, not enforced): naming style, optional optimizations, alternative approaches, documentation wording.
+
+**Exit Commands:**
+- `grill-stop`: Exit grill, keep all modifications made so far.
+- `grill-abort`: Exit grill, rollback all modifications from `.grill-backup/`.
+- Ambiguous expressions ("stop", "算了"): AI MUST ask for clarification — "exit grill review, or abandon the entire change?"
+
+**Soft Limit:** After 15 questions, self-assess whether remaining issues are blocking-level. If none remain, proceed to summary.
+
+**Consistency Scan** (before summary):
+Run a final check across all artifacts for:
+- Reference integrity — every goal in proposal maps to design/specs/tasks
+- Terminology consistency — same concepts use same names throughout
+- Logical conflict detection — no artifact contradicts another
+
+If scan finds issues, continue grill to resolve them.
+
+**Summary Format** (on completion):
+```
+## Grill Review Summary
+
+Blocking (resolved):
+- [dimension] description of resolved issue
+
+Suggestions (recorded, non-blocking):
+- [dimension] description of suggestion
+
+Modified artifacts: <list of changed files>
+
+Consistency scan: ✅ PASS
+
+Run /opsx:apply to start implementation.
+```
+
+### Phase 2: Apply / Implement
+
+When `/opsx:apply` is invoked:
+
+1. **MUST activate Superpowers `test-driven-development` as a pre-requisite skill.**
+   - For every task in `tasks.md`, follow strict Red-Green-Refactor:
+     a. Write a failing test FIRST
+     b. Write minimal code to make it pass
+     c. Refactor while keeping tests green
+
+2. **MUST activate Superpowers `verification-before-completion` before marking ANY task done.**
+   - **IRON LAW: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.**
+   - Before checking off a task `[x]`, you MUST:
+     a. Run the actual verification command in the terminal (`npx vitest run`)
+     b. Paste the raw output as evidence
+     c. Only then mark the task complete
+   - "I believe it works" or "it should pass" is NEVER acceptable.
+
+3. **Subagent discipline** (when using parallel agents):
+   - Each subagent works in its own git worktree
+   - Each subagent runs its own tests independently
+   - Main agent verifies integration after merging subagent work
+
+4. **Subagent-Driven Development trigger conditions:**
+   When ALL of the following are met, SHOULD enable subagent mode:
+   - `tasks.md` contains ≥ 6 pending implementation tasks
+   - Most tasks have no `blocked by` dependency on each other
+   - Tasks map to different modules/files with clear module boundaries
+   - Session context window is >40% consumed
+
+   Execution discipline when enabled:
+   - Each subagent works in its own isolated git worktree
+   - Each subagent independently follows TDD and runs its own tests
+   - Main agent performs two-stage review per subagent output (spec compliance → code quality)
+   - Main agent runs full integration tests after merging
+   - Subagents MUST NOT implement the same module in parallel; independent modules may be parallelized
+
+5. **Git Worktree isolation trigger conditions:**
+   When ANY of the following are met, SHOULD create a worktree before apply begins:
+   - Change involves destructive refactoring (replacing core modules, migrating data structures)
+   - Multiple `/opsx:new` changes are being worked on in parallel
+   - Rollback cost of failure is high (change affects multiple consumers)
+
+   Worktree is NOT needed when:
+   - Single-file bugfix
+   - Adding a new independent module (no impact on existing code)
+   - Documentation or configuration adjustments
+
+### Phase 3: Verify / Archive
+
+Before `/opsx:archive`:
+
+1. Run `/opsx:verify` to validate implementation matches all specs
+2. Run full test suite (`npx vitest run`) and paste evidence
+3. Run linter (`npx eslint .`) with zero warnings
+
+### General Rules
+
+- **Always run `openspec` commands from the project root directory.**
+- **Never skip TDD.** Even for "simple" changes. Especially for "simple" changes.
+- **Never trust memory over terminal output.** Always verify current state.
+- **One concern per commit.** Keep commits atomic and reversible.
+- **Fail loud, fail early.** Prefer compile-time errors over runtime surprises.
+- **Dependencies flow inward.** Domain logic never imports infrastructure.
+<!-- FUSION:END -->
