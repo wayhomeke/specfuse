@@ -207,7 +207,7 @@ AI 说"这个任务完成了"——你信吗？它声称跑过测试了——你
 如果上面的思路对你有一点启发或者不同想法，欢迎体验一下 SpecFuse和留下你的评论：
 
 ```bash
-npm create specfuse@latest my-project
+cd your-project && npm create specfuse@latest
 ```
 
 一条命令把整条流水线注入到你的项目。brainstorm、grill、TDD 铁律、artifact 管理，开箱可用。
