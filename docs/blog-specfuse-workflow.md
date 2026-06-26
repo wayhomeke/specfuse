@@ -26,22 +26,39 @@
 Think（想清楚）→ Grill（查漏洞）→ Do（动手做）→ Verify（验收归档）
 ```
 
-每一拍由不同的工具驱动，但 OpenSpec 贯穿全程做流程管理：
+OpenSpec 贯穿全程做流程管理，每一拍都有明确的切入和切出点：
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  OpenSpec（流程骨架：artifact 依赖图 → 任务追踪 → spec 校验 → 归档）│
-├────────────┬────────────┬─────────────────┬─────────────────────┤
-│   Think    │   Grill    │       Do        │       Verify        │
-│            │            │                 │                     │
-│ Superpowers│  Grill-me  │   Superpowers   │     OpenSpec        │
-│ brainstorm │  压力测试   │   TDD + 验证    │   spec 逐条校验     │
-│ 结构化提问  │  一致性扫描 │   证据铁律      │   全量测试 + lint   │
-│ 方案对比    │  分级标注   │   subagent 触发 │   归档              │
-└────────────┴────────────┴─────────────────┴─────────────────────┘
+OpenSpec ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │            │              │              │              │
+   │ new change │  status:     │  status:     │  instructions│  verify
+   │ 创建变更目录 │  artifacts   │  all done    │  apply       │  + archive
+   │            │  ready       │  建议 grill   │  读取 tasks  │  归档
+   ▼            ▼              ▼              ▼              ▼
+┌──────────────┬──────────────┬──────────────┬──────────────────────┐
+│    Think     │    Grill     │     Do       │       Verify         │
+│              │              │              │                      │
+│ Superpowers  │  Grill-me    │ Superpowers  │  OpenSpec verify     │
+│ brainstorming│  逐条质问     │ TDD + 验证   │  spec 逐条校验       │
+│              │              │              │                      │
+│ ◦ 结构化提问  │ ◦ 压力测试   │ ◦ 红绿重构   │  ◦ 实现 vs spec 对比 │
+│ ◦ 方案对比   │ ◦ 一致性扫描  │ ◦ 证据铁律   │  ◦ 全量测试 + lint   │
+│ ◦ 场景校准   │ ◦ 分级标注   │ ◦ subagent   │  ◦ 归档到 archive    │
+│              │              │              │                      │
+│ 产出:        │ 产出:        │ 产出:        │  产出:                │
+│ proposal     │ 修正后的     │ 通过测试的   │  verified change      │
+│ design       │ artifacts    │ 代码         │  archived             │
+│ specs        │              │              │                      │
+│ tasks        │              │              │                      │
+└──────────────┴──────────────┴──────────────┴──────────────────────┘
+   │              │              │              │
+   ▼              ▼              ▼              ▼
+OpenSpec ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   写入 artifacts   更新 artifacts   标记 task [x]     sync specs
+   到 change 目录    (grill 修改)     完成状态追踪      移入 archive/
 ```
 
-OpenSpec 不只出现在某一拍里。它管理 Think 阶段的 artifact 脚手架（proposal → design → specs → tasks 的依赖图），追踪 Do 阶段每个 task 的完成状态，在 Verify 阶段做 spec 逐条校验然后归档。其他工具——Superpowers 的 brainstorming 和 TDD、Grill-me 的设计审查——挂在 OpenSpec 的流程节点上，在对应的拍被自动激活。
+上面那条线是 OpenSpec 交给每一拍的输入（切入），下面那条线是每一拍交还给 OpenSpec 的输出（切出）。整个流程中，OpenSpec 负责"现在该做什么、做完了没、产出物存哪里"，具体怎么做则由每一拍各自的工具接管。
 
 关键体验是：每个阶段你只敲一个命令，背后的能力调度对你透明。不需要记"现在该激活哪个插件"，流水线替你记。
 
