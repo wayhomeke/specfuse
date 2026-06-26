@@ -26,16 +26,22 @@
 Think（想清楚）→ Grill（查漏洞）→ Do（动手做）→ Verify（验收归档）
 ```
 
-每一拍背后自动调度不同的能力：
+每一拍由不同的工具驱动，但 OpenSpec 贯穿全程做流程管理：
 
-| 拍 | 你做的事 | 背后调度的 |
-|---|---|---|
-| Think | 和 AI 做 brainstorm，输出 proposal/design/specs/tasks | Superpowers brainstorming（结构化提问、方案对比）+ OpenSpec artifact 管理 |
-| Grill | AI 质问你的设计，找遗漏和矛盾 | Grill-me（压力测试、一致性扫描、blocking/non-blocking 分级） |
-| Do | 按 tasks 逐个实施 | Superpowers TDD + verification（铁律、验证证据、条件触发 subagent） |
-| Verify | 确认实现覆盖所有 spec，归档 | OpenSpec spec 校验 + 全量测试 + linter |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  OpenSpec（流程骨架：artifact 依赖图 → 任务追踪 → spec 校验 → 归档）│
+├────────────┬────────────┬─────────────────┬─────────────────────┤
+│   Think    │   Grill    │       Do        │       Verify        │
+│            │            │                 │                     │
+│ Superpowers│  Grill-me  │   Superpowers   │     OpenSpec        │
+│ brainstorm │  压力测试   │   TDD + 验证    │   spec 逐条校验     │
+│ 结构化提问  │  一致性扫描 │   证据铁律      │   全量测试 + lint   │
+│ 方案对比    │  分级标注   │   subagent 触发 │   归档              │
+└────────────┴────────────┴─────────────────┴─────────────────────┘
+```
 
-OpenSpec 贯穿了整条流水线——从 Think 阶段的 artifact 脚手架（proposal → design → specs → tasks 的依赖图），到 Do 阶段的任务追踪，到 Verify 阶段的 spec 逐条校验和归档。它是流水线的骨架，其他工具挂在它的节点上发挥作用。
+OpenSpec 不只出现在某一拍里。它管理 Think 阶段的 artifact 脚手架（proposal → design → specs → tasks 的依赖图），追踪 Do 阶段每个 task 的完成状态，在 Verify 阶段做 spec 逐条校验然后归档。其他工具——Superpowers 的 brainstorming 和 TDD、Grill-me 的设计审查——挂在 OpenSpec 的流程节点上，在对应的拍被自动激活。
 
 关键体验是：每个阶段你只敲一个命令，背后的能力调度对你透明。不需要记"现在该激活哪个插件"，流水线替你记。
 
