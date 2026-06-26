@@ -14,12 +14,12 @@ const program = new Command();
 
 program
   .name('create-specfuse')
-  .description('Scaffold a project with OpenSpec + Superpowers specfuse methodology')
+  .description('SpecFuse — AI engineering pipeline scaffolder.\n\nInjects OpenSpec workflow + Superpowers discipline into any project.\nThink → Grill → Do → Verify, one command at a time.')
   .version(pkg.version)
-  .argument('[project-name]', 'Project directory name (omit to init in current directory)')
-  .option('--stack <id>', 'Use a built-in stack (rust, go, typescript-react, python-fastapi, bash, java-maven, java-gradle, cpp-cmake, ruby, php, kotlin, swift, elixir, scala-sbt, dotnet)')
-  .option('--stack-from <path>', 'Load a custom stack profile from YAML/JSON file')
-  .option('-y, --yes', 'Skip confirmation prompts (use defaults)')
+  .argument('[project-name]', 'Target directory (omit or use "." to init in current directory)')
+  .option('--stack <id>', 'Built-in stack: rust, go, typescript-react, python-fastapi, bash, java-maven, java-gradle, cpp-cmake, ruby, php, kotlin, swift, elixir, scala-sbt, dotnet')
+  .option('--stack-from <path>', 'Custom stack profile (YAML/JSON)')
+  .option('-y, --yes', 'Non-interactive mode (use defaults, CI-friendly)')
   .action(async (projectName: string | undefined, opts: { stack?: string; stackFrom?: string; yes?: boolean }) => {
     try {
       let customStack;
