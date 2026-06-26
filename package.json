@@ -1,11 +1,16 @@
 {
   "name": "create-specfuse",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "Scaffold projects with OpenSpec + Superpowers fusion methodology",
   "type": "module",
   "bin": {
     "create-specfuse": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
   "engines": {
     "node": ">=18.0.0"
   },

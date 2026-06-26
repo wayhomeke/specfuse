@@ -427,17 +427,10 @@ Subagent 和 Worktree 的启用不是代码逻辑判断，而是写在 CLAUDE.md
 
 ## 九、快速体验
 
-### 安装（30 秒）
-
-```bash
-git clone ssh://git@gitlab.fatehome.net:30021/fatehome/specfuse.git
-cd specfuse && npm install && npm run build && npm link
-```
-
 ### 创建项目（10 秒）
 
 ```bash
-create-specfuse my-service --stack rust
+npm create specfuse@latest my-service -- --stack rust
 ```
 
 ### 开始开发
