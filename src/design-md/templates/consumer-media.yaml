@@ -1,0 +1,34 @@
+id: consumer-media
+name: Consumer Media
+category: consumer
+dimensions:
+  colorTemp: 3
+  lightness: 2
+  density: 4
+  borderRadius: 3
+  tone: 4
+anchors:
+  primary: Spotify
+  auxiliary:
+    - Netflix
+    - Apple Music
+template: |
+  tokens:
+    colors:
+      primary: "#1DB954"
+      background: "#121212"
+      surface: "#1E1E1E"
+      text: "#FFFFFF"
+      accent: "#1ED760"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 12, 16, 24, 32, 48, 64]
+    radius:
+      default: "8px"
+      large: "12px"
+    typography:
+      fontFamily: "'Circular', 'Helvetica Neue', sans-serif"
+      scale: [12, 14, 16, 20, 24, 32, 48]
+    density:
+      compact: false
+      tableRowHeight: "48px"
