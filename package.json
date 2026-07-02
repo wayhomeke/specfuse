@@ -1,6 +1,6 @@
 {
   "name": "create-specfuse",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Scaffold projects with OpenSpec + Superpowers fusion methodology",
   "type": "module",
   "bin": {
@@ -15,7 +15,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc && rm -rf dist/design-md/templates && cp -r src/design-md/templates dist/design-md/templates",
+    "build": "rm -rf dist && tsc && mkdir -p dist/design-md && cp -r src/design-md/templates dist/design-md/templates",
     "test": "vitest run",
     "dev": "tsc --watch"
   },
