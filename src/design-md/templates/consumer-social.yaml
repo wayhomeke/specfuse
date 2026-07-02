@@ -1,0 +1,34 @@
+id: consumer-social
+name: Consumer Social
+category: consumer
+dimensions:
+  colorTemp: 4
+  lightness: 4
+  density: 4
+  borderRadius: 5
+  tone: 5
+anchors:
+  primary: Instagram
+  auxiliary:
+    - TikTok
+    - Threads
+template: |
+  tokens:
+    colors:
+      primary: "#E1306C"
+      background: "#FFFFFF"
+      surface: "#FAFAFA"
+      text: "#262626"
+      accent: "#833AB4"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 12, 16, 24, 32, 48, 64]
+    radius:
+      default: "16px"
+      large: "24px"
+    typography:
+      fontFamily: "'-apple-system', 'Segoe UI', sans-serif"
+      scale: [12, 14, 16, 18, 24, 32]
+    density:
+      compact: false
+      tableRowHeight: "56px"

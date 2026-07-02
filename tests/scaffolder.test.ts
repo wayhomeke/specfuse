@@ -91,6 +91,24 @@ describe('scaffolder integration', () => {
     expect(content).toBe('custom content');
   });
 
+  it('greenfield: creates .claude/skills/design-md/SKILL.md', async () => {
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: false,
+      targetDir: tmpDir,
+      isExisting: false,
+    };
+
+    await scaffold(config);
+
+    expect(existsSync(path.join(tmpDir, '.claude', 'skills', 'design-md', 'SKILL.md'))).toBe(true);
+    const content = readFileSync(path.join(tmpDir, '.claude', 'skills', 'design-md', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('name: design-md');
+  });
+
   it('greenfield: CLAUDE.md contains methodology invariants', async () => {
     const config: ProjectConfig = {
       projectName: 'test-project',

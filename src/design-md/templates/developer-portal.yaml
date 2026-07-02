@@ -1,0 +1,33 @@
+id: developer-portal
+name: Developer Portal
+category: developer
+dimensions:
+  colorTemp: 1
+  lightness: 1
+  density: 3
+  borderRadius: 2
+  tone: 2
+anchors:
+  primary: Stripe Docs
+  auxiliary:
+    - Tailwind Docs
+template: |
+  tokens:
+    colors:
+      primary: "#3B82F6"
+      background: "#0F172A"
+      surface: "#1E293B"
+      text: "#E2E8F0"
+      accent: "#22D3EE"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 16, 24, 32, 48, 64]
+    radius:
+      default: "6px"
+      large: "8px"
+    typography:
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
+      scale: [12, 14, 16, 18, 24, 32]
+    density:
+      compact: false
+      tableRowHeight: "40px"

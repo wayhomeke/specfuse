@@ -14,6 +14,12 @@
 - Use conventional commits: feat:, fix:, refactor:, test:, docs:, chore:
 - All commit messages in English
 
+## DESIGN.md Generation Rules
+
+- **Greenfield (auto-trigger):** When `specfuse init` scaffolds a new project AND brainstorming reveals frontend/UI intent, automatically run `generateDesignMd(targetDir)` after init completes.
+- **Brownfield (manual):** Invoke `/design-md` to generate DESIGN.md for an existing project. The skill is installed at `.claude/skills/design-md/SKILL.md`.
+- **Never overwrite silently:** If DESIGN.md already exists, always prompt for confirmation and create a `.bak` backup before overwriting.
+
 ---
 
 <!-- FUSION:START -->

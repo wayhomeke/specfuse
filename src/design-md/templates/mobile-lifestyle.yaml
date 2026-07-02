@@ -1,0 +1,34 @@
+id: mobile-lifestyle
+name: Mobile Lifestyle
+category: mobile
+dimensions:
+  colorTemp: 5
+  lightness: 4
+  density: 5
+  borderRadius: 5
+  tone: 5
+anchors:
+  primary: Headspace
+  auxiliary:
+    - Calm
+    - Duolingo
+template: |
+  tokens:
+    colors:
+      primary: "#FF8C42"
+      background: "#FFF8F0"
+      surface: "#FFFFFF"
+      text: "#2D2D2D"
+      accent: "#FFB347"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 16, 24, 32, 48, 64, 80]
+    radius:
+      default: "20px"
+      large: "28px"
+    typography:
+      fontFamily: "'Nunito', 'Rounded Mplus', sans-serif"
+      scale: [12, 14, 16, 20, 24, 32, 40]
+    density:
+      compact: false
+      tableRowHeight: "56px"
