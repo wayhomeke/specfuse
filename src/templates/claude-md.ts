@@ -23,6 +23,14 @@ function renderCommitConvention(): string {
 - All commit messages in English`;
 }
 
+function renderDesignTokensRules(): string {
+  return `## DESIGN-TOKENS.md Generation Rules
+
+- **Brainstorming auto-trigger:** When brainstorming involves frontend/UI design intent, brainstorming 阶段结束后 MUST invoke \`/design-md\` skill FIRST. \`/design-md\` completes questionnaire and generates DESIGN-TOKENS.md, THEN resume the OpenSpec artifact flow (proposal → design → specs → tasks).
+- **Brownfield (manual):** Invoke \`/design-md\` to generate DESIGN-TOKENS.md for an existing project. The skill is installed at \`.claude/skills/design-md/SKILL.md\`.
+- **Never overwrite silently:** If DESIGN-TOKENS.md already exists, always prompt for confirmation and create a \`.bak\` backup before overwriting.`;
+}
+
 function renderPathA(): string {
   return `### Path A: One-Shot Proposal
 
@@ -225,6 +233,8 @@ export function composeCLAUDEmd(ctx: TemplateContext): string {
     renderTechStack(ctx.stack),
     '',
     renderCommitConvention(),
+    '',
+    renderDesignTokensRules(),
     '',
     '---',
     '',
