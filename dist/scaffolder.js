@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir, copyFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -7,6 +7,7 @@ import { composeGitignore } from './templates/gitignore.js';
 import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeGrillMeSkill } from './templates/grill-me-skill.js';
+import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -125,6 +126,24 @@ export async function scaffold(config) {
         await createDir(path.join(targetDir, '.claude', 'skills', 'grill-me'));
         await writeText(grillSkillPath, composeGrillMeSkill());
     }
+    // Design-md skill
+    spinner.text = 'Writing .claude/skills/design-md/SKILL.md...';
+    const designMdSkillPath = path.join(targetDir, '.claude', 'skills', 'design-md', 'SKILL.md');
+    const existingDesignMdSkill = await readTextSafe(designMdSkillPath);
+    if (!existingDesignMdSkill) {
+        await createDir(path.join(targetDir, '.claude', 'skills', 'design-md'));
+        await writeText(designMdSkillPath, composeDesignMdSkill());
+    }
+    // Design-md archetype templates
+    spinner.text = 'Copying design-md archetype templates...';
+    const templatesDestDir = path.join(targetDir, '.claude', 'skills', 'design-md', 'templates');
+    const templatesSrcDir = path.join(import.meta.dirname, 'design-md', 'templates');
+    await createDir(templatesDestDir);
+    const templateFiles = await readdir(templatesSrcDir);
+    for (const f of templateFiles.filter((f) => f.endsWith('.yaml'))) {
+        await copyFile(path.join(templatesSrcDir, f), path.join(templatesDestDir, f));
+    }
+    spinner.succeed('Installed design-md skill with archetype templates');
     // OpenSpec
     if (config.initOpenspec) {
         spinner.text = 'Setting up OpenSpec...';
