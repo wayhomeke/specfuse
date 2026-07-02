@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir, copyFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -145,7 +145,17 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await createDir(path.join(targetDir, '.claude', 'skills', 'design-md'));
     await writeText(designMdSkillPath, composeDesignMdSkill());
   }
-  spinner.succeed('Installed design-md skill');
+
+  // Design-md archetype templates
+  spinner.text = 'Copying design-md archetype templates...';
+  const templatesDestDir = path.join(targetDir, '.claude', 'skills', 'design-md', 'templates');
+  const templatesSrcDir = path.join(import.meta.dirname, 'design-md', 'templates');
+  await createDir(templatesDestDir);
+  const templateFiles = await readdir(templatesSrcDir);
+  for (const f of templateFiles.filter((f) => f.endsWith('.yaml'))) {
+    await copyFile(path.join(templatesSrcDir, f), path.join(templatesDestDir, f));
+  }
+  spinner.succeed('Installed design-md skill with archetype templates');
 
   // OpenSpec
   if (config.initOpenspec) {
