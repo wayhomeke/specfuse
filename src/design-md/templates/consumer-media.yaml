@@ -1,6 +1,10 @@
 id: consumer-media
 name: Consumer Media
 category: consumer
+intent:
+  mood: Immersive and atmospheric — content is the interface
+  density: Low density, generous breathing room for media-rich layouts
+  philosophy: Dark canvas makes content pop; UI chrome dissolves when content plays
 dimensions:
   colorTemp: 3
   lightness: 2
@@ -8,27 +12,32 @@ dimensions:
   borderRadius: 3
   tone: 4
 anchors:
-  primary: Spotify
-  auxiliary:
-    - Netflix
-    - Apple Music
-template: |
-  tokens:
-    colors:
-      primary: "#1DB954"
-      background: "#121212"
-      surface: "#1E1E1E"
-      text: "#FFFFFF"
-      accent: "#1ED760"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 12, 16, 24, 32, 48, 64]
-    radius:
-      default: "8px"
-      large: "12px"
-    typography:
-      fontFamily: "'Circular', 'Helvetica Neue', sans-serif"
-      scale: [12, 14, 16, 20, 24, 32, 48]
-    density:
-      compact: false
-      tableRowHeight: "48px"
+  colors:
+    primary: "#1DB954"
+    auxiliary:
+      - "#1ED760"
+  typography:
+    baseSize: "14px"
+    scale: 1.333
+  spacing:
+    unit: "8px"
+  radius:
+    base: "8px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - avatar
+    - modal
+    - badge
+    - player-control
+    - media-card

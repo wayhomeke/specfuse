@@ -3,9 +3,10 @@ required:
   - id
   - name
   - category
+  - intent
   - dimensions
   - anchors
-  - template
+  - structure
 properties:
   id:
     type: string
@@ -24,6 +25,19 @@ properties:
       - marketing
       - form-heavy
       - content
+  intent:
+    type: object
+    required:
+      - mood
+      - density
+      - philosophy
+    properties:
+      mood:
+        type: string
+      density:
+        type: string
+      philosophy:
+        type: string
   dimensions:
     type: object
     required:
@@ -56,16 +70,67 @@ properties:
   anchors:
     type: object
     required:
-      - primary
-      - auxiliary
+      - colors
+      - typography
+      - spacing
+      - radius
     properties:
-      primary:
-        type: string
-      auxiliary:
+      colors:
+        type: object
+        required:
+          - primary
+          - auxiliary
+        properties:
+          primary:
+            type: string
+            pattern: "^#[0-9a-fA-F]{6}$"
+          auxiliary:
+            type: array
+            items:
+              type: string
+              pattern: "^#[0-9a-fA-F]{6}$"
+            minItems: 1
+            maxItems: 2
+      typography:
+        type: object
+        required:
+          - baseSize
+          - scale
+        properties:
+          baseSize:
+            type: string
+            pattern: "^\\d+px$"
+          scale:
+            type: number
+            exclusiveMinimum: 1.0
+            exclusiveMaximum: 2.0
+      spacing:
+        type: object
+        required:
+          - unit
+        properties:
+          unit:
+            type: string
+            pattern: "^\\d+px$"
+      radius:
+        type: object
+        required:
+          - base
+        properties:
+          base:
+            type: string
+            pattern: "^\\d+px$"
+  structure:
+    type: object
+    required:
+      - requiredSections
+      - componentTokens
+    properties:
+      requiredSections:
         type: array
         items:
           type: string
-        minItems: 1
-        maxItems: 2
-  template:
-    type: string
+      componentTokens:
+        type: array
+        items:
+          type: string

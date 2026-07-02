@@ -1,34 +1,43 @@
 id: content-blog
 name: Content Blog
 category: content
+intent:
+  mood: Calm and readable — typography-first editorial aesthetic
+  density: Very low density, maximizes reading comfort and line length control
+  philosophy: Text is king; generous margins, optimal measure (65-75 characters), and clear type hierarchy create effortless reading
 dimensions:
   colorTemp: 3
-  lightness: 5
-  density: 5
+  lightness: 4
+  density: 4
   borderRadius: 2
   tone: 3
 anchors:
-  primary: Medium
-  auxiliary:
-    - Substack
-    - Ghost
-template: |
-  tokens:
-    colors:
-      primary: "#292929"
-      background: "#FFFFFF"
-      surface: "#FAFAFA"
-      text: "#292929"
-      accent: "#1A8917"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 16, 24, 32, 48, 64, 96]
-    radius:
-      default: "4px"
-      large: "8px"
-    typography:
-      fontFamily: "'Georgia', 'Charter', serif"
-      scale: [14, 16, 18, 21, 26, 34, 42]
-    density:
-      compact: false
-      tableRowHeight: "48px"
+  colors:
+    primary: "#1A1A1A"
+    auxiliary:
+      - "#6366F1"
+  typography:
+    baseSize: "18px"
+    scale: 1.333
+  spacing:
+    unit: "8px"
+  radius:
+    base: "4px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - blockquote
+    - code-block
+    - badge
+    - table
+    - navigation

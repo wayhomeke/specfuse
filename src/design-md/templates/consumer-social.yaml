@@ -1,34 +1,43 @@
 id: consumer-social
 name: Consumer Social
 category: consumer
+intent:
+  mood: Warm and conversational — approachable without being childish
+  density: Medium density, content feed with clear hierarchy between items
+  philosophy: People-centric layouts where avatars and names anchor every interaction
 dimensions:
-  colorTemp: 4
+  colorTemp: 3
   lightness: 4
-  density: 4
-  borderRadius: 5
-  tone: 5
+  density: 3
+  borderRadius: 4
+  tone: 4
 anchors:
-  primary: Instagram
-  auxiliary:
-    - TikTok
-    - Threads
-template: |
-  tokens:
-    colors:
-      primary: "#E1306C"
-      background: "#FFFFFF"
-      surface: "#FAFAFA"
-      text: "#262626"
-      accent: "#833AB4"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 12, 16, 24, 32, 48, 64]
-    radius:
-      default: "16px"
-      large: "24px"
-    typography:
-      fontFamily: "'-apple-system', 'Segoe UI', sans-serif"
-      scale: [12, 14, 16, 18, 24, 32]
-    density:
-      compact: false
-      tableRowHeight: "56px"
+  colors:
+    primary: "#1DA1F2"
+    auxiliary:
+      - "#FF6B6B"
+  typography:
+    baseSize: "15px"
+    scale: 1.25
+  spacing:
+    unit: "4px"
+  radius:
+    base: "12px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - avatar
+    - modal
+    - badge
+    - feed-item
+    - comment
