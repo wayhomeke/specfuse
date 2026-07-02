@@ -1,34 +1,43 @@
 id: marketing-creative
 name: Marketing Creative
 category: marketing
+intent:
+  mood: Bold and expressive — breaks grid expectations to create memorability
+  density: Very low density, oversized type and asymmetric layouts demand attention
+  philosophy: Rules exist to be broken intentionally; creative risk signals brand confidence
 dimensions:
   colorTemp: 4
-  lightness: 3
+  lightness: 4
   density: 5
   borderRadius: 4
   tone: 5
 anchors:
-  primary: Figma.com
-  auxiliary:
-    - Framer.com
-    - Lottie
-template: |
-  tokens:
-    colors:
-      primary: "#A259FF"
-      background: "#1E1E1E"
-      surface: "#2C2C2C"
-      text: "#FFFFFF"
-      accent: "#FF7262"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 16, 24, 32, 48, 64, 96, 128]
-    radius:
-      default: "12px"
-      large: "20px"
-    typography:
-      fontFamily: "'Satoshi', 'Inter', sans-serif"
-      scale: [14, 16, 20, 24, 32, 48, 64, 80]
-    density:
-      compact: false
-      tableRowHeight: "48px"
+  colors:
+    primary: "#FF3366"
+    auxiliary:
+      - "#FFCC00"
+  typography:
+    baseSize: "18px"
+    scale: 1.618
+  spacing:
+    unit: "8px"
+  radius:
+    base: "16px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - badge
+    - navigation
+    - hero-section
+    - marquee
+    - footer
