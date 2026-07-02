@@ -1,0 +1,34 @@
+id: marketing-corporate
+name: Marketing Corporate
+category: marketing
+dimensions:
+  colorTemp: 2
+  lightness: 4
+  density: 4
+  borderRadius: 3
+  tone: 2
+anchors:
+  primary: Stripe.com
+  auxiliary:
+    - Linear.app
+    - Vercel.com
+template: |
+  tokens:
+    colors:
+      primary: "#0A2540"
+      background: "#FFFFFF"
+      surface: "#F6F9FC"
+      text: "#0A2540"
+      accent: "#635BFF"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 16, 24, 32, 48, 64, 96, 128]
+    radius:
+      default: "8px"
+      large: "12px"
+    typography:
+      fontFamily: "'Inter', -apple-system, sans-serif"
+      scale: [14, 16, 18, 24, 32, 48, 64]
+    density:
+      compact: false
+      tableRowHeight: "48px"

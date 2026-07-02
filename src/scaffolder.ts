@@ -8,6 +8,7 @@ import { composeGitignore } from './templates/gitignore.js';
 import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeGrillMeSkill } from './templates/grill-me-skill.js';
+import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -135,6 +136,16 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await createDir(path.join(targetDir, '.claude', 'skills', 'grill-me'));
     await writeText(grillSkillPath, composeGrillMeSkill());
   }
+
+  // Design-md skill
+  spinner.text = 'Writing .claude/skills/design-md/SKILL.md...';
+  const designMdSkillPath = path.join(targetDir, '.claude', 'skills', 'design-md', 'SKILL.md');
+  const existingDesignMdSkill = await readTextSafe(designMdSkillPath);
+  if (!existingDesignMdSkill) {
+    await createDir(path.join(targetDir, '.claude', 'skills', 'design-md'));
+    await writeText(designMdSkillPath, composeDesignMdSkill());
+  }
+  spinner.succeed('Installed design-md skill');
 
   // OpenSpec
   if (config.initOpenspec) {
