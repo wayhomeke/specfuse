@@ -1,6 +1,10 @@
 id: saas-dashboard
 name: SaaS Dashboard
 category: dashboard
+intent:
+  mood: Clean and professional — modern B2B aesthetic
+  density: Medium density, balanced white space and information
+  philosophy: Clarity-first design that builds user trust through consistent spatial rhythm
 dimensions:
   colorTemp: 2
   lightness: 3
@@ -8,27 +12,32 @@ dimensions:
   borderRadius: 3
   tone: 2
 anchors:
-  primary: Linear
-  auxiliary:
-    - Vercel Dashboard
-    - Stripe Dashboard
-template: |
-  tokens:
-    colors:
-      primary: "#635BFF"
-      background: "#FFFFFF"
-      surface: "#F7F8FA"
-      text: "#1A1A2E"
-      accent: "#0EA5E9"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 12, 16, 24, 32, 48, 64]
-    radius:
-      default: "8px"
-      large: "12px"
-    typography:
-      fontFamily: "'Inter', -apple-system, sans-serif"
-      scale: [12, 13, 14, 16, 20, 24, 30]
-    density:
-      compact: false
-      tableRowHeight: "44px"
+  colors:
+    primary: "#635BFF"
+    auxiliary:
+      - "#0EA5E9"
+  typography:
+    baseSize: "14px"
+    scale: 1.25
+  spacing:
+    unit: "4px"
+  radius:
+    base: "8px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - table
+    - sidebar
+    - modal
+    - badge
+    - avatar

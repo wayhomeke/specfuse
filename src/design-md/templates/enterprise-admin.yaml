@@ -1,21 +1,21 @@
-id: internal-tool
-name: Internal Tool
+id: enterprise-admin
+name: Enterprise Admin
 category: internal-tool
 intent:
-  mood: Functional and utilitarian — prioritizes efficiency over aesthetics
-  density: High density, compact layouts with maximum information per screen
-  philosophy: Tools for power users who value speed and keyboard shortcuts over visual delight
+  mood: Serious and structured — conveys control and authority over complex systems
+  density: High density, data tables and multi-panel layouts for admin operations
+  philosophy: Admin panels serve operators who manage resources at scale; batch actions and bulk views over single-item flows
 dimensions:
-  colorTemp: 2
-  lightness: 2
-  density: 2
+  colorTemp: 1
+  lightness: 3
+  density: 1
   borderRadius: 2
   tone: 1
 anchors:
   colors:
-    primary: "#4A6CF7"
+    primary: "#1E40AF"
     auxiliary:
-      - "#7C8DFF"
+      - "#6366F1"
   typography:
     baseSize: "13px"
     scale: 1.2
@@ -40,4 +40,5 @@ structure:
     - sidebar
     - modal
     - badge
-    - tooltip
+    - breadcrumb
+    - dropdown
