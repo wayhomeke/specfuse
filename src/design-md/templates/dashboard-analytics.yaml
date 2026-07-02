@@ -1,0 +1,34 @@
+id: dashboard-analytics
+name: Dashboard Analytics
+category: dashboard
+dimensions:
+  colorTemp: 2
+  lightness: 2
+  density: 1
+  borderRadius: 2
+  tone: 1
+anchors:
+  primary: Grafana
+  auxiliary:
+    - Datadog
+    - New Relic
+template: |
+  tokens:
+    colors:
+      primary: "#FF6600"
+      background: "#111217"
+      surface: "#1A1C23"
+      text: "#D8D9DA"
+      accent: "#73BF69"
+    spacing:
+      base: "4px"
+      scale: [2, 4, 8, 12, 16, 24, 32]
+    radius:
+      default: "4px"
+      large: "6px"
+    typography:
+      fontFamily: "'Inter', 'Roboto', sans-serif"
+      scale: [10, 11, 12, 14, 16, 20, 24]
+    density:
+      compact: true
+      tableRowHeight: "32px"

@@ -1,0 +1,34 @@
+id: content-blog
+name: Content Blog
+category: content
+dimensions:
+  colorTemp: 3
+  lightness: 5
+  density: 5
+  borderRadius: 2
+  tone: 3
+anchors:
+  primary: Medium
+  auxiliary:
+    - Substack
+    - Ghost
+template: |
+  tokens:
+    colors:
+      primary: "#292929"
+      background: "#FFFFFF"
+      surface: "#FAFAFA"
+      text: "#292929"
+      accent: "#1A8917"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 16, 24, 32, 48, 64, 96]
+    radius:
+      default: "4px"
+      large: "8px"
+    typography:
+      fontFamily: "'Georgia', 'Charter', serif"
+      scale: [14, 16, 18, 21, 26, 34, 42]
+    density:
+      compact: false
+      tableRowHeight: "48px"

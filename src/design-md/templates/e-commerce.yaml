@@ -1,0 +1,34 @@
+id: e-commerce
+name: E-Commerce Platform
+category: e-commerce
+dimensions:
+  colorTemp: 4
+  lightness: 4
+  density: 3
+  borderRadius: 4
+  tone: 4
+anchors:
+  primary: Shopify
+  auxiliary:
+    - Gumroad
+    - Lemonsqueezy
+template: |
+  tokens:
+    colors:
+      primary: "#16A34A"
+      background: "#FFFFFF"
+      surface: "#F9FAFB"
+      text: "#111827"
+      accent: "#F59E0B"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 12, 16, 24, 32, 48, 64]
+    radius:
+      default: "12px"
+      large: "16px"
+    typography:
+      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
+      scale: [12, 14, 16, 20, 24, 32, 40]
+    density:
+      compact: false
+      tableRowHeight: "52px"

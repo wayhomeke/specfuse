@@ -1,0 +1,34 @@
+id: marketing-creative
+name: Marketing Creative
+category: marketing
+dimensions:
+  colorTemp: 4
+  lightness: 3
+  density: 5
+  borderRadius: 4
+  tone: 5
+anchors:
+  primary: Figma.com
+  auxiliary:
+    - Framer.com
+    - Lottie
+template: |
+  tokens:
+    colors:
+      primary: "#A259FF"
+      background: "#1E1E1E"
+      surface: "#2C2C2C"
+      text: "#FFFFFF"
+      accent: "#FF7262"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 16, 24, 32, 48, 64, 96, 128]
+    radius:
+      default: "12px"
+      large: "20px"
+    typography:
+      fontFamily: "'Satoshi', 'Inter', sans-serif"
+      scale: [14, 16, 20, 24, 32, 48, 64, 80]
+    density:
+      compact: false
+      tableRowHeight: "48px"

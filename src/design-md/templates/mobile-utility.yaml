@@ -1,0 +1,33 @@
+id: mobile-utility
+name: Mobile Utility
+category: mobile
+dimensions:
+  colorTemp: 2
+  lightness: 4
+  density: 3
+  borderRadius: 4
+  tone: 2
+anchors:
+  primary: Apple Health
+  auxiliary:
+    - Google Maps
+template: |
+  tokens:
+    colors:
+      primary: "#007AFF"
+      background: "#F2F2F7"
+      surface: "#FFFFFF"
+      text: "#1C1C1E"
+      accent: "#34C759"
+    spacing:
+      base: "4px"
+      scale: [4, 8, 12, 16, 20, 24, 32, 44]
+    radius:
+      default: "10px"
+      large: "14px"
+    typography:
+      fontFamily: "'-apple-system', 'SF Pro', sans-serif"
+      scale: [11, 13, 15, 17, 20, 22, 28, 34]
+    density:
+      compact: false
+      tableRowHeight: "44px"
