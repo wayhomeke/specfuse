@@ -1,12 +1,12 @@
 export function composeDesignMdSkill(): string {
   return `---
 name: design-md
-description: Generate a DESIGN.md file for the current project via interactive questionnaire and archetype matching. Use for brownfield projects that need design tokens.
+description: Generate a DESIGN-TOKENS.md file for the current project via interactive questionnaire and archetype matching. Use for brownfield projects that need design tokens.
 ---
 
-# DESIGN.md Generation Skill
+# DESIGN-TOKENS.md Generation Skill
 
-Generate a comprehensive \`DESIGN.md\` design token document for the current project.
+Generate a comprehensive \`DESIGN-TOKENS.md\` design token document for the current project.
 
 **Trigger:** User invokes \`/design-md\` manually, or auto-triggered after \`specfuse init\` for frontend projects.
 
@@ -182,7 +182,7 @@ Cross-reference format: \`"{category.token}"\` where category is one of colors, 
 
 ## §4 Output Format
 
-Generate \`DESIGN.md\` with two parts:
+Generate \`DESIGN-TOKENS.md\` with two parts:
 
 ### YAML Front Matter
 
@@ -228,15 +228,15 @@ The Markdown body follows this structure:
 
 ## §5 Backup & Overwrite Protection
 
-Before writing \`DESIGN.md\`:
+Before writing \`DESIGN-TOKENS.md\`:
 
-1. Check if \`DESIGN.md\` already exists in the target directory
+1. Check if \`DESIGN-TOKENS.md\` already exists in the target directory
 2. If it exists:
-   - Ask for overwrite confirmation: "DESIGN.md already exists. Overwrite? (A .bak backup will be created)"
-   - On confirmation: copy existing file to \`DESIGN.md.bak\`
+   - Ask for overwrite confirmation: "DESIGN-TOKENS.md already exists. Overwrite? (A .bak backup will be created)"
+   - On confirmation: copy existing file to \`DESIGN-TOKENS.md.bak\`
    - On rejection: abort without changes
 3. If it does not exist: proceed directly
 
-Never silently overwrite an existing DESIGN.md file.
+Never silently overwrite an existing DESIGN-TOKENS.md file.
 `;
 }
