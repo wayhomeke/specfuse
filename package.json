@@ -1,6 +1,6 @@
 {
   "name": "create-specfuse",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Scaffold projects with OpenSpec + Superpowers fusion methodology",
   "type": "module",
   "bin": {

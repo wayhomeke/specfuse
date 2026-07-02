@@ -1,6 +1,10 @@
 id: content-docs
 name: Content Documentation
 category: content
+intent:
+  mood: Clear and scannable — structure reveals content hierarchy instantly
+  density: Medium density, sidebar + content + on-page nav three-column pattern
+  philosophy: Documentation is wayfinding; persistent navigation and deep linking matter more than visual flair
 dimensions:
   colorTemp: 2
   lightness: 4
@@ -8,27 +12,33 @@ dimensions:
   borderRadius: 2
   tone: 2
 anchors:
-  primary: Docusaurus
-  auxiliary:
-    - GitBook
-    - ReadTheDocs
-template: |
-  tokens:
-    colors:
-      primary: "#2E8555"
-      background: "#FFFFFF"
-      surface: "#F5F6F7"
-      text: "#1C1E21"
-      accent: "#25C2A0"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 12, 16, 24, 32, 48, 64]
-    radius:
-      default: "4px"
-      large: "8px"
-    typography:
-      fontFamily: "'-apple-system', 'Segoe UI', sans-serif"
-      scale: [12, 14, 16, 18, 20, 24, 30]
-    density:
-      compact: false
-      tableRowHeight: "40px"
+  colors:
+    primary: "#0F172A"
+    auxiliary:
+      - "#3B82F6"
+  typography:
+    baseSize: "16px"
+    scale: 1.25
+  spacing:
+    unit: "4px"
+  radius:
+    base: "6px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - sidebar
+    - code-block
+    - badge
+    - table
+    - breadcrumb
+    - tab

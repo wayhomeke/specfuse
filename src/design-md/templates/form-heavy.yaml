@@ -1,34 +1,44 @@
 id: form-heavy
-name: Form-Heavy Application
+name: Form Heavy
 category: form-heavy
+intent:
+  mood: Structured and reassuring — guides users through complex multi-step flows
+  density: Medium density, forms need vertical breathing room for label-input-error stacking
+  philosophy: Progressive disclosure reduces cognitive load; validate inline, never surprise at submission
 dimensions:
-  colorTemp: 3
+  colorTemp: 2
   lightness: 4
   density: 3
   borderRadius: 3
   tone: 2
 anchors:
-  primary: Typeform
-  auxiliary:
-    - Notion Forms
-    - Airtable
-template: |
-  tokens:
-    colors:
-      primary: "#6366F1"
-      background: "#FAFAFA"
-      surface: "#FFFFFF"
-      text: "#374151"
-      accent: "#8B5CF6"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 12, 16, 24, 32, 48, 64]
-    radius:
-      default: "8px"
-      large: "12px"
-    typography:
-      fontFamily: "'Inter', -apple-system, sans-serif"
-      scale: [12, 14, 16, 18, 24, 30]
-    density:
-      compact: false
-      tableRowHeight: "48px"
+  colors:
+    primary: "#2563EB"
+    auxiliary:
+      - "#10B981"
+  typography:
+    baseSize: "14px"
+    scale: 1.2
+  spacing:
+    unit: "4px"
+  radius:
+    base: "6px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - select
+    - checkbox
+    - radio
+    - modal
+    - stepper
+    - alert

@@ -1,34 +1,44 @@
 id: e-commerce
-name: E-Commerce Platform
+name: E-Commerce
 category: e-commerce
+intent:
+  mood: Confident and inviting — drives action without feeling pushy
+  density: Medium density, product cards with clear pricing and CTA hierarchy
+  philosophy: Every element earns its space by contributing to the purchase decision; trust signals are never decorative
 dimensions:
-  colorTemp: 4
+  colorTemp: 3
   lightness: 4
   density: 3
-  borderRadius: 4
-  tone: 4
+  borderRadius: 3
+  tone: 3
 anchors:
-  primary: Shopify
-  auxiliary:
-    - Gumroad
-    - Lemonsqueezy
-template: |
-  tokens:
-    colors:
-      primary: "#16A34A"
-      background: "#FFFFFF"
-      surface: "#F9FAFB"
-      text: "#111827"
-      accent: "#F59E0B"
-    spacing:
-      base: "4px"
-      scale: [4, 8, 12, 16, 24, 32, 48, 64]
-    radius:
-      default: "12px"
-      large: "16px"
-    typography:
-      fontFamily: "'Plus Jakarta Sans', -apple-system, sans-serif"
-      scale: [12, 14, 16, 20, 24, 32, 40]
-    density:
-      compact: false
-      tableRowHeight: "52px"
+  colors:
+    primary: "#FF6900"
+    auxiliary:
+      - "#1A1A1A"
+  typography:
+    baseSize: "16px"
+    scale: 1.25
+  spacing:
+    unit: "4px"
+  radius:
+    base: "8px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - badge
+    - modal
+    - product-card
+    - price-tag
+    - rating
+    - breadcrumb

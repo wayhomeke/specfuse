@@ -1,6 +1,10 @@
 id: dashboard-analytics
 name: Dashboard Analytics
 category: dashboard
+intent:
+  mood: Data-focused and precise — every pixel serves information delivery
+  density: Very high density, optimized for data visualization and number scanning
+  philosophy: Dark interfaces reduce eye strain for long monitoring sessions; accent colors encode meaning not decoration
 dimensions:
   colorTemp: 2
   lightness: 2
@@ -8,27 +12,32 @@ dimensions:
   borderRadius: 2
   tone: 1
 anchors:
-  primary: Grafana
-  auxiliary:
-    - Datadog
-    - New Relic
-template: |
-  tokens:
-    colors:
-      primary: "#FF6600"
-      background: "#111217"
-      surface: "#1A1C23"
-      text: "#D8D9DA"
-      accent: "#73BF69"
-    spacing:
-      base: "4px"
-      scale: [2, 4, 8, 12, 16, 24, 32]
-    radius:
-      default: "4px"
-      large: "6px"
-    typography:
-      fontFamily: "'Inter', 'Roboto', sans-serif"
-      scale: [10, 11, 12, 14, 16, 20, 24]
-    density:
-      compact: true
-      tableRowHeight: "32px"
+  colors:
+    primary: "#FF6600"
+    auxiliary:
+      - "#73BF69"
+  typography:
+    baseSize: "12px"
+    scale: 1.2
+  spacing:
+    unit: "4px"
+  radius:
+    base: "4px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - table
+    - chart
+    - badge
+    - tooltip
+    - stat-card

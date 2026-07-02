@@ -1,6 +1,10 @@
 id: dashboard-monitoring
 name: Dashboard Monitoring
 category: dashboard
+intent:
+  mood: Alert-driven and status-aware — visual hierarchy serves urgency levels
+  density: Maximum density, real-time feeds with minimal chrome
+  philosophy: Monospace typography and tight grids for pattern recognition; color = system state, not brand
 dimensions:
   colorTemp: 1
   lightness: 1
@@ -8,27 +12,32 @@ dimensions:
   borderRadius: 1
   tone: 1
 anchors:
-  primary: PagerDuty
-  auxiliary:
-    - Uptime Robot
-    - StatusPage
-template: |
-  tokens:
-    colors:
-      primary: "#06AC38"
-      background: "#0D1117"
-      surface: "#161B22"
-      text: "#C9D1D9"
-      accent: "#F85149"
-    spacing:
-      base: "4px"
-      scale: [2, 4, 8, 12, 16, 24, 32]
-    radius:
-      default: "3px"
-      large: "4px"
-    typography:
-      fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
-      scale: [10, 11, 12, 14, 16, 18, 22]
-    density:
-      compact: true
-      tableRowHeight: "28px"
+  colors:
+    primary: "#06AC38"
+    auxiliary:
+      - "#F85149"
+  typography:
+    baseSize: "12px"
+    scale: 1.15
+  spacing:
+    unit: "4px"
+  radius:
+    base: "3px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - table
+    - badge
+    - alert
+    - tooltip
+    - status-indicator
