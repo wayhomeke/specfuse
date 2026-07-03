@@ -49,7 +49,9 @@ my-app/
 ├── CLAUDE.md                    # 融合方法论 + 流水线纪律规则
 ├── .gitignore                   # 栈特化忽略规则
 ├── .claude/
-│   └── settings.local.json      # 权限白名单
+│   ├── settings.local.json      # 权限白名单
+│   └── skills/
+│       └── design-md/           # 设计令牌生成技能
 └── openspec/
     ├── config.yaml              # 栈特化 spec 规则
     ├── specs/
@@ -57,7 +59,15 @@ my-app/
         └── archive/
 ```
 
+脚手架完成后自动将项目目录加入 Claude Code 信任列表，无需手动确认。
+
 如果检测到已安装 `@fission-ai/openspec`，还会自动注册 OpenSpec 技能和 `/opsx:*` 命令。
+
+### Design Tokens（前端项目）
+
+对涉及 UI/前端的项目，流水线在 brainstorming 阶段会自动触发 `/design-md` 技能，通过问卷生成 `DESIGN-TOKENS.md`——定义色彩、字体、间距、圆角等设计变量，确保实现阶段的视觉一致性。
+
+也可手动调用 `/design-md` 为已有项目生成设计令牌。
 
 ---
 
@@ -195,6 +205,14 @@ npm install
 npm run build
 npm test
 ```
+
+生成设计模版预览页面（输出到 `docs/samples/`）：
+
+```bash
+npm run samples
+```
+
+16 个内置模版各生成一个自包含 HTML 页面，展示色彩系统、字体阶梯、间距、圆角和组件预览。打开 `docs/samples/index.html` 查看全部模版。
 
 新增栈模板：在 `src/stacks/` 下创建文件并注册到 `src/stacks/index.ts`。
 
