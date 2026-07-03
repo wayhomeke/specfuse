@@ -1,6 +1,7 @@
 import path from 'node:path';
-import { access, readFile, readdir, copyFile } from 'node:fs/promises';
+import { access, readFile, writeFile, readdir, copyFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
+import os from 'node:os';
 import chalk from 'chalk';
 import ora from 'ora';
 import type { ProjectConfig } from './types.js';
@@ -23,6 +24,21 @@ function hasSuperpowersPlugin(): boolean {
   } catch {
     return false;
   }
+}
+
+async function trustDirectory(absPath: string): Promise<void> {
+  const claudeJsonPath = path.join(os.homedir(), '.claude.json');
+  let data: Record<string, any> = {};
+  try {
+    const raw = await readFile(claudeJsonPath, 'utf-8');
+    data = JSON.parse(raw);
+  } catch {
+    // file missing or malformed — start fresh
+  }
+  if (!data.projects) data.projects = {};
+  if (!data.projects[absPath]) data.projects[absPath] = {};
+  data.projects[absPath].hasTrustDialogAccepted = true;
+  await writeFile(claudeJsonPath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -229,6 +245,13 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
         );
       }
     }
+  }
+
+  // Trust the project directory so .claude/settings.local.json permissions take effect
+  try {
+    await trustDirectory(path.resolve(targetDir));
+  } catch {
+    // non-fatal: user can accept trust dialog manually
   }
 
   spinner.succeed(isExisting ? 'SpecFuse initialized in current directory!' : 'Project scaffolded!');
