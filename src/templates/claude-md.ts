@@ -40,6 +40,7 @@ When \`/opsx:propose\` is invoked:
    - Ask ONE question at a time (Socratic method). Never fire multiple questions in a single turn.
    - Proactively present 2-3 architectural alternatives with explicit trade-offs.
    - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
+   - **If brainstorming involved frontend/UI design intent:** MUST invoke \`/design-md\` skill NOW (before generating artifacts). Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
 
 2. Every proposal artifact MUST contain:
@@ -58,6 +59,7 @@ When \`/opsx:new\` is invoked:
 2. **BEFORE drafting the first artifact (proposal), MUST activate Superpowers \`brainstorming\`.**
    - Use Socratic questioning to clarify scope, non-goals, and trade-offs.
    - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
+   - **If brainstorming involved frontend/UI design intent:** MUST invoke \`/design-md\` skill NOW (before drafting proposal). Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after the user confirms the approach, draft the proposal artifact.
 
 3. When \`/opsx:continue\` is invoked to advance to the next artifact:
