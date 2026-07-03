@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc && mkdir -p dist/design-md && cp -r src/design-md/templates dist/design-md/templates",
+    "samples": "npx tsx scripts/generate-samples.ts",
     "test": "vitest run",
     "dev": "tsc --watch"
   },
