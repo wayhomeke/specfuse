@@ -1,1 +1,1 @@
-{"version":3,"file":"claude-md.d.ts","sourceRoot":"","sources":["../../src/templates/claude-md.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAgB,eAAe,EAAE,MAAM,aAAa,CAAC;AA0JjE,wBAAgB,iBAAiB,IAAI,MAAM,CA+D1C;AAaD,wBAAgB,eAAe,CAAC,GAAG,EAAE,eAAe,GAAG,MAAM,CAkC5D"}
+{"version":3,"file":"claude-md.d.ts","sourceRoot":"","sources":["../../src/templates/claude-md.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAgB,eAAe,EAAE,MAAM,aAAa,CAAC;AAmKjE,wBAAgB,iBAAiB,IAAI,MAAM,CAgE1C;AAaD,wBAAgB,eAAe,CAAC,GAAG,EAAE,eAAe,GAAG,MAAM,CAkC5D"}
