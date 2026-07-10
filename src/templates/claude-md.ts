@@ -97,6 +97,15 @@ function renderApplyPhase(stack: StackProfile): string {
 
 When \`/opsx:apply\` is invoked:
 
+0. **Model Switch Checkpoint (模型切换节拍)**
+   - 进入实施阶段前，AI MUST 使用 AskUserQuestion 工具询问用户是否切换模型。
+   - 选项设置：
+     - 选项 1: "继续使用当前模型"（描述：不切换，直接开始实施）
+     - Other 输入框提示："输入切换命令，如 /model sonnet、/model glm、/model ds"
+   - 如果用户选择 "继续使用当前模型"，直接进入后续步骤。
+   - 如果用户通过 Other 输入了切换命令，AI 执行该命令完成切换后再继续。
+   - 此步骤不可跳过，必须等待用户明确选择后才执行后续步骤。
+
 1. **MUST activate Superpowers \`test-driven-development\` as a pre-requisite skill.**
    - For every task in \`tasks.md\`, follow strict Red-Green-Refactor:
      a. Write a failing test FIRST
@@ -214,6 +223,7 @@ Modified artifacts: <list of changed files>
 Consistency scan: ✅ PASS
 
 Run /opsx:apply to start implementation.
+💡 Tip: 进入 apply 时会提示是否切换为编码优化型模型。
 \`\`\``;
 }
 
