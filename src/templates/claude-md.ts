@@ -102,8 +102,8 @@ When \`/opsx:apply\` is invoked:
    - 选项设置：
      - 选项 1: "继续使用当前模型"（描述：不切换，直接开始实施）
      - Other 输入框提示："输入切换命令，如 /model sonnet、/model glm、/model ds"
-   - 如果用户选择 "继续使用当前模型"，直接进入后续步骤。
-   - 如果用户通过 Other 输入了切换命令，AI 执行该命令完成切换后再继续。
+   - 如果用户选择 "继续使用当前模型"，直接进入步骤 1。
+   - 如果用户通过 Other 输入了模型名称，AI 提示用户手动执行 \`/model <name>\` 命令，然后重新执行 \`/opsx:apply\` 以从步骤 1 开始。AI 此时 MUST 停止，不继续执行后续步骤。
    - 此步骤不可跳过，必须等待用户明确选择后才执行后续步骤。
 
 1. **MUST activate Superpowers \`test-driven-development\` as a pre-requisite skill.**
