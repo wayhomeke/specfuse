@@ -1,14 +1,14 @@
 export function composeDesignMdSkill(): string {
   return `---
 name: design-md
-description: Generate a DESIGN-TOKENS.md file for the current project via interactive questionnaire and archetype matching. Use for brownfield projects that need design tokens.
+description: Generate a DESIGN-TOKENS.md file for the current project via interactive questionnaire and archetype matching. Auto-triggered at brainstorming end when the change ships a user-facing UI (three-gate test in CLAUDE.md), or invoked manually via /design-md for any project needing design tokens.
 ---
 
 # DESIGN-TOKENS.md Generation Skill
 
 Generate a comprehensive \`DESIGN-TOKENS.md\` design token document for the current project.
 
-**Trigger:** User invokes \`/design-md\` manually, or auto-triggered after \`specfuse init\` for frontend projects.
+**Trigger:** (1) Auto-triggered at brainstorming end when the three-gate test in CLAUDE.md fires — i.e. the change or project ships a UI consumed by an end user (new WebUI / desktop GUI / mobile interface / embedded frontend), no existing DESIGN-TOKENS.md exempts it. For weak visual intent, state that visual design was not discussed in brainstorming before running the questionnaire. (2) User invokes \`/design-md\` manually in a brownfield project.
 
 ---
 
