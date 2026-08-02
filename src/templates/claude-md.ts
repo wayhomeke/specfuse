@@ -26,7 +26,16 @@ function renderCommitConvention(): string {
 function renderDesignTokensRules(): string {
   return `## DESIGN-TOKENS.md Generation Rules
 
-- **Brainstorming auto-trigger:** When brainstorming involves frontend/UI design intent, brainstorming 阶段结束后 MUST invoke \`/design-md\` skill FIRST. \`/design-md\` completes questionnaire and generates DESIGN-TOKENS.md, THEN resume the OpenSpec artifact flow (proposal → design → specs → tasks).
+DESIGN-TOKENS.md 触发判定在 brainstorming 结束时执行，采用三道门依次评估（命中即停）：
+
+- **Brainstorming auto-trigger (three-gate test, evaluated at brainstorming end):**
+  - **Gate 1 — Primary trigger:** Does this change or project ship a UI consumed by an end user? Trigger if ANY: new WebUI / desktop GUI / mobile interface; modifying the visual presentation layer of an existing UI; deliverable embeds a frontend (SPA / templates / \`go:embed\` web assets). Examples — hit: a ping tool with a browser UI; miss: a pure API / CLI / backend service / library / script.
+  - **Gate 2 — Exemption:** Skip if visual decisions are already settled elsewhere: a DESIGN-TOKENS.md already exists at project root AND this change does not touch the visual presentation layer; OR the change only moves API/logic/data with the UI visual layer fully unchanged; OR the project has a design system / component library this change merely consumes.
+  - **Gate 3 — Intensity calibration (not a switch):**
+    - **Strong intent** (user actively discussed palette / dark mode / brand archetype / component visual language / design references / mood during brainstorming) → invoke \`/design-md\` NOW. Questionnaire answers already have grounding in the brainstorming record.
+    - **Weak intent** (only "has UI" was settled, no visual discussion) → STILL invoke \`/design-md\` NOW (Gate 1 hit), but BEFORE running the questionnaire, explicitly tell the user: "This change includes a user-facing UI, so DESIGN-TOKENS.md will be generated. However, visual design was NOT discussed during brainstorming — the following questionnaire will capture those decisions now." Then run the questionnaire. Do NOT silently extract answers the user never expressed.
+  - **Default:** Gate 1 misses → do not invoke \`/design-md\`; resume the artifact flow directly.
+- **Why trigger on "has UI" not "user expressed visual intent":** A WebUI project's visual tokens are an inevitable consequence of building the UI, not a function of whether the user raised visual topics in brainstorming. design.md and tasks.md reference DESIGN-TOKENS.md (archetype, fonts, status colors, primary scale), so the token file must exist before those artifacts are drafted — deferring generation to after artifacts creates forward references and breaks the Grill consistency scan.
 - **Brownfield (manual):** Invoke \`/design-md\` to generate DESIGN-TOKENS.md for an existing project. The skill is installed at \`.claude/skills/design-md/SKILL.md\`.
 - **Never overwrite silently:** If DESIGN-TOKENS.md already exists, always prompt for confirmation and create a \`.bak\` backup before overwriting.`;
 }
@@ -40,7 +49,7 @@ When \`/opsx:propose\` is invoked:
    - Ask ONE question at a time (Socratic method). Never fire multiple questions in a single turn.
    - Proactively present 2-3 architectural alternatives with explicit trade-offs.
    - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
-   - **If brainstorming involved frontend/UI design intent:** MUST invoke \`/design-md\` skill NOW (before generating artifacts). Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
+   - **If the three-gate test (see DESIGN-TOKENS.md Generation Rules above) triggers:** MUST invoke \`/design-md\` skill NOW (before generating artifacts). For weak intent, state that visual design was not discussed in brainstorming before running the questionnaire. Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
 
 2. Every proposal artifact MUST contain:
@@ -59,7 +68,7 @@ When \`/opsx:new\` is invoked:
 2. **BEFORE drafting the first artifact (proposal), MUST activate Superpowers \`brainstorming\`.**
    - Use Socratic questioning to clarify scope, non-goals, and trade-offs.
    - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to \`docs/superpowers/specs/\`. All spec files are managed exclusively by OpenSpec.
-   - **If brainstorming involved frontend/UI design intent:** MUST invoke \`/design-md\` skill NOW (before drafting proposal). Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
+   - **If the three-gate test (see DESIGN-TOKENS.md Generation Rules above) triggers:** MUST invoke \`/design-md\` skill NOW (before drafting proposal). For weak intent, state that visual design was not discussed in brainstorming before running the questionnaire. Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after the user confirms the approach, draft the proposal artifact.
 
 3. When \`/opsx:continue\` is invoked to advance to the next artifact:
