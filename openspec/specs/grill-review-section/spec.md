@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Defines the "Pre-Apply Review (Grill)" protocol section that `renderGrillReview()` must emit into generated CLAUDE.md files: review dimensions, blocking classification, backup/rollback, exit commands, soft limit, bidirectional consistency scan, and summary format.
+
+## Requirements
 
 ### Requirement: renderGrillReview function exists
 The system SHALL export a module-internal function `renderGrillReview()` in `src/templates/claude-md.ts` that returns a string containing the complete "Pre-Apply Review (Grill)" markdown section.
@@ -40,11 +44,11 @@ The generated section SHALL instruct the AI to prompt the user with a grill revi
 ---
 
 ### Requirement: Review dimensions listed
-The generated section SHALL list 7 universal review dimensions: scope boundary, error paths, dependency risk, testability, security, performance impact, backward compatibility.
+The generated section SHALL list 8 universal review dimensions: scope boundary, error paths, dependency risk, testability, security, performance impact, backward compatibility, data-flow integrity.
 
 #### Scenario: All dimensions present
 - **WHEN** the grill section content is examined
-- **THEN** it contains all 7 dimension keywords
+- **THEN** it contains all 8 dimension keywords
 
 #### Scenario: Relevance-based selection noted
 - **WHEN** the grill section content is examined
@@ -100,11 +104,11 @@ The generated section SHALL define `grill-stop` and `grill-abort` as unambiguous
 ---
 
 ### Requirement: Soft question limit
-The generated section SHALL specify a soft limit of 15 questions, after which AI self-assesses remaining blocking issues.
+The generated section SHALL specify a soft limit of 9 questions, after which AI self-assesses remaining blocking issues.
 
 #### Scenario: Limit value present
 - **WHEN** the grill section content is examined
-- **THEN** it mentions 15 as the soft question limit
+- **THEN** it mentions 9 as the soft question limit
 
 #### Scenario: Self-assessment behavior
 - **WHEN** the grill section content is examined
@@ -113,11 +117,15 @@ The generated section SHALL specify a soft limit of 15 questions, after which AI
 ---
 
 ### Requirement: Consistency scan at end
-The generated section SHALL require a final consistency scan covering reference integrity, terminology consistency, and logical conflict detection across all artifacts.
+The generated section SHALL require a final consistency scan covering reference integrity, terminology consistency, and logical conflict detection across all artifacts, run bidirectionally (every proposal goal maps to design/specs/tasks forward, and every spec input maps to a declared signature parameter slot in reverse).
 
 #### Scenario: Three scan dimensions present
 - **WHEN** the grill section content is examined
 - **THEN** it lists reference integrity, terminology consistency, and logical conflict detection
+
+#### Scenario: Reverse direction present
+- **WHEN** the grill section content is examined
+- **THEN** it includes the reverse direction check from spec inputs to declared signature parameter slots
 
 #### Scenario: Scan blocks completion
 - **WHEN** the grill section content is examined

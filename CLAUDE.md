@@ -85,6 +85,8 @@ When `/opsx:explore` is invoked:
 
 ### Pre-Apply Review (Grill)
 
+Per-artifact review surfaces and check tools (signature substitution, assertion strength, etc.) live in `.claude/skills/grill-me/SKILL.md`. This section governs discipline and process.
+
 When all artifacts (proposal, design, specs, tasks) are complete, the AI MUST prompt:
 > "All artifacts are ready. Recommend running `/grill-me` for a pre-apply review before implementation. Or run `/opsx:apply` directly to skip review."
 
@@ -109,6 +111,7 @@ If the user runs `/opsx:apply` without prior grill, this is treated as an implic
 - Security — input validation, permissions, data exposure risks?
 - Performance impact — O(n²), blocking IO, memory pressure?
 - Backward compatibility — any breaking changes to existing APIs/behaviors?
+- **Data-flow integrity** — every spec input value has a parameter slot in a declared signature; walk the call chain by substitution; spec scenarios must be strong enough to prove the input took effect (assertion strength), not just assert the output shell.
 
 **Problem Classification:**
 - **Blocking** (must resolve before apply): artifact contradictions, uncovered edge cases, missing error handling, security risks, untestable specs. User may override with explicit acknowledgment.
@@ -119,11 +122,11 @@ If the user runs `/opsx:apply` without prior grill, this is treated as an implic
 - `grill-abort`: Exit grill, rollback all modifications from `.grill-backup/`.
 - Ambiguous expressions ("stop", "算了"): AI MUST ask for clarification — "exit grill review, or abandon the entire change?"
 
-**Soft Limit:** After 15 questions, self-assess whether remaining issues are blocking-level. If none remain, proceed to summary.
+**Soft Limit:** After 9 questions, self-assess whether remaining issues are blocking-level. If none remain, proceed to summary.
 
 **Consistency Scan** (before summary):
 Run a final check across all artifacts for:
-- Reference integrity — every goal in proposal maps to design/specs/tasks
+- Reference integrity — every goal in proposal maps to design/specs/tasks, and every spec WHEN input maps to a parameter slot in a declared signature (reverse direction — data-flow integrity)
 - Terminology consistency — same concepts use same names throughout
 - Logical conflict detection — no artifact contradicts another
 

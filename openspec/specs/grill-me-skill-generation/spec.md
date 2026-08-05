@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Defines the `grill-me` SKILL.md that `composeGrillMeSkill()` must generate: self-contained review method with per-artifact surfaces, check tools, and the discipline the skill carries into a project.
+
+## Requirements
 
 ### Requirement: composeGrillMeSkill function exists
 The system SHALL export a function `composeGrillMeSkill()` from `src/templates/grill-me-skill.ts` that returns a string containing valid SKILL.md content.
@@ -26,12 +30,16 @@ The output SHALL begin with YAML frontmatter containing `name: grill-me` and a `
 
 ---
 
-### Requirement: SKILL.md references CLAUDE.md protocol
-The skill body SHALL reference the "Pre-Apply Review (Grill)" section in CLAUDE.md as the authoritative protocol source.
+### Requirement: SKILL.md is a self-contained review method
+The skill body SHALL contain the full review method inline (per-artifact review surfaces, check tools, soft limit, triage rule), so the Grill beat runs without referencing an external protocol document as the source of the method.
 
-#### Scenario: CLAUDE.md reference present
+#### Scenario: Method is inline
 - **WHEN** the skill body content is examined
-- **THEN** it contains a reference to "CLAUDE.md" and "Pre-Apply Review"
+- **THEN** it includes the per-artifact review surfaces and the signature-substitution check tool without delegating the method to CLAUDE.md
+
+#### Scenario: CLAUDE.md reference limited to discipline
+- **WHEN** the skill body content is examined
+- **THEN** any reference to CLAUDE.md positions it as governing project-level discipline, not as the source of the review method
 
 ---
 
