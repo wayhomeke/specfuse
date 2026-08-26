@@ -10,6 +10,7 @@ import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeGrillMeSkill } from './templates/grill-me-skill.js';
 import { composeDesignMdSkill } from './templates/design-md-skill.js';
+import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -160,6 +161,15 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   if (!existingDesignMdSkill) {
     await createDir(path.join(targetDir, '.claude', 'skills', 'design-md'));
     await writeText(designMdSkillPath, composeDesignMdSkill());
+  }
+
+  // FuseReview skill
+  spinner.text = 'Writing .claude/skills/fusereview/SKILL.md...';
+  const fusereviewSkillPath = path.join(targetDir, '.claude', 'skills', 'fusereview', 'SKILL.md');
+  const existingFusereviewSkill = await readTextSafe(fusereviewSkillPath);
+  if (!existingFusereviewSkill) {
+    await createDir(path.join(targetDir, '.claude', 'skills', 'fusereview'));
+    await writeText(fusereviewSkillPath, composeFuseReviewSkill(ctx));
   }
 
   // Design-md archetype templates
