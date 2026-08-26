@@ -91,6 +91,46 @@ describe('scaffolder integration', () => {
     expect(content).toBe('custom content');
   });
 
+  it('greenfield: creates .claude/skills/fusereview/SKILL.md with rendered content', async () => {
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: false,
+      targetDir: tmpDir,
+      isExisting: false,
+    };
+
+    await scaffold(config);
+
+    const skillPath = path.join(tmpDir, '.claude', 'skills', 'fusereview', 'SKILL.md');
+    expect(existsSync(skillPath)).toBe(true);
+    const content = readFileSync(skillPath, 'utf-8');
+    expect(content).toContain('name: fusereview');
+    expect(content).toContain('[test-strength]');
+  });
+
+  it('existing: does not overwrite existing fusereview skill', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'skills', 'fusereview'), { recursive: true });
+    writeFileSync(path.join(tmpDir, '.claude', 'skills', 'fusereview', 'SKILL.md'), 'custom content');
+
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: false,
+      targetDir: tmpDir,
+      isExisting: true,
+    };
+
+    await scaffold(config);
+
+    const content = readFileSync(path.join(tmpDir, '.claude', 'skills', 'fusereview', 'SKILL.md'), 'utf-8');
+    expect(content).toBe('custom content');
+  });
+
   it('greenfield: creates .claude/skills/design-md/SKILL.md', async () => {
     const config: ProjectConfig = {
       projectName: 'test-project',

@@ -146,7 +146,7 @@ When \`/opsx:apply\` is invoked:
    Execution discipline when enabled:
    - Each subagent works in its own isolated git worktree
    - Each subagent independently follows TDD and runs its own tests
-   - Main agent performs two-stage review per subagent output (spec compliance → code quality)
+   - Main agent performs two-stage review per subagent output (spec compliance → FuseReview skill via \`.claude/skills/fusereview/SKILL.md\`, executed on the subagent's diff before merge)
    - Main agent runs full integration tests after merging
    - Subagents MUST NOT implement the same module in parallel; independent modules may be parallelized
 
@@ -160,6 +160,31 @@ When \`/opsx:apply\` is invoked:
    - Single-file bugfix
    - Adding a new independent module (no impact on existing code)
    - Documentation or configuration adjustments`;
+}
+
+export function renderApplyFuseReview(): string {
+  return `### Phase 2.5: FuseReview Checkpoint (Post-Apply)
+
+FuseReview is the fifth beat: Think reviews direction, Grill reviews design, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
+
+**Baseline:** At apply start, record the current HEAD commit in the change's state as the review baseline. The review object is \`baseline..HEAD\`. If no baseline was recorded, fall back to the merge-base of the current branch and the trunk, and annotate the fallback in the report.
+
+**Checkpoint (mandatory question):** After the last task in \`tasks.md\` passes verification, the AI MUST ask the user whether to enter FuseReview. Silent advancement to \`/opsx:verify\` or \`/opsx:archive\` is forbidden — the question may be answered "no", but it may never be skipped.
+
+**Present facts, do not judge:** The checkpoint question lists the change facts — task count, whether subagent mode was used, and the modules touched. A recommendation may be attached, but the decision belongs to the user. There are no automatic trigger thresholds: no task-count cutoff, no automatic change-classification heuristics of any kind.
+
+**If the user accepts:** dispatch a reviewer context that did not participate in the implementation (fresh subagent or session) to cold-read \`baseline..HEAD\` and execute the FuseReview skill. If no separate context is available, run in the current session and annotate "non-cold-read".
+
+**If the user declines:** record the skip decision in the apply completion report together with the change facts (task count, subagent usage, modules), so the skip is auditable rather than invisible.
+
+**Handling findings:**
+- **Blocking** findings are fixed test-first: write the failing test that catches the defect, then fix.
+- **Suggestions** are recorded in the apply completion report without enforcement.
+- After fixes, re-review ONLY the fix diff. There is no second full review round — this is the termination condition.
+
+**Merge gate (subagent mode):** in subagent mode the second stage of the two-stage review executes the FuseReview skill on each subagent's diff before merge, automatically, without a user checkpoint.
+
+**Manual invocation:** the user may invoke the FuseReview skill explicitly at any time, independent of the checkpoint.`;
 }
 
 function renderVerifyPhase(stack: StackProfile): string {
@@ -279,6 +304,8 @@ export function composeCLAUDEmd(ctx: TemplateContext): string {
     renderGrillReview(),
     "",
     renderApplyPhase(ctx.stack),
+    "",
+    renderApplyFuseReview(),
     "",
     renderVerifyPhase(ctx.stack),
     "",
