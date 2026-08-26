@@ -36,7 +36,7 @@ When `/opsx:propose` is invoked:
    - Ask ONE question at a time (Socratic method). Never fire multiple questions in a single turn.
    - Proactively present 2-3 architectural alternatives with explicit trade-offs.
    - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to `docs/superpowers/specs/`. All spec files are managed exclusively by OpenSpec.
-   - **If brainstorming involved frontend/UI design intent:** MUST invoke `/design-md` skill NOW (before generating artifacts). Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
+   - **If the three-gate test (see DESIGN-TOKENS.md Generation Rules above) triggers:** MUST invoke `/design-md` skill NOW (before generating artifacts). For weak intent, state that visual design was not discussed in brainstorming before running the questionnaire. Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
 
 2. Every proposal artifact MUST contain:
@@ -53,7 +53,7 @@ When `/opsx:new` is invoked:
 2. **BEFORE drafting the first artifact (proposal), MUST activate Superpowers `brainstorming`.**
    - Use Socratic questioning to clarify scope, non-goals, and trade-offs.
    - **STOP brainstorming BEFORE its "Write design doc" step (step 6).** Do NOT write to `docs/superpowers/specs/`. All spec files are managed exclusively by OpenSpec.
-   - **If brainstorming involved frontend/UI design intent:** MUST invoke `/design-md` skill NOW (before drafting proposal). Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
+   - **If the three-gate test (see DESIGN-TOKENS.md Generation Rules above) triggers:** MUST invoke `/design-md` skill NOW (before drafting proposal). For weak intent, state that visual design was not discussed in brainstorming before running the questionnaire. Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after the user confirms the approach, draft the proposal artifact.
 
 3. When `/opsx:continue` is invoked to advance to the next artifact:
@@ -192,7 +192,7 @@ When `/opsx:apply` is invoked:
    Execution discipline when enabled:
    - Each subagent works in its own isolated git worktree
    - Each subagent independently follows TDD and runs its own tests
-   - Main agent performs two-stage review per subagent output (spec compliance → code quality)
+   - Main agent performs two-stage review per subagent output (spec compliance → FuseReview skill via `.claude/skills/fusereview/SKILL.md`, executed on the subagent's diff before merge)
    - Main agent runs full integration tests after merging
    - Subagents MUST NOT implement the same module in parallel; independent modules may be parallelized
 
@@ -206,6 +206,29 @@ When `/opsx:apply` is invoked:
    - Single-file bugfix
    - Adding a new independent module (no impact on existing code)
    - Documentation or configuration adjustments
+
+### Phase 2.5: FuseReview Checkpoint (Post-Apply)
+
+FuseReview is the fifth beat: Think reviews direction, Grill reviews design, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in `.claude/skills/fusereview/SKILL.md`.
+
+**Baseline:** At apply start, record the current HEAD commit in the change's state as the review baseline. The review object is `baseline..HEAD`. If no baseline was recorded, fall back to the merge-base of the current branch and the trunk, and annotate the fallback in the report.
+
+**Checkpoint (mandatory question):** After the last task in `tasks.md` passes verification, the AI MUST ask the user whether to enter FuseReview. Silent advancement to `/opsx:verify` or `/opsx:archive` is forbidden — the question may be answered "no", but it may never be skipped.
+
+**Present facts, do not judge:** The checkpoint question lists the change facts — task count, whether subagent mode was used, and the modules touched. A recommendation may be attached, but the decision belongs to the user. There are no automatic trigger thresholds: no task-count cutoff, no automatic change-classification heuristics of any kind.
+
+**If the user accepts:** dispatch a reviewer context that did not participate in the implementation (fresh subagent or session) to cold-read `baseline..HEAD` and execute the FuseReview skill. If no separate context is available, run in the current session and annotate "non-cold-read".
+
+**If the user declines:** record the skip decision in the apply completion report together with the change facts (task count, subagent usage, modules), so the skip is auditable rather than invisible.
+
+**Handling findings:**
+- **Blocking** findings are fixed test-first: write the failing test that catches the defect, then fix.
+- **Suggestions** are recorded in the apply completion report without enforcement.
+- After fixes, re-review ONLY the fix diff. There is no second full review round — this is the termination condition.
+
+**Merge gate (subagent mode):** in subagent mode the second stage of the two-stage review executes the FuseReview skill on each subagent's diff before merge, automatically, without a user checkpoint.
+
+**Manual invocation:** the user may invoke the FuseReview skill explicitly at any time, independent of the checkpoint.
 
 ### Phase 3: Verify / Archive
 
