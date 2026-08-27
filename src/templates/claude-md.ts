@@ -37,7 +37,7 @@ DESIGN-TOKENS.md 触发判定在 brainstorming 结束时执行，采用三道门
     - **Strong intent** (user actively discussed palette / dark mode / brand archetype / component visual language / design references / mood during brainstorming) → invoke \`/design-md\` NOW. Questionnaire answers already have grounding in the brainstorming record.
     - **Weak intent** (only "has UI" was settled, no visual discussion) → STILL invoke \`/design-md\` NOW (Gate 1 hit), but BEFORE running the questionnaire, explicitly tell the user: "This change includes a user-facing UI, so DESIGN-TOKENS.md will be generated. However, visual design was NOT discussed during brainstorming — the following questionnaire will capture those decisions now." Then run the questionnaire. Do NOT silently extract answers the user never expressed.
   - **Default:** Gate 1 misses → do not invoke \`/design-md\`; resume the artifact flow directly.
-- **Why trigger on "has UI" not "user expressed visual intent":** A WebUI project's visual tokens are an inevitable consequence of building the UI, not a function of whether the user raised visual topics in brainstorming. design.md and tasks.md reference DESIGN-TOKENS.md (archetype, fonts, status colors, primary scale), so the token file must exist before those artifacts are drafted — deferring generation to after artifacts creates forward references and breaks the Grill consistency scan.
+- **Why trigger on "has UI" not "user expressed visual intent":** A WebUI project's visual tokens are an inevitable consequence of building the UI, not a function of whether the user raised visual topics in brainstorming. design.md and tasks.md reference DESIGN-TOKENS.md (archetype, fonts, status colors, primary scale), so the token file must exist before those artifacts are drafted — deferring generation to after artifacts creates dangling forward references in design.md and tasks.md.
 - **Brownfield (manual):** Invoke \`/design-md\` to generate DESIGN-TOKENS.md for an existing project. The skill is installed at \`.claude/skills/design-md/SKILL.md\`.
 - **Never overwrite silently:** If DESIGN-TOKENS.md already exists, always prompt for confirmation and create a \`.bak\` backup before overwriting.`;
 }
@@ -165,7 +165,7 @@ When \`/opsx:apply\` is invoked:
 export function renderApplyFuseReview(): string {
   return `### Phase 2.5: FuseReview Checkpoint (Post-Apply)
 
-FuseReview is the fifth beat: Think reviews direction, Grill reviews design, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
+FuseReview is the fourth beat: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
 
 **Baseline:** At apply start, record the current HEAD commit in the change's state as the review baseline. The review object is \`baseline..HEAD\`. If no baseline was recorded, fall back to the merge-base of the current branch and the trunk, and annotate the fallback in the report.
 
@@ -195,75 +195,6 @@ Before \`/opsx:archive\`:
 1. Run \`/opsx:verify\` to validate implementation matches all specs
 2. Run full test suite (\`${stack.commands.test}\`) and paste evidence
 3. Run linter (\`${stack.commands.lint}\`) with zero warnings`;
-}
-
-export function renderGrillReview(): string {
-  return `### Pre-Apply Review (Grill)
-
-Per-artifact review surfaces and check tools (signature substitution, assertion strength, etc.) live in \`.claude/skills/grill-me/SKILL.md\`. This section governs discipline and process.
-
-When all artifacts (proposal, design, specs, tasks) are complete, the AI MUST prompt:
-> "All artifacts are ready. Recommend running \`/grill-me\` for a pre-apply review before implementation. Or run \`/opsx:apply\` directly to skip review."
-
-If the user runs \`/opsx:apply\` without prior grill, this is treated as an implicit skip — no blocking.
-
-**Protocol:**
-
-1. **Backup**: Copy the change directory to \`.grill-backup/\` before grill begins. Clean stale backups if present.
-2. **Review**: Ask ONE question at a time. Each question includes:
-   - Problem classification: \`[blocking]\` or \`[non-blocking]\`
-   - The specific issue found
-   - A recommended answer
-   - A modification preview (dry-run diff showing what will change)
-3. **User response**: If the user accepts, write the change. Core principle: **user must see the final diff before any write.**
-4. **Cleanup**: Delete \`.grill-backup/\` after successful completion.
-
-**Review Dimensions** (select by relevance, not all required):
-- Scope boundary — are goals/non-goals clear with no ambiguity?
-- Error paths — are exceptions, edge cases, and failures covered?
-- Dependency risk — new dependencies assessed? Impact on existing modules?
-- Testability — can every spec be verified with current test infrastructure?
-- Security — input validation, permissions, data exposure risks?
-- Performance impact — O(n²), blocking IO, memory pressure?
-- Backward compatibility — any breaking changes to existing APIs/behaviors?
-- **Data-flow integrity** — every spec input value has a parameter slot in a declared signature; walk the call chain by substitution; spec scenarios must be strong enough to prove the input took effect (assertion strength), not just assert the output shell.
-
-**Problem Classification:**
-- **Blocking** (must resolve before apply): artifact contradictions, uncovered edge cases, missing error handling, security risks, untestable specs. User may override with explicit acknowledgment.
-- **Non-blocking** (recorded, not enforced): naming style, optional optimizations, alternative approaches, documentation wording.
-
-**Exit Commands:**
-- \`grill-stop\`: Exit grill, keep all modifications made so far.
-- \`grill-abort\`: Exit grill, rollback all modifications from \`.grill-backup/\`.
-- Ambiguous expressions ("stop", "算了"): AI MUST ask for clarification — "exit grill review, or abandon the entire change?"
-
-**Soft Limit:** After 9 questions, self-assess whether remaining issues are blocking-level. If none remain, proceed to summary.
-
-**Consistency Scan** (before summary):
-Run a final check across all artifacts for:
-- Reference integrity — every goal in proposal maps to design/specs/tasks, and every spec WHEN input maps to a parameter slot in a declared signature (reverse direction — data-flow integrity)
-- Terminology consistency — same concepts use same names throughout
-- Logical conflict detection — no artifact contradicts another
-
-If scan finds issues, continue grill to resolve them.
-
-**Summary Format** (on completion):
-\`\`\`
-## Grill Review Summary
-
-Blocking (resolved):
-- [dimension] description of resolved issue
-
-Suggestions (recorded, non-blocking):
-- [dimension] description of suggestion
-
-Modified artifacts: <list of changed files>
-
-Consistency scan: ✅ PASS
-
-Run /opsx:apply to start implementation.
-💡 Tip: 进入 apply 时会提示是否切换为编码优化型模型。
-\`\`\``;
 }
 
 function renderGeneralRules(): string {
@@ -300,8 +231,6 @@ export function composeCLAUDEmd(ctx: TemplateContext): string {
     renderPathB(),
     "",
     renderExploration(),
-    "",
-    renderGrillReview(),
     "",
     renderApplyPhase(ctx.stack),
     "",

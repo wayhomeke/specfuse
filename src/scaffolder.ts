@@ -8,7 +8,6 @@ import type { ProjectConfig } from './types.js';
 import { composeGitignore } from './templates/gitignore.js';
 import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
-import { composeGrillMeSkill } from './templates/grill-me-skill.js';
 import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
@@ -143,15 +142,6 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     }
   } else {
     await writeJSON(settingsPath, generatedSettings);
-  }
-
-  // Grill-me skill
-  spinner.text = 'Writing .claude/skills/grill-me/SKILL.md...';
-  const grillSkillPath = path.join(targetDir, '.claude', 'skills', 'grill-me', 'SKILL.md');
-  const existingGrillSkill = await readTextSafe(grillSkillPath);
-  if (!existingGrillSkill) {
-    await createDir(path.join(targetDir, '.claude', 'skills', 'grill-me'));
-    await writeText(grillSkillPath, composeGrillMeSkill());
   }
 
   // Design-md skill

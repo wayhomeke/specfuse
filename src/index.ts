@@ -14,7 +14,7 @@ const program = new Command();
 
 program
   .name('create-specfuse')
-  .description('SpecFuse — AI engineering pipeline scaffolder.\n\nInjects OpenSpec workflow + Superpowers discipline into any project.\nThink → Grill → Do → Verify, one command at a time.')
+  .description('SpecFuse — AI engineering pipeline scaffolder.\n\nInjects OpenSpec workflow + Superpowers discipline into any project.\nThink → Do → FuseReview → Verify, one command at a time.')
   .version(pkg.version)
   .argument('[project-name]', 'Target directory (omit or use "." to init in current directory)')
   .option('--stack <id>', 'Built-in stack: rust, go, typescript-react, python-fastapi, bash, java-maven, java-gradle, cpp-cmake, ruby, php, kotlin, swift, elixir, scala-sbt, dotnet')
