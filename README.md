@@ -2,7 +2,7 @@
 
 将 AI 编码从即兴发挥改造为工程流水线。
 
-SpecFuse 不发明新工具——它把 OpenSpec、Superpowers、Grill-me 按正确的顺序编排成一条四拍流水线：**Think → Grill → Do → Verify**。一条命令注入到任何项目。
+SpecFuse 不发明新工具——它把 OpenSpec、Superpowers 按正确的顺序编排成一条四拍流水线：**Think → Do → FuseReview → Verify**。一条命令注入到任何项目。
 
 ## 快速开始
 
@@ -51,7 +51,8 @@ my-app/
 ├── .claude/
 │   ├── settings.local.json      # 权限白名单
 │   └── skills/
-│       └── design-md/           # 设计令牌生成技能
+│       ├── design-md/           # 设计令牌生成技能
+│       └── fusereview/          # 实施后代码评审技能
 └── openspec/
     ├── config.yaml              # 栈特化 spec 规则
     ├── specs/
@@ -80,13 +81,13 @@ Think       /opsx:new 或 /opsx:propose
               ↓  激活 Brainstorming（苏格拉底式一问一答）
               ↓  生成 proposal → design → specs → tasks
 
-Grill       /grill-me
-              ↓  AI 反向质问设计，逐条 blocking/non-blocking
-              ↓  修补制品后进入实施
-
 Do          /opsx:apply
               ↓  严格 TDD：写失败测试 → 最小实现 → 粘贴证据
               ↓  每个任务完成前必须有终端输出作为证据
+
+FuseReview  apply 收尾检查点
+              ↓  呈事实、用户决定是否评审；独立上下文冷读累积 diff
+              ↓  blocking 发现走 TDD 修复，跳过留痕
 
 Verify      /opsx:verify → /opsx:archive
               ↓  全量测试 + lint 零警告 → 归档
@@ -97,8 +98,8 @@ Verify      /opsx:verify → /opsx:archive
 | 阶段 | 强制行为 |
 |------|----------|
 | Think | 一次一问，2-3 种方案对比，Non-goals + Trade-offs |
-| Grill | 多维度审查，blocking 问题必须解决才能进入实施 |
 | Do | Red-Green-Refactor，禁止跳过测试 |
+| FuseReview | apply 完成后必须询问是否评审；跳过必须留痕；修复只复审修复 diff |
 | Verify | 必须粘贴终端原始输出，不接受"应该能跑" |
 
 ---
@@ -189,7 +190,7 @@ Options:
 
 ## 为什么需要编排
 
-你手里可能已经有 OpenSpec、Superpowers、Grill-me——但谁来记住"现在该激活什么"？
+你手里可能已经有 OpenSpec、Superpowers——但谁来记住"现在该激活什么"？
 
 - **你来记** → 你会忘。第三个小需求时你会想"太简单了不需要 brainstorm"，然后写到一半发现方向错了。
 - **流水线来记** → 每个命令背后自动调度对应能力。调用"开始实施"，TDD 铁律就自动生效。
