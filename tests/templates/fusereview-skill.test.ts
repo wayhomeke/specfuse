@@ -13,6 +13,12 @@ describe("fusereview-skill template", () => {
     expect(output.length).toBeGreaterThan(0);
   });
 
+  it("contains no Grill trace and names FuseReview the fourth beat", () => {
+    expect(lower).not.toContain("grill");
+    expect(lower).not.toContain("fifth");
+    expect(lower).toContain("fourth beat");
+  });
+
   it("starts with --- frontmatter containing name: fusereview", () => {
     expect(output.startsWith("---\n")).toBe(true);
     const frontmatter = output.split("---")[1];

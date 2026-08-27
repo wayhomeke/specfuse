@@ -1,79 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   composeCLAUDEmd,
-  renderGrillReview,
   renderApplyFuseReview,
 } from "../../src/templates/claude-md.js";
 import { getBuiltinStacks } from "../../src/stacks/index.js";
-
-describe("renderGrillReview", () => {
-  const output = renderGrillReview();
-
-  it("returns string starting with ### Pre-Apply Review (Grill)", () => {
-    expect(output.trimStart().startsWith("### Pre-Apply Review (Grill)")).toBe(
-      true,
-    );
-  });
-
-  it("accepts zero arguments", () => {
-    expect(renderGrillReview.length).toBe(0);
-  });
-
-  it("contains all 7 review dimensions", () => {
-    const dimensions = [
-      "scope boundary",
-      "error paths",
-      "dependency risk",
-      "testability",
-      "security",
-      "performance impact",
-      "backward compatibility",
-    ];
-    for (const dim of dimensions) {
-      expect(output.toLowerCase()).toContain(dim.toLowerCase());
-    }
-  });
-
-  it("contains blocking categories", () => {
-    const categories = [
-      "artifact contradictions",
-      "uncovered edge cases",
-      "missing error handling",
-      "security risks",
-      "untestable specs",
-    ];
-    for (const cat of categories) {
-      expect(output.toLowerCase()).toContain(cat.toLowerCase());
-    }
-  });
-
-  it("contains exit commands grill-stop and grill-abort", () => {
-    expect(output).toContain("grill-stop");
-    expect(output).toContain("grill-abort");
-  });
-
-  it("contains soft limit 9", () => {
-    expect(output).toContain("After 9 questions");
-  });
-
-  it("contains Data-flow integrity dimension", () => {
-    expect(output).toContain("Data-flow integrity");
-  });
-
-  it("consistency scan covers reverse direction", () => {
-    expect(output.toLowerCase()).toContain("reverse");
-  });
-
-  it("contains consistency scan keywords", () => {
-    expect(output.toLowerCase()).toContain("reference integrity");
-    expect(output.toLowerCase()).toContain("terminology");
-    expect(output.toLowerCase()).toContain("logical conflict");
-  });
-
-  it("contains backup path .grill-backup/", () => {
-    expect(output).toContain(".grill-backup/");
-  });
-});
 
 describe("CLAUDE.md template", () => {
   const stacks = getBuiltinStacks();
@@ -135,21 +65,13 @@ describe("CLAUDE.md template", () => {
         expect(output).toContain("PoC");
       });
 
-      it("contains Pre-Apply Review (Grill) between Exploration and Phase 2", () => {
-        const explorationIdx = output.indexOf("### Exploration");
-        const grillIdx = output.indexOf("### Pre-Apply Review (Grill)");
-        const applyIdx = output.indexOf("### Phase 2: Apply");
-        expect(grillIdx).toBeGreaterThan(explorationIdx);
-        expect(grillIdx).toBeLessThan(applyIdx);
-      });
-
       it("all existing sections remain present and in original order", () => {
         const sections = [
           "Path A: One-Shot Proposal",
           "Path B: Step-by-Step Change",
           "Exploration",
-          "Pre-Apply Review (Grill)",
           "Phase 2: Apply",
+          "Phase 2.5: FuseReview",
           "Phase 3: Verify",
           "General Rules",
         ];
@@ -159,6 +81,10 @@ describe("CLAUDE.md template", () => {
           expect(idx).toBeGreaterThan(lastIdx);
           lastIdx = idx;
         }
+      });
+
+      it("contains no Grill trace anywhere", () => {
+        expect(output.toLowerCase()).not.toContain("grill");
       });
 
       it("contains FuseReview checkpoint between Phase 2 and Phase 3", () => {
@@ -180,6 +106,12 @@ describe("CLAUDE.md template", () => {
 describe("renderApplyFuseReview", () => {
   const output = renderApplyFuseReview();
   const lower = output.toLowerCase();
+
+  it("contains no Grill trace and names FuseReview the fourth beat", () => {
+    expect(lower).not.toContain("grill");
+    expect(lower).not.toContain("fifth beat");
+    expect(lower).toContain("fourth beat");
+  });
 
   it("returns string starting with ### Phase 2.5: FuseReview", () => {
     expect(output.trimStart().startsWith("### Phase 2.5: FuseReview")).toBe(
