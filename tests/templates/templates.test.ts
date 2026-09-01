@@ -50,9 +50,20 @@ describe('gitignore template', () => {
       }
     });
 
-    it(`${stack.id}: includes .codegraph/ in shared patterns`, () => {
+    it(`${stack.id}: does not include .codegraph/ (integration removed)`, () => {
       const output = composeGitignore(stack);
-      expect(output).toContain('.codegraph/');
+      expect(output).not.toContain('.codegraph/');
+    });
+
+    it(`${stack.id}: preserves surrounding shared patterns`, () => {
+      const output = composeGitignore(stack);
+      expect(output).toContain('.idea/');
+      expect(output).toContain('.DS_Store');
+      expect(output).toContain('.env');
+      expect(output).toContain('*.log');
+      for (const pattern of stack.gitignorePatterns) {
+        expect(output).toContain(pattern);
+      }
     });
 
     it(`${stack.id}: does not include .grill-backup/ (phase removed)`, () => {

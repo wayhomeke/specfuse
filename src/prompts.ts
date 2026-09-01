@@ -50,9 +50,7 @@ export async function collectProjectConfig(
 
   const initOpenspec = skipPrompts ? true : await confirm({ message: 'Initialize OpenSpec?', default: true });
 
-  const initCodegraph = skipPrompts ? true : await confirm({ message: 'Enable CodeGraph code knowledge graph?', default: true });
-
-  return { projectName, stack, initGit, initOpenspec, initCodegraph, targetDir, isExisting };
+  return { projectName, stack, initGit, initOpenspec, targetDir, isExisting };
 }
 
 async function detectAndSelect(targetDir: string): Promise<StackProfile> {

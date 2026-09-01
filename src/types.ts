@@ -26,7 +26,6 @@ export interface ProjectConfig {
   stack: StackProfile;
   initGit: boolean;
   initOpenspec: boolean;
-  initCodegraph: boolean;
   targetDir: string;
   isExisting: boolean;
 }

@@ -7,9 +7,6 @@ import { getBuiltinStacks } from '../src/stacks/index.js';
 import type { ProjectConfig } from '../src/types.js';
 
 vi.mock('../src/utils/tools.js', () => ({
-  detectCodegraph: vi.fn().mockResolvedValue(false),
-  installCodegraph: vi.fn().mockResolvedValue(false),
-  initCodegraph: vi.fn().mockResolvedValue(true),
   detectOpenspec: vi.fn().mockResolvedValue(false),
   installOpenspec: vi.fn().mockResolvedValue(false),
   initOpenspec: vi.fn().mockResolvedValue(true),
@@ -37,7 +34,6 @@ describe('scaffolder integration', () => {
         stack,
         initGit: false,
         initOpenspec: true,
-        initCodegraph: false,
         targetDir: tmpDir,
         isExisting: false,
       };
@@ -59,7 +55,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -75,7 +70,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -98,7 +92,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -115,7 +108,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -133,7 +125,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -153,7 +144,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -173,7 +163,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: false,
     };
@@ -193,7 +182,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -216,7 +204,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -241,7 +228,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -253,6 +239,58 @@ describe('scaffolder integration', () => {
     expect(result).toContain('# My rules');
     const dsStoreCount = (result.match(/\.DS_Store/g) || []).length;
     expect(dsStoreCount).toBe(1);
+  });
+
+  it('ignores a stray initCodegraph field from an untyped caller', async () => {
+    // An untyped JS caller may still pass the removed field; it must be inert.
+    const config = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      initCodegraph: true,
+      targetDir: tmpDir,
+      isExisting: false,
+    } as unknown as ProjectConfig;
+
+    await scaffold(config);
+
+    expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
+    const gitignore = readFileSync(path.join(tmpDir, '.gitignore'), 'utf-8');
+    expect(gitignore).not.toContain('.codegraph/');
+  });
+
+  it('collectProjectConfig returns no initCodegraph field', async () => {
+    const { collectProjectConfig } = await import('../src/prompts.js');
+    const config = await collectProjectConfig('test-project', 'rust', undefined, true);
+    expect(Object.prototype.hasOwnProperty.call(config, 'initCodegraph')).toBe(false);
+    expect(config).toHaveProperty('projectName');
+    expect(config).toHaveProperty('stack');
+    expect(config).toHaveProperty('initGit');
+    expect(config).toHaveProperty('initOpenspec');
+    expect(config).toHaveProperty('targetDir');
+    expect(config).toHaveProperty('isExisting');
+  });
+
+  it('existing: preserves a pre-existing .codegraph/ line (append-only merge)', async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    writeFileSync(path.join(tmpDir, '.gitignore'), '# My rules\n.codegraph/\n');
+
+    const config: ProjectConfig = {
+      projectName: 'test-project',
+      stack: getBuiltinStacks()[0],
+      initGit: false,
+      initOpenspec: false,
+      targetDir: tmpDir,
+      isExisting: true,
+    };
+
+    await scaffold(config);
+
+    const result = readFileSync(path.join(tmpDir, '.gitignore'), 'utf-8');
+    // Merging appends missing patterns and never removes lines, so a line the
+    // user (or an older SpecFuse) wrote survives even though we no longer emit it.
+    expect(result).toContain('.codegraph/');
   });
 
   it('existing: merges settings.local.json permissions', async () => {
@@ -268,7 +306,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -290,7 +327,6 @@ describe('scaffolder integration', () => {
       stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: true,
-      initCodegraph: false,
       targetDir: tmpDir,
       isExisting: true,
     };
@@ -301,65 +337,5 @@ describe('scaffolder integration', () => {
     expect(result).toBe('schema: custom\n');
   });
 
-  // --- CodeGraph integration ---
 
-  it('codegraph: skips when initCodegraph is false', async () => {
-    const { detectCodegraph } = await import('../src/utils/tools.js');
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      initCodegraph: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
-
-    await scaffold(config);
-
-    expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
-    expect(detectCodegraph).not.toHaveBeenCalled();
-  });
-
-  it('codegraph: attempts detection and install when initCodegraph is true', async () => {
-    const { detectCodegraph, installCodegraph } = await import('../src/utils/tools.js');
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      initCodegraph: true,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
-
-    await scaffold(config);
-
-    expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
-    expect(detectCodegraph).toHaveBeenCalled();
-    expect(installCodegraph).toHaveBeenCalled();
-  });
-
-  it('codegraph: calls initCodegraph when already installed', async () => {
-    const tools = await import('../src/utils/tools.js');
-    vi.mocked(tools.detectCodegraph).mockClear();
-    vi.mocked(tools.installCodegraph).mockClear();
-    vi.mocked(tools.initCodegraph).mockClear();
-    vi.mocked(tools.detectCodegraph).mockResolvedValueOnce(true);
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      initCodegraph: true,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
-
-    await scaffold(config);
-
-    expect(tools.detectCodegraph).toHaveBeenCalled();
-    expect(tools.initCodegraph).toHaveBeenCalledWith(tmpDir);
-    expect(tools.installCodegraph).not.toHaveBeenCalled();
-  });
 });
