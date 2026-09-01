@@ -13,7 +13,7 @@ import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
-import { detectCodegraph, installCodegraph, initCodegraph, detectOpenspec, installOpenspec, initOpenspec } from './utils/tools.js';
+import { detectOpenspec, installOpenspec, initOpenspec } from './utils/tools.js';
 
 function hasSuperpowersPlugin(): boolean {
   const pluginsPath = path.join(process.env.HOME || '', '.claude', 'plugins', 'installed_plugins.json');
@@ -219,34 +219,6 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     }
   }
 
-  // CodeGraph
-  if (config.initCodegraph) {
-    spinner.text = 'Setting up CodeGraph...';
-    const hasCodegraph = await detectCodegraph();
-
-    if (hasCodegraph) {
-      const ok = await initCodegraph(targetDir);
-      if (ok) {
-        spinner.text = 'CodeGraph initialized.';
-      } else {
-        spinner.warn('CodeGraph init failed. Run manually: codegraph init -i && codegraph install');
-      }
-    } else {
-      spinner.text = 'Installing CodeGraph...';
-      const installed = await installCodegraph();
-      if (installed) {
-        const ok = await initCodegraph(targetDir);
-        if (!ok) {
-          spinner.warn('CodeGraph installed but init failed. Run manually: codegraph init -i && codegraph install');
-        }
-      } else {
-        spinner.warn(
-          'CodeGraph installation failed. Install manually:\n  curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh\n  Then run: codegraph init -i && codegraph install',
-        );
-      }
-    }
-  }
-
   // Trust the project directory so .claude/settings.local.json permissions take effect
   try {
     await trustDirectory(path.resolve(targetDir));
@@ -272,17 +244,6 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   if (!isExisting) console.log(`    cd ${projectName}`);
   console.log('    claude');
   console.log('    /opsx:propose   # start your first change');
-
-  if (config.initCodegraph) {
-    const localBin = path.join(process.env.HOME || '', '.local', 'bin');
-    const inPath = (process.env.PATH || '').split(':').includes(localBin);
-    if (!inPath) {
-      console.log('');
-      console.log(chalk.yellow('  Note: ~/.local/bin is not in your PATH.'));
-      console.log(chalk.dim('  Add it to use codegraph directly:'));
-      console.log(chalk.dim('    echo \'export PATH="$HOME/.local/bin:$PATH"\' >> ~/.bashrc && source ~/.bashrc'));
-    }
-  }
 
   if (!hasSuperpowersPlugin()) {
     console.log('');
