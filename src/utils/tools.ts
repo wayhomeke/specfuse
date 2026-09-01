@@ -3,45 +3,34 @@ import { promisify } from 'node:util';
 
 const execShell = promisify(execCb);
 
-const homedir = process.env.HOME || process.env.USERPROFILE || '';
-const LOCAL_BIN = `${homedir}/.local/bin`;
-const ENV_WITH_LOCAL_BIN = { ...process.env, PATH: `${LOCAL_BIN}:${process.env.PATH}` };
+/**
+ * Scaffolding runs these tools as non-interactive children: stdin is a pipe
+ * nobody ever writes to. A child that stops to ask a question would wait on
+ * that pipe forever, and the prompt itself is swallowed by exec's buffering —
+ * the user sees a frozen terminal with no explanation.
+ *
+ * Two layers guard against that:
+ *  - `stdio: ['ignore', ...]` hands the child a closed stdin (EOF) rather than
+ *    an open pipe, so well-behaved prompts abort instead of blocking.
+ *  - `timeout` + SIGKILL bounds anything that ignores EOF anyway (clack does),
+ *    turning a permanent hang into a recoverable failure the caller reports.
+ */
+const NONINTERACTIVE = {
+  stdio: ['ignore', 'pipe', 'pipe'] as const,
+  killSignal: 'SIGKILL' as const,
+};
 
-export async function detectCodegraph(): Promise<boolean> {
-  try {
-    await execShell('codegraph --version', { env: ENV_WITH_LOCAL_BIN });
-    return true;
-  } catch {
-    return false;
-  }
-}
+const PROBE_TIMEOUT_MS = 15_000;
+const INSTALL_TIMEOUT_MS = 300_000;
+const INIT_TIMEOUT_MS = 600_000;
 
-export async function installCodegraph(): Promise<boolean> {
-  if (process.platform === 'win32') {
-    return false;
-  }
-  try {
-    await execShell('curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh');
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function initCodegraph(cwd: string): Promise<boolean> {
-  try {
-    const env = { ...ENV_WITH_LOCAL_BIN, CI: 'true' };
-    await execShell('codegraph init -i', { cwd, env });
-    await execShell('codegraph install -y', { cwd, env });
-    return true;
-  } catch {
-    return false;
-  }
+function opts(timeout: number, extra: Record<string, unknown> = {}) {
+  return { ...NONINTERACTIVE, timeout, ...extra };
 }
 
 export async function detectOpenspec(): Promise<boolean> {
   try {
-    await execShell('openspec --version');
+    await execShell('openspec --version', opts(PROBE_TIMEOUT_MS));
     return true;
   } catch {
     return false;
@@ -50,7 +39,7 @@ export async function detectOpenspec(): Promise<boolean> {
 
 export async function installOpenspec(): Promise<boolean> {
   try {
-    await execShell('npm install -g @fission-ai/openspec');
+    await execShell('npm install -g @fission-ai/openspec', opts(INSTALL_TIMEOUT_MS));
     return true;
   } catch {
     return false;
@@ -59,7 +48,7 @@ export async function installOpenspec(): Promise<boolean> {
 
 export async function initOpenspec(cwd: string): Promise<boolean> {
   try {
-    await execShell('openspec init --tools claude --force', { cwd });
+    await execShell('openspec init --tools claude --force', opts(INIT_TIMEOUT_MS, { cwd }));
     await configureOpenspecProfile();
     return true;
   } catch {
@@ -69,7 +58,7 @@ export async function initOpenspec(cwd: string): Promise<boolean> {
 
 async function configureOpenspecProfile(): Promise<void> {
   try {
-    await execShell('openspec config set profile custom');
+    await execShell('openspec config set profile custom', opts(PROBE_TIMEOUT_MS));
     const workflows = ['propose', 'explore', 'new', 'continue', 'apply', 'ff', 'sync', 'archive', 'bulk-archive', 'verify', 'onboard'];
     const { readFileSync, writeFileSync } = await import('node:fs');
     const { execSync } = await import('node:child_process');
