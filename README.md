@@ -1,52 +1,31 @@
 # SpecFuse
 
-将 AI 编码从即兴发挥改造为工程流水线。
+> 把 AI 编码从即兴发挥，改造成工程流水线。
 
-SpecFuse 不发明新工具——它把 OpenSpec、Superpowers 按正确的顺序编排成一条四拍流水线：**Think → Do → FuseReview → Verify**。一条命令注入到任何项目。
+SpecFuse 不发明新工具。它把 OpenSpec（流程引擎）和 Superpowers（行为约束）编排成一条 **Think → Do → FuseReview → Verify** 四拍流水线，一条命令注入任何项目——它不产生新能力，它约束产出可靠性。
 
 ## 快速开始
 
 ```bash
-npm create specfuse@latest
+npm create specfuse@latest                                  # 交互式引导（需 Node >= 18，推荐 nvm）
+npm create specfuse@latest my-app -- --stack rust --yes     # 指定栈 + 非交互，CI 友好
+cd existing-project && npm create specfuse@latest .         # 已有项目就地初始化
 ```
 
-交互式引导你选择技术栈，生成项目骨架和完整的工作流配置。无需全局安装，始终拉取最新版。
+两个可选组件。不装也能用——生成的 `CLAUDE.md` 依然生效，只是缺一半能力：
 
 ```bash
-# 指定目录
-npm create specfuse@latest my-app
-
-# 指定技术栈，跳过交互
-npm create specfuse@latest my-app -- --stack rust --yes
+npm install -g @fission-ai/openspec   <｜begin▁of▁sentence｜># 流程引擎；装好后自动注册 /opsx:* 命令
+/plugins add obra/superpowers          # 行为约束插件（在 Claude Code 内执行）
 ```
 
-### 前置依赖
+## 生成物
 
-- **Node.js >= 18**（推荐通过 [nvm](https://github.com/nvm-sh/nvm) 安装）
-
-### 可选组件
-
-SpecFuse 生成的工作流依赖以下组件实现完整能力，但它们不是硬依赖：
-
-```bash
-# OpenSpec CLI — 流程引擎
-npm install -g @fission-ai/openspec
-
-# Superpowers — Claude Code 行为约束插件（在 Claude Code 内执行）
-/plugins add obra/superpowers
-```
-
-> 未安装时，生成的 CLAUDE.md 仍然有效，只是 `/opsx:*` 命令和 Superpowers 技能不可用。
-
----
-
-## 它做了什么
-
-运行后在目标目录生成：
+装完得到四样东西：
 
 ```
 my-app/
-├── CLAUDE.md                    # 融合方法论 + 流水线纪律规则
+├── CLAUDE.md                    # 流水线调度协议（四拍规则全文）
 ├── .gitignore                   # 栈特化忽略规则
 ├── .claude/
 │   ├── settings.local.json      # 权限白名单
@@ -55,74 +34,63 @@ my-app/
 │       └── fusereview/          # 实施后代码评审技能
 └── openspec/
     ├── config.yaml              # 栈特化 spec 规则
-    ├── specs/
-    └── changes/
-        └── archive/
+    ├── specs/                   # 主规格
+    └── changes/archive/         # 变更档案
 ```
 
-脚手架完成后自动将项目目录加入 Claude Code 信任列表，无需手动确认。
-
-如果检测到已安装 `@fission-ai/openspec`，还会自动注册 OpenSpec 技能和 `/opsx:*` 命令。
+项目目录会自动加入 Claude Code 信任列表。
 
 ### Design Tokens（前端项目）
 
-对涉及 UI/前端的项目，流水线在 brainstorming 阶段会自动触发 `/design-md` 技能，通过问卷生成 `DESIGN-TOKENS.md`——定义色彩、字体、间距、圆角等设计变量，确保实现阶段的视觉一致性。
-
-也可手动调用 `/design-md` 为已有项目生成设计令牌。
-
----
+涉 UI/前端的项目，Think 阶段会触发 `/design-md` 技能生成 `DESIGN-TOKENS.md`，定义色彩、字体、间距、圆角等设计变量。也可手动 `/design-md` 为已有项目生成。
 
 ## 四拍流水线
 
-初始化完成后，在项目中启动 Claude Code，按以下节奏开发：
+在项目中启动 Claude Code，按这套节奏开发：
 
 ```
-Think       /opsx:new 或 /opsx:propose
-              ↓  激活 Brainstorming（苏格拉底式一问一答）
-              ↓  生成 proposal → design → specs → tasks
-
-Do          /opsx:apply
-              ↓  严格 TDD：写失败测试 → 最小实现 → 粘贴证据
-              ↓  每个任务完成前必须有终端输出作为证据
-
-FuseReview  apply 收尾检查点
-              ↓  呈事实、用户决定是否评审；独立上下文冷读累积 diff
-              ↓  blocking 发现走 TDD 修复，跳过留痕
-
-Verify      /opsx:verify → /opsx:archive
-              ↓  全量测试 + lint 零警告 → 归档
+Think       /opsx:new 或 /opsx:propose     —— 方案设计与制品生成
+Do          /opsx:apply                    —— TDD 实施
+FuseReview  apply 收尾检查点                —— 冷读评审
+Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 ```
 
-### 内置纪律（自动执行，无需手动记忆）
+### Think
 
-| 阶段 | 强制行为 |
-|------|----------|
-| Think | 一次一问，2-3 种方案对比，Non-goals + Trade-offs |
-| Do | Red-Green-Refactor，禁止跳过测试 |
-| FuseReview | apply 完成后必须询问是否评审；跳过必须留痕；修复只复审修复 diff |
-| Verify | 必须粘贴终端原始输出，不接受"应该能跑" |
+- `/opsx:propose`（Path A）一次生成全部制品；`/opsx:new` + `/opsx:continue`（Path B）一次一个制品、逐步确认。
+- 苏格拉底式一次一问，2-3 个方案对比，强制声明 Non-goals、Trade-offs、Verification strategy。
 
----
+### Do
 
-## 已有项目初始化
+- 进入实施前有模型切换检查点。
+- 逐任务红绿循环，严格遵守 TDD。
+- **铁律：`NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE`** —— 每个任务完成前必须粘贴终端原始输出作为证据。
 
-```bash
-cd existing-project
-npm create specfuse@latest .
-```
+### FuseReview
 
-智能合并策略，不覆盖已有内容：
+- apply 完成后必须询问是否评审（禁止静默跳过）；呈报任务数、涉及模块等事实，由你决定是否执行。
+- 评审以冷读方式审查 `基线..HEAD` 的累积 diff（评审者不参与实现）。
+- Blocking 发现走 TDD 修复；修复后只复审修复 diff，不进行第二轮全量评审。
+- 跳过评审必须记录在收尾报告中留痕。
+
+### Verify
+
+- `/opsx:verify` 逐条对照 specs 验证实现；`/opsx:archive` 前运行全量测试 + lint 零警告，粘贴原始输出。
+
+## 已有项目：能不动就不动
+
+`npm create specfuse@latest .` 的合并策略逐文件保守：
 
 | 文件 | 行为 |
 |------|------|
-| `CLAUDE.md` | 有 `<!-- FUSION:START/END -->` 标记 → 替换标记内段落；无标记 → 追加 |
+| `CLAUDE.md` | 有 `<!-- FUSION:START/END -->` 标记 → 只替换标记内段落；无标记 → 追加 |
 | `.gitignore` | 追加缺失模式，不重复 |
 | `.claude/settings.local.json` | 合并权限列表 |
 | `openspec/config.yaml` | 已存在 → 跳过 |
 
----
+删除 `CLAUDE.md` 里的 FUSION 块，项目即回到无调度状态——整套编排零侵入、可逆。
 
-## 内置技术栈
+## 技术栈：15 个内置，一个 YAML 自定义
 
 | 栈 | ID | 构建 | 测试 | Lint |
 |---|---|---|---|---|
@@ -142,62 +110,36 @@ npm create specfuse@latest .
 | .NET | `dotnet` | `dotnet build` | `dotnet test` | `dotnet format --verify-no-changes` |
 | Bash | `bash` | — | `bats tests/` | `shellcheck **/*.sh` |
 
-### 自定义栈
-
-创建 YAML 文件定义你的栈：
+内置覆盖不了的（Spring Boot、公司内部框架），一个 YAML 描述构建、测试、lint 即可入场：
 
 ```yaml
 id: java-spring
 label: "Java + Spring Boot"
-languages: [Java]
-framework: Spring Boot
-architecture: Layered (Controller → Service → Repository)
 commands:
   build: ./gradlew build
   test: ./gradlew test
   lint: ./gradlew checkstyleMain
-  format: ./gradlew spotlessApply
 permissions:
   - "Bash(./gradlew *)"
-gitignorePatterns:
-  - "/build/"
-  - "/.gradle/"
+gitignorePatterns: ["/build/", "/.gradle/"]
 ```
 
 ```bash
 npm create specfuse@latest my-app -- --stack-from ./java-spring.yaml
 ```
 
----
-
 ## CLI 参考
 
 ```
 Usage: create-specfuse [options] [project-name]
 
-Arguments:
-  project-name         目标目录（省略或 "." 表示当前目录）
-
-Options:
-  --stack <id>         指定内置技术栈
-  --stack-from <path>  加载自定义栈配置（YAML/JSON）
-  -y, --yes            非交互模式（CI 友好）
-  -V, --version        显示版本号
-  -h, --help           显示帮助
+  project-name          目标目录（省略或 "." 表示当前目录）
+  --stack <id>          指定内置技术栈
+  --stack-from <path>   加载自定义栈配置（YAML/JSON）
+  -y, --yes             非交互模式
+  -V, --version         版本号
+  -h, --help            帮助
 ```
-
----
-
-## 为什么需要编排
-
-你手里可能已经有 OpenSpec、Superpowers——但谁来记住"现在该激活什么"？
-
-- **你来记** → 你会忘。第三个小需求时你会想"太简单了不需要 brainstorm"，然后写到一半发现方向错了。
-- **流水线来记** → 每个命令背后自动调度对应能力。调用"开始实施"，TDD 铁律就自动生效。
-
-这就是融合和组合的区别：组合是你有三个好工具，融合是一条流水线让工具在正确时刻自动接力。
-
----
 
 ## 开发
 
