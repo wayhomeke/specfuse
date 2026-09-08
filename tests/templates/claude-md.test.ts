@@ -3,104 +3,98 @@ import {
   composeCLAUDEmd,
   renderApplyFuseReview,
 } from "../../src/templates/claude-md.js";
-import { getBuiltinStacks } from "../../src/stacks/index.js";
 
 describe("CLAUDE.md template", () => {
-  const stacks = getBuiltinStacks();
+  const output = composeCLAUDEmd({ projectName: "test" });
+  it("contains FUSION markers", () => {
+    expect(output).toContain("<!-- FUSION:START -->");
+    expect(output).toContain("<!-- FUSION:END -->");
+  });
 
-  for (const stack of stacks) {
-    describe(stack.id, () => {
-      const output = composeCLAUDEmd({ projectName: "test", stack });
+  it("contains methodology invariant: Never skip TDD", () => {
+    expect(output).toContain("Never skip TDD");
+  });
 
-      it("contains FUSION markers", () => {
-        expect(output).toContain("<!-- FUSION:START -->");
-        expect(output).toContain("<!-- FUSION:END -->");
-      });
+  it("contains methodology invariant: verification evidence", () => {
+    expect(output).toContain(
+      "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE",
+    );
+  });
 
-      it("contains methodology invariant: Never skip TDD", () => {
-        expect(output).toContain("Never skip TDD");
-      });
+  it("contains Path A and Path B", () => {
+    expect(output).toContain("Path A: One-Shot Proposal");
+    expect(output).toContain("Path B: Step-by-Step Change");
+  });
 
-      it("contains methodology invariant: verification evidence", () => {
-        expect(output).toContain(
-          "NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE",
-        );
-      });
+  it("generalizes the verification command to project-owned wording", () => {
+    expect(output).toContain("project's test command");
+    expect(output).not.toContain("npm test");
+  });
 
-      it("contains Path A and Path B", () => {
-        expect(output).toContain("Path A: One-Shot Proposal");
-        expect(output).toContain("Path B: Step-by-Step Change");
-      });
+  it("generalizes the lint command to project-owned wording", () => {
+    expect(output).toContain("project's linter");
+    expect(output).not.toContain("npx eslint");
+  });
 
-      it("contains stack-specific test command", () => {
-        expect(output).toContain(stack.commands.test);
-      });
+  it("contains exploration section", () => {
+    expect(output).toContain("Exploration");
+    expect(output).toContain("brainstorming");
+  });
 
-      it("contains stack-specific lint command", () => {
-        expect(output).toContain(stack.commands.lint);
-      });
+  it("contains commit convention", () => {
+    expect(output).toContain("conventional commits");
+  });
 
-      it("contains exploration section", () => {
-        expect(output).toContain("Exploration");
-        expect(output).toContain("brainstorming");
-      });
+  it("contains subagent trigger rules", () => {
+    expect(output).toContain("Subagent-Driven Development trigger");
+    expect(output).toContain("tasks.md");
+    expect(output).toContain("blocked by");
+  });
 
-      it("contains commit convention", () => {
-        expect(output).toContain("conventional commits");
-      });
+  it("contains worktree trigger rules in apply phase", () => {
+    expect(output).toContain("Git Worktree isolation trigger");
+    expect(output).toContain("destructive refactoring");
+  });
 
-      it("contains subagent trigger rules", () => {
-        expect(output).toContain("Subagent-Driven Development trigger");
-        expect(output).toContain("tasks.md");
-        expect(output).toContain("blocked by");
-      });
+  it("contains worktree trigger rules in explore phase", () => {
+    expect(output).toContain("Worktree isolation (exploration)");
+    expect(output).toContain("PoC");
+  });
 
-      it("contains worktree trigger rules in apply phase", () => {
-        expect(output).toContain("Git Worktree isolation trigger");
-        expect(output).toContain("destructive refactoring");
-      });
+  it("all existing sections remain present and in original order", () => {
+    const sections = [
+      "Path A: One-Shot Proposal",
+      "Path B: Step-by-Step Change",
+      "Exploration",
+      "Phase 2: Apply",
+      "Phase 2.5: FuseReview",
+      "Phase 3: Verify",
+      "General Rules",
+    ];
+    let lastIdx = -1;
+    for (const section of sections) {
+      const idx = output.indexOf(section);
+      expect(idx).toBeGreaterThan(lastIdx);
+      lastIdx = idx;
+    }
+  });
 
-      it("contains worktree trigger rules in explore phase", () => {
-        expect(output).toContain("Worktree isolation (exploration)");
-        expect(output).toContain("PoC");
-      });
+  it("contains no Grill trace anywhere", () => {
+    expect(output.toLowerCase()).not.toContain("grill");
+  });
 
-      it("all existing sections remain present and in original order", () => {
-        const sections = [
-          "Path A: One-Shot Proposal",
-          "Path B: Step-by-Step Change",
-          "Exploration",
-          "Phase 2: Apply",
-          "Phase 2.5: FuseReview",
-          "Phase 3: Verify",
-          "General Rules",
-        ];
-        let lastIdx = -1;
-        for (const section of sections) {
-          const idx = output.indexOf(section);
-          expect(idx).toBeGreaterThan(lastIdx);
-          lastIdx = idx;
-        }
-      });
+  it("contains FuseReview checkpoint between Phase 2 and Phase 3", () => {
+    const applyIdx = output.indexOf("### Phase 2: Apply");
+    const fuseIdx = output.indexOf("### Phase 2.5: FuseReview");
+    const verifyIdx = output.indexOf("### Phase 3: Verify");
+    expect(fuseIdx).toBeGreaterThan(applyIdx);
+    expect(fuseIdx).toBeLessThan(verifyIdx);
+  });
 
-      it("contains no Grill trace anywhere", () => {
-        expect(output.toLowerCase()).not.toContain("grill");
-      });
-
-      it("contains FuseReview checkpoint between Phase 2 and Phase 3", () => {
-        const applyIdx = output.indexOf("### Phase 2: Apply");
-        const fuseIdx = output.indexOf("### Phase 2.5: FuseReview");
-        const verifyIdx = output.indexOf("### Phase 3: Verify");
-        expect(fuseIdx).toBeGreaterThan(applyIdx);
-        expect(fuseIdx).toBeLessThan(verifyIdx);
-      });
-
-      it("subagent two-stage review points at the FuseReview skill", () => {
-        expect(output).not.toContain("spec compliance → code quality");
-        expect(output.toLowerCase()).toContain("fusereview");
-      });
-    });
-  }
+  it("subagent two-stage review points at the FuseReview skill", () => {
+    expect(output).not.toContain("spec compliance → code quality");
+    expect(output.toLowerCase()).toContain("fusereview");
+  });
 });
 
 describe("renderApplyFuseReview", () => {

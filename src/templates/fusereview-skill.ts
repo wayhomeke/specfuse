@@ -1,7 +1,6 @@
 import type { TemplateContext } from "../types.js";
 
-export function composeFuseReviewSkill(ctx: TemplateContext): string {
-  const { stack } = ctx;
+export function composeFuseReviewSkill(_ctx: TemplateContext): string {
   return `---
 name: fusereview
 description: Use when performing the post-apply code review (FuseReview, the fourth pipeline beat) — reviews the accumulated diff of the current change with a fresh context; also runs when the user asks to "code review", "review the change", or audit the implementation quality of recent work.
@@ -74,18 +73,11 @@ For each retained value, ask whether it is borrowed or owned. Trust the type sys
 
 Locate the owner of the complete emitted or retained result, including wrappers and metadata. Probe tiny and exact limits, oversized single items, and multibyte content against byte limits.
 
-## Stack-adaptive checks
-
-Review error paths and concurrency against this project's declared stack policies:
-
-- **Error handling policy:** \`${stack.errorHandling}\` — new error paths must conform to it; deviations need justification in the diff or the change's design artifact.
-- **Concurrency model:** \`${stack.concurrency}\` — lifecycle, cancellation, and shared-state checks must be reasoned through this model.
-
 ## Output discipline
 
 - Every finding states **Defect / Location / Impact / Evidence**.
 - Separate **Blocking** findings (must fix before Verify) from **Suggestion** findings (recorded, not enforced).
-- Omit what a mechanical gate already enforces: if the stack's lint, test, or typecheck command covers a check and passes, do not re-raise it here.
+- Omit what a mechanical gate already enforces: if the project's lint, test, or typecheck command covers a check and passes, do not re-raise it here.
 
 ## Handling findings
 
