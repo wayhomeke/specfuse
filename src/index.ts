@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { collectProjectConfig } from './prompts.js';
@@ -28,7 +28,19 @@ program
   });
 
 // Only parse when run as the CLI entrypoint, so tests can import `program`.
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
-if (isMain) {
+// npm/npx invoke this file through a symlink (node_modules/.bin/create-specfuse),
+// so argv[1] must be realpath'd before comparison — comparing the raw path makes
+// every symlinked invocation look like an import and the CLI silently no-ops.
+function isEntrypoint(): boolean {
+  const invoked = process.argv[1];
+  if (!invoked) return false;
+  try {
+    return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(resolve(invoked));
+  } catch {
+    return false;
+  }
+}
+
+if (isEntrypoint()) {
   program.parse();
 }
