@@ -3,7 +3,6 @@ import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync } from 'node
 import path from 'node:path';
 import os from 'node:os';
 import { scaffold } from '../src/scaffolder.js';
-import { getBuiltinStacks } from '../src/stacks/index.js';
 import type { ProjectConfig } from '../src/types.js';
 
 vi.mock('../src/utils/tools.js', () => ({
@@ -11,6 +10,17 @@ vi.mock('../src/utils/tools.js', () => ({
   installOpenspec: vi.fn().mockResolvedValue(false),
   initOpenspec: vi.fn().mockResolvedValue(true),
 }));
+
+function baseConfig(overrides: Partial<ProjectConfig> = {}): ProjectConfig {
+  return {
+    projectName: 'test-project',
+    initGit: false,
+    initOpenspec: false,
+    targetDir: '',
+    isExisting: false,
+    ...overrides,
+  } as ProjectConfig;
+}
 
 describe('scaffolder integration', () => {
   let tmpDir: string;
@@ -27,37 +37,21 @@ describe('scaffolder integration', () => {
 
   // --- Greenfield mode (new project) ---
 
-  for (const stack of getBuiltinStacks()) {
-    it(`greenfield ${stack.id}: creates all required files`, async () => {
-      const config: ProjectConfig = {
-        projectName: 'test-project',
-        stack,
-        initGit: false,
-        initOpenspec: true,
-        targetDir: tmpDir,
-        isExisting: false,
-      };
+  it('greenfield: creates all required files', async () => {
+    const config = baseConfig({ targetDir: tmpDir, initOpenspec: true });
 
-      await scaffold(config);
+    await scaffold(config);
 
-      expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
-      expect(existsSync(path.join(tmpDir, '.gitignore'))).toBe(true);
-      expect(existsSync(path.join(tmpDir, '.claude', 'settings.local.json'))).toBe(true);
-      expect(existsSync(path.join(tmpDir, 'openspec', 'config.yaml'))).toBe(true);
-      expect(existsSync(path.join(tmpDir, 'openspec', 'specs'))).toBe(true);
-      expect(existsSync(path.join(tmpDir, 'openspec', 'changes', 'archive'))).toBe(true);
-    });
-  }
+    expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
+    expect(existsSync(path.join(tmpDir, '.gitignore'))).toBe(true);
+    expect(existsSync(path.join(tmpDir, '.claude', 'settings.local.json'))).toBe(true);
+    expect(existsSync(path.join(tmpDir, 'openspec', 'config.yaml'))).toBe(true);
+    expect(existsSync(path.join(tmpDir, 'openspec', 'specs'))).toBe(true);
+    expect(existsSync(path.join(tmpDir, 'openspec', 'changes', 'archive'))).toBe(true);
+  });
 
   it('greenfield: does not create .claude/skills/grill-me/ (phase removed)', async () => {
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
+    const config = baseConfig({ targetDir: tmpDir });
 
     await scaffold(config);
 
@@ -65,14 +59,7 @@ describe('scaffolder integration', () => {
   });
 
   it('greenfield: creates .claude/skills/fusereview/SKILL.md with rendered content', async () => {
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
+    const config = baseConfig({ targetDir: tmpDir });
 
     await scaffold(config);
 
@@ -87,14 +74,7 @@ describe('scaffolder integration', () => {
     mkdirSync(path.join(tmpDir, '.claude', 'skills', 'fusereview'), { recursive: true });
     writeFileSync(path.join(tmpDir, '.claude', 'skills', 'fusereview', 'SKILL.md'), 'custom content');
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, isExisting: true });
 
     await scaffold(config);
 
@@ -103,14 +83,7 @@ describe('scaffolder integration', () => {
   });
 
   it('greenfield: creates .claude/skills/design-md/SKILL.md', async () => {
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
+    const config = baseConfig({ targetDir: tmpDir });
 
     await scaffold(config);
 
@@ -119,15 +92,8 @@ describe('scaffolder integration', () => {
     expect(content).toContain('name: design-md');
   });
 
-  it('greenfield: CLAUDE.md contains methodology invariants', async () => {
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
+  it('greenfield: CLAUDE.md contains methodology invariants and no tech-stack block', async () => {
+    const config = baseConfig({ targetDir: tmpDir });
 
     await scaffold(config);
 
@@ -136,17 +102,11 @@ describe('scaffolder integration', () => {
     expect(content).toContain('NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE');
     expect(content).toContain('<!-- FUSION:START -->');
     expect(content).toContain('<!-- FUSION:END -->');
+    expect(content).not.toContain('## Tech Stack');
   });
 
   it('greenfield: settings.local.json is valid JSON', async () => {
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
+    const config = baseConfig({ targetDir: tmpDir });
 
     await scaffold(config);
 
@@ -158,14 +118,7 @@ describe('scaffolder integration', () => {
   it('greenfield: fails if directory already exists', async () => {
     mkdirSync(tmpDir, { recursive: true });
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: false,
-    };
+    const config = baseConfig({ targetDir: tmpDir });
 
     await expect(scaffold(config)).rejects.toThrow('already exists');
   });
@@ -177,14 +130,7 @@ describe('scaffolder integration', () => {
     const existingContent = '# My Project\n\nSome existing content.\n';
     writeFileSync(path.join(tmpDir, 'CLAUDE.md'), existingContent);
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, isExisting: true });
 
     await scaffold(config);
 
@@ -199,14 +145,7 @@ describe('scaffolder integration', () => {
     const existingContent = '# My Project\n\n<!-- FUSION:START -->\nold stuff\n<!-- FUSION:END -->\n\n# Footer\n';
     writeFileSync(path.join(tmpDir, 'CLAUDE.md'), existingContent);
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, isExisting: true });
 
     await scaffold(config);
 
@@ -223,14 +162,7 @@ describe('scaffolder integration', () => {
     mkdirSync(tmpDir, { recursive: true });
     writeFileSync(path.join(tmpDir, '.gitignore'), '# My rules\n.DS_Store\n/custom/\n');
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, isExisting: true });
 
     await scaffold(config);
 
@@ -241,14 +173,16 @@ describe('scaffolder integration', () => {
     expect(dsStoreCount).toBe(1);
   });
 
-  it('ignores a stray initCodegraph field from an untyped caller', async () => {
-    // An untyped JS caller may still pass the removed field; it must be inert.
+  it('ignores stray initCodegraph and stack fields from an untyped caller', async () => {
+    // An untyped JS caller may still pass the removed fields; both must be
+    // inert — no CodeGraph subprocess, no stack-derived content (spec:
+    // "Scaffolding ignores stray fields from an untyped caller").
     const config = {
       projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
       initGit: false,
       initOpenspec: false,
       initCodegraph: true,
+      stack: { id: 'stray', gitignorePatterns: ['/target/'], permissions: ['Bash(stray *)'] },
       targetDir: tmpDir,
       isExisting: false,
     } as unknown as ProjectConfig;
@@ -258,14 +192,16 @@ describe('scaffolder integration', () => {
     expect(existsSync(path.join(tmpDir, 'CLAUDE.md'))).toBe(true);
     const gitignore = readFileSync(path.join(tmpDir, '.gitignore'), 'utf-8');
     expect(gitignore).not.toContain('.codegraph/');
+    expect(gitignore).not.toContain('/target/');
+    const settings = JSON.parse(readFileSync(path.join(tmpDir, '.claude', 'settings.local.json'), 'utf-8'));
+    expect(settings.permissions.allow).not.toContain('Bash(stray *)');
   });
 
-  it('collectProjectConfig returns no initCodegraph field', async () => {
+  it('collectProjectConfig returns no stack field', async () => {
     const { collectProjectConfig } = await import('../src/prompts.js');
-    const config = await collectProjectConfig('test-project', 'rust', undefined, true);
-    expect(Object.prototype.hasOwnProperty.call(config, 'initCodegraph')).toBe(false);
+    const config = await collectProjectConfig('test-project', true);
+    expect(Object.prototype.hasOwnProperty.call(config, 'stack')).toBe(false);
     expect(config).toHaveProperty('projectName');
-    expect(config).toHaveProperty('stack');
     expect(config).toHaveProperty('initGit');
     expect(config).toHaveProperty('initOpenspec');
     expect(config).toHaveProperty('targetDir');
@@ -276,14 +212,7 @@ describe('scaffolder integration', () => {
     mkdirSync(tmpDir, { recursive: true });
     writeFileSync(path.join(tmpDir, '.gitignore'), '# My rules\n.codegraph/\n');
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, isExisting: true });
 
     await scaffold(config);
 
@@ -301,14 +230,7 @@ describe('scaffolder integration', () => {
       JSON.stringify(existingSettings, null, 2),
     );
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: false,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, isExisting: true });
 
     await scaffold(config);
 
@@ -322,20 +244,11 @@ describe('scaffolder integration', () => {
     mkdirSync(path.join(tmpDir, 'openspec'), { recursive: true });
     writeFileSync(path.join(tmpDir, 'openspec', 'config.yaml'), 'schema: custom\n');
 
-    const config: ProjectConfig = {
-      projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
-      initGit: false,
-      initOpenspec: true,
-      targetDir: tmpDir,
-      isExisting: true,
-    };
+    const config = baseConfig({ targetDir: tmpDir, initOpenspec: true, isExisting: true });
 
     await scaffold(config);
 
     const result = readFileSync(path.join(tmpDir, 'openspec', 'config.yaml'), 'utf-8');
     expect(result).toBe('schema: custom\n');
   });
-
-
 });

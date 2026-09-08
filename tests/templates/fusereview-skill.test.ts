@@ -1,9 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { composeFuseReviewSkill } from "../../src/templates/fusereview-skill.js";
-import { getStack } from "../../src/stacks/index.js";
 
-const rustStack = getStack("rust")!;
-const ctx = { projectName: "test-app", stack: rustStack };
+const ctx = { projectName: "test-app" };
 
 describe("fusereview-skill template", () => {
   const output = composeFuseReviewSkill(ctx);
@@ -98,7 +96,8 @@ describe("fusereview-skill template", () => {
     expect(output).toContain("Suggestion");
   });
 
-  it("omits checks already enforced by mechanical gates", () => {
+  it("omits checks already enforced by the project's mechanical gates", () => {
+    expect(lower).toContain("project's");
     expect(lower).toContain("mechanical gate");
   });
 
@@ -106,19 +105,9 @@ describe("fusereview-skill template", () => {
     expect(lower).toContain("self-contained");
   });
 
-  it("renders a stack-adaptive section with the rust stack's directives", () => {
-    expect(output).toContain(rustStack.errorHandling);
-    expect(output).toContain(rustStack.concurrency);
-  });
-
-  it("renders different directives for a different stack", () => {
-    const goStack = getStack("go")!;
-    const goOutput = composeFuseReviewSkill({
-      projectName: "go-app",
-      stack: goStack,
-    });
-    expect(goOutput).toContain(goStack.errorHandling);
-    expect(goOutput).toContain(goStack.concurrency);
-    expect(goOutput).not.toContain(rustStack.errorHandling);
+  it("contains no stack-adaptive section (stack layer removed)", () => {
+    expect(lower).not.toContain("stack-adaptive");
+    expect(lower).not.toContain("error handling policy");
+    expect(lower).not.toContain("concurrency model");
   });
 });

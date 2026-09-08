@@ -1,23 +1,4 @@
-import type { StackProfile, TemplateContext } from "../types.js";
-
-function renderTechStack(stack: StackProfile): string {
-  const lines = [
-    "## Tech Stack",
-    ...stack.languages.map((l) => `- Language: ${l}`),
-  ];
-  if (stack.framework) lines.push(`- Framework: ${stack.framework}`);
-  lines.push(
-    `- Architecture: ${stack.architecture}`,
-    `- Build: \`${stack.commands.build}\``,
-    `- Test: \`${stack.commands.test}\``,
-    `- Lint: \`${stack.commands.lint}\``,
-  );
-  if (stack.commands.format)
-    lines.push(`- Format: \`${stack.commands.format}\``);
-  if (stack.commands.typecheck)
-    lines.push(`- Typecheck: \`${stack.commands.typecheck}\``);
-  return lines.join("\n");
-}
+import type { TemplateContext } from "../types.js";
 
 function renderCommitConvention(): string {
   return `## Commit Convention
@@ -103,7 +84,7 @@ When \`/opsx:explore\` is invoked:
    Discarding a worktree costs zero — prevents exploration artifacts from polluting the main branch.`;
 }
 
-function renderApplyPhase(stack: StackProfile): string {
+function renderApplyPhase(): string {
   return `### Phase 2: Apply / Implement
 
 When \`/opsx:apply\` is invoked:
@@ -126,7 +107,7 @@ When \`/opsx:apply\` is invoked:
 2. **MUST activate Superpowers \`verification-before-completion\` before marking ANY task done.**
    - **IRON LAW: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.**
    - Before checking off a task \`[x]\`, you MUST:
-     a. Run the actual verification command in the terminal (\`${stack.commands.test}\`)
+     a. Run the project's test command in the terminal
      b. Paste the raw output as evidence
      c. Only then mark the task complete
    - "I believe it works" or "it should pass" is NEVER acceptable.
@@ -187,14 +168,14 @@ FuseReview is the fourth beat: Think reviews direction, Do produces code, **Fuse
 **Manual invocation:** the user may invoke the FuseReview skill explicitly at any time, independent of the checkpoint.`;
 }
 
-function renderVerifyPhase(stack: StackProfile): string {
+function renderVerifyPhase(): string {
   return `### Phase 3: Verify / Archive
 
 Before \`/opsx:archive\`:
 
 1. Run \`/opsx:verify\` to validate implementation matches all specs
-2. Run full test suite (\`${stack.commands.test}\`) and paste evidence
-3. Run linter (\`${stack.commands.lint}\`) with zero warnings`;
+2. Run the project's full test suite and paste evidence
+3. Run the project's linter with zero warnings`;
 }
 
 function renderGeneralRules(): string {
@@ -211,8 +192,6 @@ function renderGeneralRules(): string {
 export function composeCLAUDEmd(ctx: TemplateContext): string {
   const sections = [
     `# Project CLAUDE.md`,
-    "",
-    renderTechStack(ctx.stack),
     "",
     renderCommitConvention(),
     "",
@@ -232,11 +211,11 @@ export function composeCLAUDEmd(ctx: TemplateContext): string {
     "",
     renderExploration(),
     "",
-    renderApplyPhase(ctx.stack),
+    renderApplyPhase(),
     "",
     renderApplyFuseReview(),
     "",
-    renderVerifyPhase(ctx.stack),
+    renderVerifyPhase(),
     "",
     renderGeneralRules(),
     "<!-- FUSION:END -->",
