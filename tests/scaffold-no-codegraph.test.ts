@@ -4,7 +4,6 @@ import path from 'node:path';
 import os from 'node:os';
 import { exec } from 'node:child_process';
 import { execFile } from 'node:child_process';
-import { getBuiltinStacks } from '../src/stacks/index.js';
 import type { ProjectConfig } from '../src/types.js';
 
 // Mock the subprocess layer itself — NOT src/utils/tools.js — so the spawned
@@ -41,7 +40,6 @@ describe('scaffold spawns no CodeGraph subprocess', () => {
 
     const config: ProjectConfig = {
       projectName: 'test-project',
-      stack: getBuiltinStacks()[0],
       initGit: true,
       initOpenspec: true,
       targetDir: tmpDir,

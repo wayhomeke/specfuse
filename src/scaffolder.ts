@@ -95,8 +95,8 @@ function mergeClaudeSettings(existing: object, generated: object): object {
 }
 
 export async function scaffold(config: ProjectConfig): Promise<void> {
-  const { targetDir, stack, projectName, isExisting } = config;
-  const ctx = { projectName, stack };
+  const { targetDir, projectName, isExisting } = config;
+  const ctx = { projectName };
 
   if (!isExisting && await fileExists(targetDir)) {
     throw new Error(`Directory "${targetDir}" already exists. Omit project name to init in current directory.`);
@@ -110,7 +110,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   spinner.text = 'Writing .gitignore...';
   const gitignorePath = path.join(targetDir, '.gitignore');
   const existingGitignore = await readTextSafe(gitignorePath);
-  const generatedGitignore = composeGitignore(stack);
+  const generatedGitignore = composeGitignore();
   if (existingGitignore) {
     await writeText(gitignorePath, mergeGitignore(existingGitignore, generatedGitignore));
   } else {
@@ -132,7 +132,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   spinner.text = 'Writing .claude/settings.local.json...';
   const settingsPath = path.join(targetDir, '.claude', 'settings.local.json');
   const existingSettings = await readTextSafe(settingsPath);
-  const generatedSettings = composeClaudeSettings(stack);
+  const generatedSettings = composeClaudeSettings();
   if (existingSettings) {
     try {
       const parsed = JSON.parse(existingSettings);
@@ -182,7 +182,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     if (await fileExists(configYamlPath)) {
       spinner.text = 'OpenSpec config.yaml already exists, skipping...';
     } else {
-      await writeYAML(configYamlPath, composeOpenspecConfig(ctx));
+      await writeYAML(configYamlPath, composeOpenspecConfig());
     }
   }
 
@@ -234,7 +234,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   const tag = (label: string) => isExisting ? `${label} ${chalk.yellow('(merged)')}` : label;
 
   console.log(`    CLAUDE.md                         ${chalk.dim(tag('Bridge declaration'))}`);
-  console.log(`    .gitignore                        ${chalk.dim(tag(stack.label + ' patterns'))}`);
+  console.log(`    .gitignore                        ${chalk.dim(tag('Shared ignore patterns'))}`);
   console.log(`    .claude/settings.local.json       ${chalk.dim(tag('Permissions'))}`);
   if (config.initOpenspec) {
     console.log(`    openspec/config.yaml              ${chalk.dim('Spec-driven config')}`);

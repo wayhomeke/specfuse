@@ -1,5 +1,3 @@
-import type { StackProfile } from '../types.js';
-
 const SHARED_PATTERNS = [
   '# IDE',
   '.idea/',
@@ -24,12 +22,6 @@ const SHARED_PATTERNS = [
   '/tmp/',
 ];
 
-export function composeGitignore(stack: StackProfile): string {
-  const lines = [
-    '# Build & Dependencies',
-    ...stack.gitignorePatterns,
-    '',
-    ...SHARED_PATTERNS,
-  ];
-  return lines.join('\n') + '\n';
+export function composeGitignore(): string {
+  return SHARED_PATTERNS.join('\n') + '\n';
 }

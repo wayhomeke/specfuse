@@ -1,5 +1,3 @@
-import type { StackProfile } from '../types.js';
-
 const SHARED_PERMISSIONS = [
   'Bash(git status *)',
   'Bash(git diff *)',
@@ -20,10 +18,10 @@ const SHARED_PERMISSIONS = [
   'WebSearch',
 ];
 
-export function composeClaudeSettings(stack: StackProfile): object {
+export function composeClaudeSettings(): object {
   return {
     permissions: {
-      allow: [...stack.permissions, ...SHARED_PERMISSIONS],
+      allow: [...SHARED_PERMISSIONS],
     },
   };
 }
