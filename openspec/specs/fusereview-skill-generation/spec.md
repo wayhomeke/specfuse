@@ -1,9 +1,7 @@
 ## Purpose
 
-Defines the generation and scaffolding contract for the self-contained FuseReview skill: the eleven review checks with inlined substance, stack-adaptive sections derived from `StackProfile`, the output discipline, and distribution behavior of `scaffold()`.
-
+Defines the generation and scaffolding contract for the self-contained FuseReview skill: the eleven review checks with inlined substance, the output discipline, and distribution behavior of `scaffold()`.
 ## Requirements
-
 ### Requirement: Skill template renders eleven checks with substance
 
 `composeFuseReviewSkill(ctx)` output SHALL contain all eleven review checks — test strength, missing detection, scope fit, real entry path, interface both-sides, lifecycle and concurrency, enforcement paths, configuration choices, capability-consumer fit, borrowed-state boundaries, boundary values — each carrying actionable substance, not a bare name.
@@ -18,20 +16,6 @@ Defines the generation and scaffolding contract for the self-contained FuseRevie
 - **WHEN** `composeFuseReviewSkill(ctx)` is called
 - **THEN** the lifecycle/concurrency check contains the seven defect classes (independent orthogonal outcomes, both-sides contract normalization, async-is-not-sync, dispose-to-quiescence, callback containment, environment isolation for untrusted output, link-shaped path handling)
 
-### Requirement: Skill consumes stack profile for adaptive checks
-
-`composeFuseReviewSkill(ctx)` output SHALL include stack-adaptive review directives derived from `ctx.stack.errorHandling` and `ctx.stack.concurrency`.
-
-#### Scenario: Stack-specific directives rendered
-
-- **WHEN** `composeFuseReviewSkill(ctx)` is called with a rust stack context
-- **THEN** its output contains the rust stack's `errorHandling` text and `concurrency` text inside a stack-adaptive section
-
-#### Scenario: Different stack yields different directives
-
-- **WHEN** `composeFuseReviewSkill(ctx)` is called with a go stack context
-- **THEN** the stack-adaptive section contains the go stack's `errorHandling` text instead of the rust one
-
 ### Requirement: Skill is self-contained and disciplined
 
 `composeFuseReviewSkill(ctx)` output SHALL not depend on host-project documents for its review method and SHALL state the output discipline.
@@ -39,7 +23,7 @@ Defines the generation and scaffolding contract for the self-contained FuseRevie
 #### Scenario: Output discipline present
 
 - **WHEN** `composeFuseReviewSkill(ctx)` is called
-- **THEN** its output requires each finding to carry defect, location, impact, and evidence; separates blocking from suggestion; and instructs omitting checks already enforced by the stack's mechanical gates (lint/test/typecheck commands)
+- **THEN** its output requires each finding to carry defect, location, impact, and evidence; separates blocking from suggestion; and instructs omitting checks already enforced by the project's own mechanical gates (its lint, test, and typecheck commands)
 
 #### Scenario: No external document routing
 
@@ -59,3 +43,4 @@ Defines the generation and scaffolding contract for the self-contained FuseRevie
 
 - **WHEN** `scaffold()` runs where `.claude/skills/fusereview/SKILL.md` already exists with custom content
 - **THEN** the file content is unchanged after scaffolding
+

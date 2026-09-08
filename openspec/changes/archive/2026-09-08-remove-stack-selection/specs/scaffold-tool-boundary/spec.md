@@ -1,3 +1,18 @@
+## RENAMED Requirements
+
+The three requirements below keep their identity but widen their scope from
+"no CodeGraph" to "no CodeGraph and no stack". Renamed first so the MODIFIED
+bodies below match their new headers.
+
+- FROM: `### Requirement: ProjectConfig carries no CodeGraph field`
+- TO: `### Requirement: ProjectConfig carries no CodeGraph field and no stack field`
+
+- FROM: `### Requirement: Setup questionnaire asks exactly three questions`
+- TO: `### Requirement: Setup questionnaire asks exactly two questions`
+
+- FROM: `### Requirement: Generated .gitignore contains no CodeGraph entry`
+- TO: `### Requirement: Generated .gitignore is stack-free and contains no CodeGraph entry`
+
 ## MODIFIED Requirements
 
 ### Requirement: ProjectConfig carries no CodeGraph field and no stack field

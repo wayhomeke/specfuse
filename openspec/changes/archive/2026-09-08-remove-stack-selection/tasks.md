@@ -61,6 +61,6 @@ The per-stack loops (`for (const stack of getBuiltinStacks())`) currently encode
 
 ## 7. Follow-up (not part of apply)
 
-- [ ] 7.1 README stack sections ship as a separate `docs:` commit, per the proposal's Non-goals. Not run during `/opsx:apply`; tracked here for visibility only.
+- [x] 7.1 README stack sections ship as a separate `docs:` commit, per the proposal's Non-goals. Not run during `/opsx:apply`; tracked here for visibility only.
 
 *Not blocked; informational.*
