@@ -2,7 +2,7 @@
 
 > 把 AI 编码从即兴发挥，改造成工程流水线。
 
-SpecFuse 不发明新工具。它把 OpenSpec（流程引擎）和 Superpowers（行为约束）编排成一条 **Think → Do → FuseReview → Verify** 四拍流水线，一条命令注入任何项目——它不产生新能力，它约束产出可靠性。
+SpecFuse 不发明新工具。它把 OpenSpec（流程引擎）和 Superpowers（行为约束）编排成一条 **Think → Do → FuseReview → FuseQA → Verify** 五拍流水线，一条命令注入任何项目——它不产生新能力，它约束产出可靠性。
 
 ## 快速开始
 
@@ -25,13 +25,14 @@ npm install -g @fission-ai/openspec    # 流程引擎；装好后自动注册 /o
 
 ```
 my-app/
-├── CLAUDE.md                    # 流水线调度协议（四拍规则全文）
+├── CLAUDE.md                    # 流水线调度协议（五拍规则全文）
 ├── .gitignore                   # 共享忽略规则
 ├── .claude/
 │   ├── settings.local.json      # 权限白名单
 │   └── skills/
 │       ├── design-md/           # 设计令牌生成技能
-│       └── fusereview/          # 实施后代码评审技能
+│       ├── fusereview/          # 实施后代码评审技能
+│       └── fuseqa/              # 实施后端到端验收技能（含 4 份模板）
 └── openspec/
     ├── config.yaml              # spec 规则（流程约束）
     ├── specs/                   # 主规格
@@ -44,7 +45,7 @@ my-app/
 
 涉 UI/前端的项目，Think 阶段会触发 `/design-md` 技能生成 `DESIGN-TOKENS.md`，定义色彩、字体、间距、圆角等设计变量。也可手动 `/design-md` 为已有项目生成。
 
-## 四拍流水线
+## 五拍流水线
 
 在项目中启动 Claude Code，按这套节奏开发：
 
@@ -52,6 +53,7 @@ my-app/
 Think       /opsx:new 或 /opsx:propose     —— 方案设计与制品生成
 Do          /opsx:apply                    —— TDD 实施
 FuseReview  apply 收尾检查点                —— 冷读评审
+FuseQA      apply 收尾检查点                —— 真实入口端到端验收
 Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 ```
 
@@ -73,9 +75,20 @@ Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 - Blocking 发现走 TDD 修复；修复后只复审修复 diff，不进行第二轮全量评审。
 - 跳过评审必须记录在收尾报告中留痕。
 
+### FuseQA
+
+- apply 完成后必须询问是否验收（与 FuseReview 是**两问**，前一问答什么都不影响这一问必问，禁止合并成一问）。
+- 单测覆盖源码，冷读评审不运行系统，全量测试跑的还是单测——**没人以用户身份运行过制品**。这一拍补的就是这个缺口。
+- 用例从 specs 的 Scenario 派生，重建为真实入口（子进程 / HTTP 请求 / 浏览器），被测物是构建产物而非 `src/`；禁止 `import ../src/`（机械可查）。
+- 用例落 `tests/e2e/<capability>/`，与 `openspec/specs/<capability>/` 同名对齐，因此**回归零成本成立**——它已是全量测试的一部分。
+- 发现按**归因**分级而非按红:实现缺陷 Blocking，spec 漏洞默认 Suggestion，假红记为用例债并须写明代码为何正确。
+- 用例是项目资产，新增/修正/剔除都要留理由——剔除尤其，否则「删掉红用例」和「掩盖缺陷」在台账上无从区分。
+- **收尾报告必须同时记录 FuseReview 与 FuseQA 两条决定**，缺一条即 apply 未完成。
+
 ### Verify
 
 - `/opsx:verify` 逐条对照 specs 验证实现；`/opsx:archive` 前运行全量测试 + lint 零警告，粘贴原始输出。
+- 全量测试**即 E2E 回归门禁**（包含 `tests/e2e/` 下所有用例），不得跳过。
 
 ## 已有项目：能不动就不动
 
@@ -92,7 +105,7 @@ Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 
 ## 不问技术栈
 
-SpecFuse 是流程，不是栈选择器。Think → Do → FuseReview → Verify 对 Rust、React 或一个裸脚本完全一致，所以初始化时不会问你用什么栈，也不生成栈特化内容：
+SpecFuse 是流程，不是栈选择器。Think → Do → FuseReview → FuseQA → Verify 对 Rust、React 或一个裸脚本完全一致，所以初始化时不会问你用什么栈，也不生成栈特化内容：
 
 - `CLAUDE.md` 不含 Tech Stack 段落，验证指令写作「项目的测试命令」「项目的 linter」——由项目自己的工具链定义。
 - `.gitignore` 只给 IDE / OS / env / 日志这些共享模式，构建产物模式留给首次提交时判断。
