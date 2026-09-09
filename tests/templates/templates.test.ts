@@ -64,3 +64,18 @@ describe('gitignore template', () => {
     expect(output).not.toContain('.grill-backup/');
   });
 });
+
+describe('claude settings: FuseQA E2E permissions are stack-free', () => {
+  const allow = (composeClaudeSettings() as any).permissions.allow as string[];
+
+  it('permits isolated scratch-environment construction', () => {
+    expect(allow).toContain('Bash(mktemp *)');
+    expect(allow).toContain('Bash(mkdir *)');
+  });
+
+  it('mandates no test framework', () => {
+    for (const p of allow) {
+      expect(p).not.toMatch(/vitest|bats|playwright|jest/i);
+    }
+  });
+});

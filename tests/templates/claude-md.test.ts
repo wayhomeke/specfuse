@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   composeCLAUDEmd,
   renderApplyFuseReview,
+  renderFuseQA,
+  renderVerifyPhase,
 } from "../../src/templates/claude-md.js";
 
 describe("CLAUDE.md template", () => {
@@ -164,5 +166,164 @@ describe("renderApplyFuseReview", () => {
 
   it("preserves manual invocation", () => {
     expect(lower).toContain("at any time");
+  });
+});
+
+// --- FuseQA checkpoint (fifth beat) ---
+// spec: fuseqa-checkpoint
+describe("FuseQA checkpoint", () => {
+  const fq = renderFuseQA();
+
+  it("asks a MUST-level question and forbids silent advancement", () => {
+    expect(fq).toContain("MUST");
+    expect(fq).toMatch(/forbidden/i);
+    expect(fq).toContain("/opsx:verify");
+  });
+
+  it("states the question is independent of the FuseReview answer", () => {
+    expect(fq).toMatch(/FuseReview/);
+    expect(fq).toMatch(/any FuseReview answer|regardless of/i);
+  });
+
+  it("forbids merging the two checkpoints into one question", () => {
+    expect(fq).toMatch(/never merge|MUST NOT be merged|single question/i);
+  });
+});
+
+describe("FuseQA facts, scope and skill reference", () => {
+  const fq = renderFuseQA();
+
+  it("presents the three change facts", () => {
+    expect(fq).toMatch(/user-observable entry point/i);
+    expect(fq).toMatch(/capabilit/i);
+    expect(fq).toMatch(/E2E case count/i);
+  });
+
+  it("states there are no automatic thresholds and the user decides", () => {
+    expect(fq).toMatch(/no automatic trigger thresholds/i);
+    expect(fq).toMatch(/decision belongs to the user/i);
+  });
+
+  it("assigns regression execution to the Verify phase", () => {
+    expect(fq).toMatch(/Regression execution is NOT part of this beat/i);
+    expect(fq).toMatch(/Verify phase full test run/i);
+  });
+
+  it("defines no separate red-diagnosis stage", () => {
+    expect(fq).toMatch(/no separate red-diagnosis stage/i);
+    expect(fq).toMatch(/TDD RED step/);
+  });
+
+  it("references the skill path and preserves manual invocation", () => {
+    expect(fq).toContain(".claude/skills/fuseqa/SKILL.md");
+    expect(fq).toMatch(/invoke the FuseQA skill explicitly at any time/i);
+  });
+});
+
+describe("FuseQA grading by attribution", () => {
+  const fq = renderFuseQA();
+
+  it("grades an implementation defect as Blocking", () => {
+    expect(fq).toMatch(/Implementation defect .*Blocking/i);
+  });
+
+  it("grades a spec gap as Suggestion with escalation", () => {
+    expect(fq).toMatch(/Spec gap .*Suggestion/i);
+    expect(fq).toMatch(/Escalate to Blocking/i);
+  });
+
+  it("treats a false red as case debt outside the grading", () => {
+    expect(fq).toMatch(/False red .*case debt/i);
+    expect(fq).toMatch(/why the implementation is correct/i);
+  });
+
+  it("bounds attribution with a time box that cannot hold up completion", () => {
+    expect(fq).toMatch(/time box/i);
+    expect(fq).toMatch(/MUST NOT hold up apply completion/i);
+  });
+});
+
+describe("FuseQA case lifecycle", () => {
+  const fq = renderFuseQA();
+
+  it("places cases under tests/e2e/<capability>/ aligned with specs", () => {
+    expect(fq).toContain("tests/e2e/<capability>/");
+    expect(fq).toContain("openspec/specs/<capability>/");
+  });
+
+  it("requires a reason for removal", () => {
+    expect(fq).toMatch(/Removal.*records why/i);
+    expect(fq).toMatch(/indistinguishable in the ledger/i);
+  });
+
+  it("requires an added case to trace to its source", () => {
+    expect(fq).toMatch(/Addition\*\* records its source/i);
+    expect(fq).toMatch(/spec Scenario|escaped defect/i);
+  });
+});
+
+describe("FuseQA dual-record completion condition", () => {
+  const fq = renderFuseQA();
+
+  it("requires both checkpoint decisions in the completion report", () => {
+    expect(fq).toMatch(/MUST record the FuseReview decision AND the FuseQA decision/i);
+  });
+
+  it("states a missing record means apply is incomplete and blocks verify", () => {
+    expect(fq).toMatch(/not complete/i);
+    expect(fq).toMatch(/\/opsx:verify.*MUST NOT be entered/i);
+  });
+});
+
+describe("Verify phase names the E2E regression gate", () => {
+  const vp = renderVerifyPhase();
+
+  it("declares the full test run to be the E2E regression gate", () => {
+    expect(vp).toMatch(/E2E regression gate/i);
+    expect(vp).toContain("tests/e2e/");
+    expect(vp).toMatch(/MUST NOT be skipped/i);
+  });
+});
+
+describe("FuseReview decline does not end the exit sequence", () => {
+  it("states FuseQA remains mandatory after declining FuseReview", () => {
+    const fr = renderApplyFuseReview();
+    expect(fr).toMatch(/Declining does not end the apply exit sequence/i);
+    expect(fr).toMatch(/FuseQA checkpoint that follows remains mandatory/i);
+  });
+});
+
+describe("CLAUDE.md assembly order", () => {
+  const out = composeCLAUDEmd({ projectName: "test" });
+
+  it("orders FuseReview before FuseQA before Verify", () => {
+    const fr = out.indexOf("Phase 2.5: FuseReview Checkpoint");
+    const fq = out.indexOf("Phase 2.6: FuseQA Checkpoint");
+    const vp = out.indexOf("Phase 3: Verify / Archive");
+    expect(fr).toBeGreaterThan(-1);
+    expect(fq).toBeGreaterThan(-1);
+    expect(vp).toBeGreaterThan(-1);
+    expect(fr).toBeLessThan(fq);
+    expect(fq).toBeLessThan(vp);
+  });
+});
+
+describe("FuseQA skip is recorded with facts (spec: fuseqa-checkpoint)", () => {
+  it("requires a declined FuseQA to be recorded with the change facts", () => {
+    // Asserted against renderFuseQA specifically: the FuseReview section has its
+    // own auditable-skip line, so a suite-wide match would pass on the wrong text.
+    const fq = renderFuseQA();
+    expect(fq).toMatch(/declined FuseQA is recorded together with the change facts/i);
+    expect(fq).toMatch(/auditable rather than invisible/i);
+  });
+});
+
+describe("FuseReview lower bound is the Do phase (spec: apply-exit-checkpoint)", () => {
+  it("places FuseReview after the apply phase, not merely before FuseQA", () => {
+    const out = composeCLAUDEmd({ projectName: "test" });
+    const apply = out.indexOf("Phase 2: Apply / Implement");
+    const fr = out.indexOf("Phase 2.5: FuseReview Checkpoint");
+    expect(apply).toBeGreaterThan(-1);
+    expect(fr).toBeGreaterThan(apply);
   });
 });

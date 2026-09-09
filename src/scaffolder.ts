@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { access, readFile, writeFile, readdir, copyFile } from 'node:fs/promises';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, type Dirent } from 'node:fs';
 import os from 'node:os';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -10,6 +10,7 @@ import { composeClaudeSettings } from './templates/claude-settings.js';
 import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
+import { composeFuseQASkill } from './templates/fuseqa-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -94,6 +95,35 @@ function mergeClaudeSettings(existing: object, generated: object): object {
   return { ...existing, permissions: { ...(existing as any)?.permissions, allow: merged } };
 }
 
+/**
+ * Copy every file in a template directory. Deliberately unfiltered: template
+ * directories contain only templates, and an extension filter silently drops
+ * whatever format it was not told about (the .yaml-only filter this replaced
+ * would have dropped all three Markdown FuseQA templates).
+ *
+ * A missing source directory is fatal rather than skipped: a skill that
+ * references templates which were never copied is worse than a failed scaffold,
+ * because the failure surfaces later and further from its cause.
+ */
+async function copyTemplateDir(srcDir: string, destDir: string): Promise<void> {
+  let entries: Dirent[];
+  try {
+    entries = await readdir(srcDir, { withFileTypes: true });
+  } catch {
+    throw new Error(`Template source directory missing: ${srcDir}`);
+  }
+  await createDir(destDir);
+  for (const e of entries) {
+    const src = path.join(srcDir, e.name);
+    const dest = path.join(destDir, e.name);
+    if (e.isDirectory()) {
+      await copyTemplateDir(src, dest);
+    } else {
+      await copyFile(src, dest);
+    }
+  }
+}
+
 export async function scaffold(config: ProjectConfig): Promise<void> {
   const { targetDir, projectName, isExisting } = config;
   const ctx = { projectName };
@@ -162,16 +192,26 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await writeText(fusereviewSkillPath, composeFuseReviewSkill(ctx));
   }
 
-  // Design-md archetype templates
-  spinner.text = 'Copying design-md archetype templates...';
-  const templatesDestDir = path.join(targetDir, '.claude', 'skills', 'design-md', 'templates');
-  const templatesSrcDir = path.join(import.meta.dirname, 'design-md', 'templates');
-  await createDir(templatesDestDir);
-  const templateFiles = await readdir(templatesSrcDir);
-  for (const f of templateFiles.filter((f) => f.endsWith('.yaml'))) {
-    await copyFile(path.join(templatesSrcDir, f), path.join(templatesDestDir, f));
+  // FuseQA skill
+  spinner.text = 'Writing .claude/skills/fuseqa/SKILL.md...';
+  const fuseqaSkillPath = path.join(targetDir, '.claude', 'skills', 'fuseqa', 'SKILL.md');
+  const existingFuseqaSkill = await readTextSafe(fuseqaSkillPath);
+  if (!existingFuseqaSkill) {
+    await createDir(path.join(targetDir, '.claude', 'skills', 'fuseqa'));
+    await writeText(fuseqaSkillPath, composeFuseQASkill(ctx));
   }
-  spinner.succeed('Installed design-md skill with archetype templates');
+
+  // Skill templates
+  spinner.text = 'Copying skill templates...';
+  await copyTemplateDir(
+    path.join(import.meta.dirname, 'design-md', 'templates'),
+    path.join(targetDir, '.claude', 'skills', 'design-md', 'templates'),
+  );
+  await copyTemplateDir(
+    path.join(import.meta.dirname, 'fuseqa', 'templates'),
+    path.join(targetDir, '.claude', 'skills', 'fuseqa', 'templates'),
+  );
+  spinner.succeed('Installed design-md and fuseqa skills with templates');
 
   // OpenSpec
   if (config.initOpenspec) {
