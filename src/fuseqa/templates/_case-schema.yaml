@@ -1,0 +1,70 @@
+# FuseQA case contract.
+#
+# Declares what every E2E case must state about itself. This is a structure
+# contract, not a code skeleton: it fixes the five things a case must declare
+# and says nothing about which test framework expresses them. Use the project's
+# existing test stack.
+type: object
+required:
+  - artifact
+  - entry
+  - isolation
+  - observable
+  - traces-to
+properties:
+  artifact:
+    type: string
+    description: >-
+      What is under test: the build output or an installed package.
+      Constraint: this is not a source path — TDD covers source, FuseQA covers
+      what ships. A case pointed at src/ is a unit test wearing a costume.
+    examples:
+      - build output invoked as an installed binary
+      - the packed tarball installed into a scratch project
+      - the running server started from the build output
+  entry:
+    type: string
+    description: >-
+      The user-reachable entry point being exercised.
+      Constraint: this is not a function name — a case that imports project
+      source and calls a function has no entry point, it has an internal call.
+      For an artifact shape with no
+      recipe, record here the conclusion derived from the three questions
+      (how obtained / how triggered / what is observable) so the derivation
+      is auditable.
+    examples:
+      - subprocess with argv, invoked through a symlinked bin shim
+      - HTTP request against a live port
+      - browser navigation to a served page
+      - import via the path declared in package.json exports
+      - the real consumer that reads this artifact
+  isolation:
+    type: string
+    description: >-
+      How this case avoids contaminating and being contaminated by others.
+      Cases that share mutable state pass alone and fail in suite.
+    examples:
+      - fresh temp directory, removed on teardown
+      - dedicated port per case
+      - fresh browser context
+  observable:
+    type: string
+    description: >-
+      The externally observable signal asserted on. If a requirement has no
+      externally observable consequence, it has no FuseQA case — skip it
+      rather than inventing one.
+    examples:
+      - process exit code
+      - stdout content
+      - files written to disk
+      - HTTP status and body
+      - rendered DOM state
+  traces-to:
+    type: string
+    description: >-
+      Why this case exists: the spec Scenario it derives from, or the escaped
+      defect it was written for. A case with no traceable source cannot be
+      retired later on evidence.
+    examples:
+      - "spec: <capability> / Scenario: <name>"
+      - "defect: entry guard failed through symlinked bin shim"

@@ -15,7 +15,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc && mkdir -p dist/design-md && cp -r src/design-md/templates dist/design-md/templates",
+    "build": "rm -rf dist && tsc && for d in src/*/templates; do [ -d \"$d\" ] || continue; m=$(dirname \"$d\"); mkdir -p \"dist/${m#src/}\"; mkdir -p \"dist/${m#src/}/templates\" && cp -r \"$d/.\" \"dist/${m#src/}/templates/\"; done",
     "samples": "npx tsx scripts/generate-samples.ts",
     "test": "vitest run",
     "dev": "tsc --watch"
