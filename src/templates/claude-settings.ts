@@ -15,6 +15,11 @@ const SHARED_PERMISSIONS = [
   'Bash(grep *)',
   'Bash(wc *)',
   'Bash(tree *)',
+  // FuseQA E2E cases run the built artifact in an isolated scratch directory.
+  // Deliberately stack-free: no test-framework entries — the project's own
+  // stack decides how cases are expressed.
+  'Bash(mktemp *)',
+  'Bash(mkdir *)',
   'WebSearch',
 ];
 

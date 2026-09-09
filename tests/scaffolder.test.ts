@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync, readdirSync, cpSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { scaffold } from '../src/scaffolder.js';
@@ -90,6 +90,81 @@ describe('scaffolder integration', () => {
     expect(existsSync(path.join(tmpDir, '.claude', 'skills', 'design-md', 'SKILL.md'))).toBe(true);
     const content = readFileSync(path.join(tmpDir, '.claude', 'skills', 'design-md', 'SKILL.md'), 'utf-8');
     expect(content).toContain('name: design-md');
+  });
+
+  // Safety net for the copyTemplateDir refactor: these lock in design-md's
+  // current distribution behavior so replacing the .yaml-only filter cannot
+  // silently drop templates.
+  it('greenfield: copies all design-md archetype templates', async () => {
+    const config = baseConfig({ targetDir: tmpDir });
+
+    await scaffold(config);
+
+    const dir = path.join(tmpDir, '.claude', 'skills', 'design-md', 'templates');
+    expect(existsSync(dir)).toBe(true);
+    const files = readdirSync(dir);
+    expect(files).toContain('_schema.yaml');
+    expect(files.filter((f) => f.endsWith('.yaml')).length).toBe(17);
+  });
+
+  it('existing: does not overwrite a custom design-md SKILL.md', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'skills', 'design-md'), { recursive: true });
+    const skillPath = path.join(tmpDir, '.claude', 'skills', 'design-md', 'SKILL.md');
+    writeFileSync(skillPath, 'custom design-md content');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(skillPath, 'utf-8')).toBe('custom design-md content');
+  });
+
+  it('greenfield: creates .claude/skills/fuseqa/SKILL.md with its templates', async () => {
+    const config = baseConfig({ targetDir: tmpDir });
+
+    await scaffold(config);
+
+    const skillPath = path.join(tmpDir, '.claude', 'skills', 'fuseqa', 'SKILL.md');
+    expect(existsSync(skillPath)).toBe(true);
+    expect(readFileSync(skillPath, 'utf-8')).toContain('name: fuseqa');
+
+    const tdir = path.join(tmpDir, '.claude', 'skills', 'fuseqa', 'templates');
+    expect(existsSync(tdir)).toBe(true);
+    expect(readdirSync(tdir).sort()).toEqual([
+      '_case-schema.yaml',
+      'derivation-checklist.md',
+      'entry-recipes.md',
+      'ledger.md',
+    ]);
+  });
+
+  it('existing: does not overwrite a custom fuseqa SKILL.md', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'skills', 'fuseqa'), { recursive: true });
+    const skillPath = path.join(tmpDir, '.claude', 'skills', 'fuseqa', 'SKILL.md');
+    writeFileSync(skillPath, 'custom fuseqa content');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(skillPath, 'utf-8')).toBe('custom fuseqa content');
+  });
+
+  it('missing template source is fatal, not silently skipped', async () => {
+    // A skill referencing templates that were never copied fails later and
+    // further from its cause than a failed scaffold does. Simulated by making
+    // the built template source unreadable to the copy step.
+    const { rm } = await import('node:fs/promises');
+    const srcDir = path.resolve(import.meta.dirname, '..', 'src', 'fuseqa', 'templates');
+    const stash = path.join(os.tmpdir(), `fuseqa-tpl-stash-${Date.now()}`);
+
+    // Move the real template dir aside, run scaffold, expect a thrown error.
+    cpSync(srcDir, stash, { recursive: true });
+    await rm(srcDir, { recursive: true, force: true });
+    try {
+      await expect(scaffold(baseConfig({ targetDir: tmpDir }))).rejects.toThrow(
+        /Template source directory missing/,
+      );
+    } finally {
+      cpSync(stash, srcDir, { recursive: true });
+      rmSync(stash, { recursive: true, force: true });
+    }
   });
 
   it('greenfield: CLAUDE.md contains methodology invariants and no tech-stack block', async () => {
