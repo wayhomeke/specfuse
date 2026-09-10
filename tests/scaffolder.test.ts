@@ -22,6 +22,23 @@ function baseConfig(overrides: Partial<ProjectConfig> = {}): ProjectConfig {
   } as ProjectConfig;
 }
 
+/**
+ * The scaffolder reports OpenSpec readiness through stdout, so these suites
+ * capture console.log rather than inspecting the filesystem.
+ */
+async function captureScaffold(config: ProjectConfig): Promise<string> {
+  const lines: string[] = [];
+  const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+    lines.push(args.map(String).join(' '));
+  });
+  try {
+    await scaffold(config);
+  } finally {
+    spy.mockRestore();
+  }
+  return lines.join('\n');
+}
+
 describe('scaffolder integration', () => {
   let tmpDir: string;
 
@@ -325,5 +342,299 @@ describe('scaffolder integration', () => {
 
     const result = readFileSync(path.join(tmpDir, 'openspec', 'config.yaml'), 'utf-8');
     expect(result).toBe('schema: custom\n');
+  });
+});
+
+// spec: openspec-readiness-reporting
+// Safety net: the E2E cases always run with openspec off PATH and a stubbed npm,
+// i.e. permanently on the install-failed path. The success path can only be held
+// down here, so it is pinned before the print block is touched.
+describe('OpenSpec readiness reporting — success path', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = path.join(os.tmpdir(), `fusion-ready-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  });
+
+  afterEach(async () => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+    // Reset here, not in a test body: a body-level reset is skipped whenever the
+    // test fails, leaving the mock mutated for whatever runs next.
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  it('prints the opsx line verbatim when OpenSpec is ready', async () => {
+    // The top-level mock defaults to detect=false/install=false, i.e. the
+    // install-failed path. Readiness must be set explicitly.
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(true);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).toContain('/opsx:propose   # start your first change');
+  });
+
+  it('prints the opsx line verbatim and no notice when the user declined OpenSpec', async () => {
+    // 'skipped' and 'ready' print identically but are distinct states: nothing
+    // was attempted, so nothing failed and there is nothing to report.
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: false }));
+
+    expect(out).toContain('/opsx:propose   # start your first change');
+    expect(out).not.toMatch(/OpenSpec CLI not (installed|available)/i);
+  });
+});
+
+// spec: openspec-readiness-reporting
+describe('OpenSpec readiness reporting — install failed', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = path.join(os.tmpdir(), `fusion-nofail-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.installOpenspec).mockResolvedValue(false);
+  });
+
+  afterEach(async () => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.installOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  it('annotates the opsx line instead of promising it works', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).toMatch(/\/opsx:propose\s+\S*#? ?unavailable yet/i);
+    expect(out).not.toContain('# start your first change');
+  });
+
+  it('lists both repair commands, since the CLI itself is missing', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).toContain('npm i -g @fission-ai/openspec');
+    expect(out).toContain('openspec init --tools claude --force');
+  });
+
+  it('states the consequence: the opsx commands do not exist yet', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).toMatch(/\/opsx:\*/);
+    expect(out).toMatch(/not available|cannot be entered/i);
+  });
+
+  it('places the notice after Next steps', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    const nextSteps = out.indexOf('Next steps');
+    const notice = out.search(/OpenSpec (CLI )?(not|is not)/i);
+    expect(nextSteps).toBeGreaterThan(-1);
+    expect(notice).toBeGreaterThan(nextSteps);
+  });
+});
+
+// spec: openspec-readiness-reporting
+describe('OpenSpec readiness reporting — init failed', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = path.join(os.tmpdir(), `fusion-initfail-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(true);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(false);
+  });
+
+  afterEach(async () => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  it('lists only the init command, because the CLI is already installed', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).toContain('openspec init --tools claude --force');
+    expect(out).not.toContain('npm i -g @fission-ai/openspec');
+  });
+
+  it('annotates the opsx line on this path too', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).not.toContain('# start your first change');
+  });
+});
+
+// spec: openspec-readiness-reporting
+describe('OpenSpec readiness reporting — no notice on the quiet paths', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = path.join(os.tmpdir(), `fusion-quiet-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  });
+
+  afterEach(async () => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  it('prints no OpenSpec notice when it is ready', async () => {
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(true);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).not.toMatch(/Note: OpenSpec/i);
+    expect(out).not.toContain('npm i -g @fission-ai/openspec');
+  });
+
+  it('prints no OpenSpec notice when the user declined it', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: false }));
+
+    expect(out).not.toMatch(/Note: OpenSpec/i);
+  });
+});
+
+// spec: openspec-readiness-reporting
+describe('OpenSpec readiness reporting — Next steps keeps its structure', () => {
+  let tmpDir: string;
+
+  // chalk emits escape codes even in a non-TTY, so strip them before comparing
+  // structure; otherwise a coloured comment marker looks like a different line.
+  const stripAnsi = (v: string) => v.replace(/\u001b\[[0-9;]*m/g, '');
+
+  const nextStepsBlock = (out: string) => {
+    const lines = stripAnsi(out).split('\n');
+    const start = lines.findIndex((l) => l.includes('Next steps'));
+    const rest = lines.slice(start + 1);
+    const end = rest.findIndex((l) => l.trim() === '');
+    return (end === -1 ? rest : rest.slice(0, end)).map((l) => l.trim());
+  };
+
+  beforeEach(() => {
+    tmpDir = path.join(os.tmpdir(), `fusion-struct-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  });
+
+  afterEach(async () => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  it('emits the same lines in the same order on both paths', async () => {
+    // Guards against a future line inserted into Next steps that bypasses the
+    // annotation: the sequences would stop matching.
+    const failed = nextStepsBlock(
+      await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true })),
+    );
+
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(true);
+    const ready = nextStepsBlock(
+      await captureScaffold(baseConfig({ targetDir: `${tmpDir}-b`, initOpenspec: true })),
+    );
+    rmSync(`${tmpDir}-b`, { recursive: true, force: true });
+
+    // Pinned against a literal sequence: a relative comparison alone cannot see
+    // a line added unconditionally, because it appears on both paths and the
+    // sequences still match.
+    expect(failed.map((l) => l.split('#')[0].trim())).toEqual([
+      'cd test-project',
+      'claude',
+      '/opsx:propose',
+    ]);
+    expect(failed.length).toBe(ready.length);
+    expect(failed.map((l) => l.split('#')[0].trim())).toEqual(
+      ready.map((l) => l.split('#')[0].trim()),
+    );
+  });
+
+  it('keeps repair commands out of Next steps', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+    const block = nextStepsBlock(out).join('\n');
+
+    expect(block).not.toContain('npm i -g');
+    expect(block).not.toContain('openspec init');
+  });
+});
+
+// spec: openspec-readiness-reporting
+describe('OpenSpec readiness comes from the recorded outcome, not a probe', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = path.join(os.tmpdir(), `fusion-probe-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    // Set the mocks this suite needs rather than inheriting whatever the previous
+    // suite's afterEach left behind: a leaked detect=true makes this read as ready
+    // and the suite passes for the wrong reason.
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.installOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('still reports failure when a stale opsx directory exists from an earlier run', async () => {
+    // A filesystem probe would read this leftover directory as success and hide
+    // the failure that happened in THIS run.
+    mkdirSync(path.join(tmpDir, '.claude', 'commands', 'opsx'), { recursive: true });
+    writeFileSync(path.join(tmpDir, '.claude', 'commands', 'opsx', 'new.md'), 'stale');
+
+    const out = await captureScaffold(
+      baseConfig({ targetDir: tmpDir, initOpenspec: true, isExisting: true }),
+    );
+
+    expect(out).toMatch(/Note: OpenSpec/i);
+    expect(out).not.toContain('# start your first change');
+  });
+});
+
+// spec: openspec-readiness-reporting
+// The branch where installOpenspec() succeeds but initOpenspec() then fails.
+// Nothing else in the suite sets installOpenspec to true, so without this suite
+// `if (installed)` is never entered and the original defect can be reintroduced
+// there while every gate stays green.
+describe('OpenSpec readiness reporting — installed, then init failed', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = path.join(os.tmpdir(), `fusion-postinst-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.installOpenspec).mockResolvedValue(true);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(false);
+  });
+
+  afterEach(async () => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+    const tools = await import('../src/utils/tools.js');
+    vi.mocked(tools.detectOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.installOpenspec).mockResolvedValue(false);
+    vi.mocked(tools.initOpenspec).mockResolvedValue(true);
+  });
+
+  it('reports failure rather than promising the command works', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).not.toContain('# start your first change');
+    expect(out).toMatch(/Note: OpenSpec/i);
+  });
+
+  it('lists only the init command, since the CLI got installed', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
+
+    expect(out).toContain('openspec init --tools claude --force');
+    expect(out).not.toContain('npm i -g @fission-ai/openspec');
   });
 });

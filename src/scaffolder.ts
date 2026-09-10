@@ -124,9 +124,19 @@ async function copyTemplateDir(srcDir: string, destDir: string): Promise<void> {
   }
 }
 
+/**
+ * Whether OpenSpec ended up usable in this run. Carried from the setup step to
+ * the print block rather than re-derived: probing for `.claude/commands/opsx/`
+ * would read a directory left by an earlier run as success, masking a failure
+ * in this one. The two failure states are kept apart because they need
+ * different repair steps.
+ */
+type OpenspecStatus = 'skipped' | 'ready' | 'install-failed' | 'init-failed';
+
 export async function scaffold(config: ProjectConfig): Promise<void> {
   const { targetDir, projectName, isExisting } = config;
   const ctx = { projectName };
+  let openspecStatus: OpenspecStatus = 'skipped';
 
   if (!isExisting && await fileExists(targetDir)) {
     throw new Error(`Directory "${targetDir}" already exists. Omit project name to init in current directory.`);
@@ -240,6 +250,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
 
     if (hasOpenspec) {
       const ok = await initOpenspec(targetDir);
+      openspecStatus = ok ? 'ready' : 'init-failed';
       if (!ok) {
         spinner.warn('OpenSpec init failed. Run manually: openspec init --tools claude --force');
       }
@@ -248,10 +259,12 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
       const installed = await installOpenspec();
       if (installed) {
         const ok = await initOpenspec(targetDir);
+        openspecStatus = ok ? 'ready' : 'init-failed';
         if (!ok) {
           spinner.warn('OpenSpec installed but init failed. Run manually: openspec init --tools claude --force');
         }
       } else {
+        openspecStatus = 'install-failed';
         spinner.warn(
           'OpenSpec CLI installation failed. Install manually: npm i -g @fission-ai/openspec && openspec init',
         );
@@ -283,7 +296,30 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   console.log(chalk.bold('  Next steps:'));
   if (!isExisting) console.log(`    cd ${projectName}`);
   console.log('    claude');
-  console.log('    /opsx:propose   # start your first change');
+  const openspecReady = openspecStatus === 'ready' || openspecStatus === 'skipped';
+  console.log(
+    openspecReady
+      ? '    /opsx:propose   # start your first change'
+      : `    /opsx:propose   ${chalk.yellow('# unavailable yet — see the note below')}`,
+  );
+
+  if (!openspecReady) {
+    console.log('');
+    console.log(
+      chalk.yellow(
+        openspecStatus === 'install-failed'
+          ? '  Note: OpenSpec CLI not installed.'
+          : '  Note: OpenSpec initialization did not complete.',
+      ),
+    );
+    console.log(chalk.dim('  The /opsx:* slash commands are not available, so the generated'));
+    console.log(chalk.dim('  workflow cannot be entered until OpenSpec is initialized.'));
+    console.log(chalk.dim('  Run in the project directory:'));
+    if (openspecStatus === 'install-failed') {
+      console.log(chalk.dim('    npm i -g @fission-ai/openspec'));
+    }
+    console.log(chalk.dim('    openspec init --tools claude --force'));
+  }
 
   if (!hasSuperpowersPlugin()) {
     console.log('');

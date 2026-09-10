@@ -75,3 +75,51 @@ rather than invisible.
 
 Neither gap is a known defect; both are untested surface. Recorded here so a
 future change can pick them up deliberately rather than rediscovering them.
+
+## Addition — 2026-09-11 (change: openspec-init-failure-visibility)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/openspec-readiness-reporting/success-path.test.ts` (2 cases) |
+| Capability | `openspec-readiness-reporting` |
+| Traces to | spec Scenarios "Line is verbatim when OpenSpec is ready" and "No notice on the success path" |
+| Shape | CLI — real subprocess with argv, real OpenSpec CLI reachable, scratch HOME |
+
+Covers the **success** path, which no other test reaches end to end: the unit
+suite mocks `utils/tools.js`, so `initOpenspec` returning true is an assumption
+rather than an observation, and the pre-existing E2E suite is permanently on the
+install-failed path (narrowed `PATH`, stub `npm`).
+
+**Why it is not a duplicate of the unit tests.** Mutating the scaffolder to
+report `'ready'` regardless of the real init result — the one defect class a mock
+cannot see — turns this case red on `existsSync(<project>/.claude/commands/opsx)`
+(`expected false to be true`), while the unit suite stays green. A mocked "ready"
+cannot distinguish a working init from a no-op; only running the real CLI can.
+
+**Timeout:** 60s per case, because a real `openspec init` costs ~5.7s, above
+vitest's 5s default. This is inherent to the path under observation, not case
+debt — the work being paid for is the thing being verified. Full suite goes from
+~5s to ~16s as a result.
+
+**Environment self-check:** the suite skips with a printed reason when the
+OpenSpec CLI is not on `PATH` — "cannot execute" is not "failed", and an
+unexecutable case must not turn the regression gate red.
+
+**Isolation:** scratch `HOME`/`XDG_CONFIG_HOME` per file. Verified the real
+`openspec init` and the trust-list write land inside it: `~/.claude.json`
+project count unchanged (1493) and `~/.config/openspec/config.json` mtime
+unchanged across runs.
+
+## Known gap recorded, not fixed (change: openspec-init-failure-visibility)
+
+The **unit** suite still writes trust entries into the developer's real
+`~/.claude.json` — measured at ~35 rows per full run, of which ~16 come from the
+suites added by this change. `trustDirectory()` calls `os.homedir()`, which
+ignores an in-process `process.env.HOME` reassignment, so unit tests cannot
+isolate it the way subprocess-based E2E cases do.
+
+Deferred deliberately: the fix requires changing `trustDirectory()`'s signature
+(inject the path), which is a production interface change orthogonal to making a
+failure visible. "Pre-existing" alone is not a sufficient reason — this change
+roughly doubles the leak rate — so the reason on record is the scope boundary,
+with the rate quantified here so a follow-up change has a baseline.

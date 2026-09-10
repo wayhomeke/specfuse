@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync, mkdirSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -28,6 +28,7 @@ import path from 'node:path';
  * script, not by tsc, so a build-script regression is invisible to it.
  */
 const DIST = path.resolve(import.meta.dirname, '..', '..', '..', 'dist', 'index.js');
+const ANSI = new RegExp(String.fromCharCode(27) + '\\[[0-9;]*m', 'g');
 const EXPECTED_TEMPLATES = [
   '_case-schema.yaml',
   'derivation-checklist.md',
@@ -165,5 +166,44 @@ describe('scaffolded project receives the FuseQA skill from the built artifact',
     expect(
       existsSync(path.join(base, 'app-e', '.claude', 'skills', 'fuseqa', 'SKILL.md')),
     ).toBe(true);
+  });
+
+  // spec: openspec-readiness-reporting / "Built CLI exits zero on the failure path"
+  // OpenSpec is unreachable here (narrowed PATH, stubbed npm), so this run takes
+  // the install-failed path. Exit code 0 is the change's central non-goal:
+  // reporting the failure must not turn scaffolding into a failure.
+  it('exits zero even though OpenSpec could not be installed', () => {
+    const r = spawnSync(process.execPath, [DIST, 'app-exit', '--yes'], {
+      encoding: 'utf-8',
+      cwd: dir,
+      env,
+    });
+
+    expect(r.status).toBe(0);
+    const clean = (r.stdout ?? '').replace(/\u001b\[[0-9;]*m/g, '');
+    expect(clean).toMatch(/Note: OpenSpec/i);
+    expect(clean).not.toContain('# start your first change');
+  });
+
+  // spec: openspec-readiness-reporting / "Superpowers notice is unaffected"
+  // Only reachable through a subprocess: hasSuperpowersPlugin() reads
+  // $HOME/.claude/plugins, and the scratch HOME here has no plugins, so the
+  // notice is live. In-process unit tests read the developer's real HOME, where
+  // the plugin IS installed and the block never runs.
+  it('prints the Superpowers notice alongside the OpenSpec one, unchanged', () => {
+    const r = spawnSync(process.execPath, [DIST, 'app-notices', '--yes'], {
+      encoding: 'utf-8',
+      cwd: dir,
+      env,
+    });
+    const clean = (r.stdout ?? '').replace(ANSI, '');
+
+    expect(clean).toContain('Note: Superpowers plugin not detected.');
+    expect(clean).toContain('/plugins add obra/superpowers');
+    // Both notices coexist: reporting OpenSpec did not displace the other.
+    expect(clean).toMatch(/Note: OpenSpec/i);
+    expect(clean.indexOf('Note: OpenSpec')).toBeLessThan(
+      clean.indexOf('Note: Superpowers'),
+    );
   });
 });
