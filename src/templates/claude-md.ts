@@ -84,18 +84,19 @@ When \`/opsx:explore\` is invoked:
    Discarding a worktree costs zero — prevents exploration artifacts from polluting the main branch.`;
 }
 
-function renderApplyPhase(): string {
+export function renderApplyPhase(): string {
   return `### Phase 2: Apply / Implement
 
 When \`/opsx:apply\` is invoked:
 
 0. **Model Switch Checkpoint (模型切换节拍)**
    - 进入实施阶段前，AI MUST 使用 AskUserQuestion 工具询问用户是否切换模型。
-   - 选项设置：
+   - 选项设置（MUST 提供 2–4 项：options 少于 2 项会被工具拒绝入参）：
      - 选项 1: "继续使用当前模型"（描述：不切换，直接开始实施）
+     - 选项 2: "切换模型"（描述：我需要在实施前换一个模型）
      - Other 输入框提示："输入切换命令，如 /model sonnet、/model glm、/model ds"
    - 如果用户选择 "继续使用当前模型"，直接进入步骤 1。
-   - 如果用户通过 Other 输入了模型名称，AI 提示用户手动执行 \`/model <name>\` 命令，然后重新执行 \`/opsx:apply\` 以从步骤 1 开始。AI 此时 MUST 停止，不继续执行后续步骤。
+   - 如果用户选择 "切换模型" 或通过 Other 输入了模型名称，AI 提示用户手动执行 \`/model <name>\` 命令，然后重新执行 \`/opsx:apply\` 以从步骤 1 开始。AI 此时 MUST 停止，不继续执行后续步骤。
    - 此步骤不可跳过，必须等待用户明确选择后才执行后续步骤。
 
 1. **MUST activate Superpowers \`test-driven-development\` as a pre-requisite skill.**
@@ -224,7 +225,11 @@ function renderGeneralRules(): string {
 - **Dependencies flow inward.** Domain logic never imports infrastructure.`;
 }
 
-export function composeCLAUDEmd(ctx: TemplateContext): string {
+// The context parameter is retained but unread: none of the sections below
+// interpolate it, and it is part of the exported signature the scaffolder and
+// the tests call uniformly across the compose* family. Underscored to say
+// "deliberately unused" rather than removed, which would break those callers.
+export function composeCLAUDEmd(_ctx: TemplateContext): string {
   const sections = [
     `# Project CLAUDE.md`,
     "",
