@@ -180,6 +180,9 @@ describe('scaffolded project receives the FuseQA skill from the built artifact',
     });
 
     expect(r.status).toBe(0);
+    // The control character in the pattern is the point: it is the ANSI
+    // escape chalk emits for colour, which these comparisons must strip.
+    // eslint-disable-next-line no-control-regex
     const clean = (r.stdout ?? '').replace(/\u001b\[[0-9;]*m/g, '');
     expect(clean).toMatch(/Note: OpenSpec/i);
     expect(clean).not.toContain('# start your first change');

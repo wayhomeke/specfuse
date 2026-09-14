@@ -18,6 +18,7 @@
     "build": "rm -rf dist && tsc && for d in src/*/templates; do [ -d \"$d\" ] || continue; m=$(dirname \"$d\"); mkdir -p \"dist/${m#src/}\"; mkdir -p \"dist/${m#src/}/templates\" && cp -r \"$d/.\" \"dist/${m#src/}/templates/\"; done",
     "samples": "npx tsx scripts/generate-samples.ts",
     "test": "vitest run",
+    "lint": "eslint .",
     "dev": "tsc --watch"
   },
   "dependencies": {
@@ -29,8 +30,12 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.0.0",
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.6",
     "typescript": "^5.8.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^3.2.0"
   },
   "keywords": [
