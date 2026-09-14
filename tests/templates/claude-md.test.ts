@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   composeCLAUDEmd,
+  renderApplyPhase,
   renderApplyFuseReview,
   renderFuseQA,
   renderVerifyPhase,
@@ -325,5 +326,34 @@ describe("FuseReview lower bound is the Do phase (spec: apply-exit-checkpoint)",
     const fr = out.indexOf("Phase 2.5: FuseReview Checkpoint");
     expect(apply).toBeGreaterThan(-1);
     expect(fr).toBeGreaterThan(apply);
+  });
+});
+
+describe("model switch checkpoint option set (spec: model-switch-checkpoint)", () => {
+  const out = renderApplyPhase();
+
+  // Anchored on the option-declaration syntax (`选项 N: "label"`), not on the
+  // section text. A bare `toContain("切换模型")` passes vacuously here — the
+  // surrounding prose already reads "询问用户是否切换模型", so it stays green
+  // even when no such option exists. That version was written first, observed
+  // passing against the defective text, and replaced.
+  const optionLabels = [...out.matchAll(/选项 \d+:\s*"([^"]+)"/g)].map((m) => m[1]);
+
+  it("names at least two options, so AskUserQuestion accepts the payload", () => {
+    // The quantity AskUserQuestion validates against: `options` is minItems 2.
+    expect(optionLabels.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("stays within the tool's four-option maximum", () => {
+    expect(optionLabels.length).toBeLessThanOrEqual(4);
+  });
+
+  it("names exactly the pass-through and the generic switch, binding no model identifier", () => {
+    // Pinning the exact set is deliberate: a specific model name appearing as an
+    // option would bind every generated project to an identifier it never chose.
+    // A legitimate third option means revisiting this assertion on purpose.
+    expect(optionLabels).toHaveLength(2);
+    expect(optionLabels).toContain("继续使用当前模型");
+    expect(optionLabels).toContain("切换模型");
   });
 });
