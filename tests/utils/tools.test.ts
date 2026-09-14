@@ -18,16 +18,6 @@ function mockExecSuccess(stdout = '') {
   });
 }
 
-function mockExecFailure(message = 'not found') {
-  mockExec.mockImplementation((_cmd: any, _opts: any, cb?: any) => {
-    const callback = cb || _opts;
-    if (typeof callback === 'function') {
-      callback(new Error(message), '', '');
-    }
-    return {} as any;
-  });
-}
-
 describe('subprocess guards — non-interactive hardening', () => {
   beforeEach(() => { vi.resetAllMocks(); });
 

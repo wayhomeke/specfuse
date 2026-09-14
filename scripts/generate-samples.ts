@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs'
-import { join, basename } from 'node:path'
+import { join } from 'node:path'
 import { parse } from 'yaml'
 
 const TEMPLATES_DIR = join(import.meta.dirname, '..', 'src', 'design-md', 'templates')
