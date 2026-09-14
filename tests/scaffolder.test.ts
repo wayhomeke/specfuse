@@ -387,6 +387,47 @@ describe('OpenSpec readiness reporting — success path', () => {
   });
 });
 
+// The trust write is the one thing scaffold() does outside the project directory.
+// `os.homedir()` reads `process.env.HOME` at call time, so reassigning it
+// in-process redirects that write into a scratch home — the same isolation the
+// E2E cases get from their spawned env. Restored in afterEach rather than in the
+// test body: a body-level restore is skipped when the test fails, and this one
+// would then leak a fake HOME into every later test.
+describe('trust write tolerates a malformed ~/.claude.json', () => {
+  let tmpDir: string;
+  let realHome: string | undefined;
+
+  beforeEach(() => {
+    tmpDir = path.join(os.tmpdir(), `fusion-trust-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    mkdirSync(tmpDir, { recursive: true });
+    realHome = process.env.HOME;
+  });
+
+  afterEach(() => {
+    if (realHome === undefined) delete process.env.HOME;
+    else process.env.HOME = realHome;
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('self-heals a falsy projects field rather than silently skipping the write', async () => {
+    const home = path.join(tmpDir, 'home');
+    mkdirSync(home, { recursive: true });
+    // Parseable but malformed: a falsy scalar where an object belongs. The
+    // function's own comment says it starts fresh on malformed input.
+    writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ projects: 0, kept: 'unchanged' }));
+    process.env.HOME = home;
+
+    const target = path.join(tmpDir, 'project');
+    await captureScaffold(baseConfig({ targetDir: target }));
+
+    const written = JSON.parse(readFileSync(path.join(home, '.claude.json'), 'utf-8'));
+    expect(typeof written.projects).toBe('object');
+    expect(written.projects[path.resolve(target)].hasTrustDialogAccepted).toBe(true);
+    // Unknown keys must survive the read-modify-write round trip.
+    expect(written.kept).toBe('unchanged');
+  });
+});
+
 // spec: openspec-readiness-reporting
 describe('OpenSpec readiness reporting — install failed', () => {
   let tmpDir: string;
@@ -508,6 +549,9 @@ describe('OpenSpec readiness reporting — Next steps keeps its structure', () =
 
   // chalk emits escape codes even in a non-TTY, so strip them before comparing
   // structure; otherwise a coloured comment marker looks like a different line.
+  // The control character in the pattern is the point: it is the ANSI
+  // escape chalk emits for colour, which these comparisons must strip.
+  // eslint-disable-next-line no-control-regex
   const stripAnsi = (v: string) => v.replace(/\u001b\[[0-9;]*m/g, '');
 
   const nextStepsBlock = (out: string) => {

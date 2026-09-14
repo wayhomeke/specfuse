@@ -27,15 +27,35 @@ function hasSuperpowersPlugin(): boolean {
   }
 }
 
+/**
+ * The slice of `~/.claude.json` this module touches. Typed narrowly instead of
+ * `any` so a typo in a field name fails at compile time; the index signatures
+ * are there because the file carries many other keys, and every one of them
+ * must survive the read-modify-write round trip untouched.
+ */
+interface ClaudeProjectEntry {
+  hasTrustDialogAccepted?: boolean;
+  [key: string]: unknown;
+}
+
+interface ClaudeJson {
+  projects?: Record<string, ClaudeProjectEntry>;
+  [key: string]: unknown;
+}
+
 async function trustDirectory(absPath: string): Promise<void> {
   const claudeJsonPath = path.join(os.homedir(), '.claude.json');
-  let data: Record<string, any> = {};
+  let data: ClaudeJson = {};
   try {
     const raw = await readFile(claudeJsonPath, 'utf-8');
-    data = JSON.parse(raw);
+    data = JSON.parse(raw) as ClaudeJson;
   } catch {
     // file missing or malformed — start fresh
   }
+  // `if (!…)`, not `??=`: this tolerated any falsy value (a parseable but
+  // malformed file) before the type narrowing, and `??=` fires only on
+  // null/undefined — substituting it silently dropped the self-heal for
+  // `projects: 0`, and then threw assigning a property on a number.
   if (!data.projects) data.projects = {};
   if (!data.projects[absPath]) data.projects[absPath] = {};
   data.projects[absPath].hasTrustDialogAccepted = true;
@@ -88,11 +108,25 @@ function mergeGitignore(existing: string, generated: string): string {
   return existing.trimEnd() + '\n\n# Added by specfuse\n' + newLines.join('\n') + '\n';
 }
 
+/** The slice of a settings file this module merges; other keys pass through. */
+interface ClaudeSettings {
+  permissions?: { allow?: string[]; [key: string]: unknown };
+  [key: string]: unknown;
+}
+
 function mergeClaudeSettings(existing: object, generated: object): object {
-  const existingPerms: string[] = (existing as any)?.permissions?.allow ?? [];
-  const generatedPerms: string[] = (generated as any)?.permissions?.allow ?? [];
-  const merged = [...new Set([...existingPerms, ...generatedPerms])];
-  return { ...existing, permissions: { ...(existing as any)?.permissions, allow: merged } };
+  const existingSettings = existing as ClaudeSettings;
+  const generatedSettings = generated as ClaudeSettings;
+  const merged = [
+    ...new Set([
+      ...(existingSettings.permissions?.allow ?? []),
+      ...(generatedSettings.permissions?.allow ?? []),
+    ]),
+  ];
+  return {
+    ...existing,
+    permissions: { ...existingSettings.permissions, allow: merged },
+  };
 }
 
 /**
