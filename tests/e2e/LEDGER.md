@@ -123,3 +123,66 @@ Deferred deliberately: the fix requires changing `trustDirectory()`'s signature
 failure visible. "Pre-existing" alone is not a sufficient reason — this change
 roughly doubles the leak rate — so the reason on record is the scope boundary,
 with the rate quantified here so a follow-up change has a baseline.
+
+## Correction — 2026-09-14 (supersedes the premise of the "Known gap" section above)
+
+| Field | Content |
+|---|---|
+| Claim corrected | The "Known gap" premise: "`trustDirectory()` calls `os.homedir()`, which ignores an in-process `process.env.HOME` reassignment, so unit tests cannot isolate it the way subprocess-based E2E cases do." |
+| What changed | No product change. This entry records that the premise was **false**, so the gap was never un-isolatable and the recorded deferral rested on a wrong reason. The "~35 entries per full run" figure is **not** in question — it is confirmed exactly. |
+| Why the original was wrong | On POSIX, `os.homedir()` reads `process.env.HOME` at call time. Measured on this machine: `HOME=/scratch node -e "…os.homedir()"` → `/scratch`, and an in-process `process.env.HOME='/x/y'` → `/x/y` as well. Either redirects the write. Whatever version produced the original note, this one does not behave that way. |
+| Evidence | A full unit+E2E run with `HOME=<scratch>` wrote **exactly 35** `projects` entries into the scratch `.claude.json` (all `/tmp/fusion-*` paths) while the developer's real `~/.claude.json` stayed at **4** entries with **0** temp entries. Isolation holds and the rate is pinned. |
+| How to apply | Run the suite with `HOME` (and `XDG_CONFIG_HOME`) pointing at a scratch directory to keep the trust write off the developer's machine. **No `trustDirectory()` signature change is required for isolation** — so the previously recorded blocker no longer justifies deferring a follow-up. |
+| Still unexplained | Why the real `~/.claude.json` holds **0** such entries today despite ~35 being written per run. "Claude Code prunes entries whose directories no longer exist" is consistent with the observation but is **unverified** and undocumented. |
+| Cost of running it | The race that remains is not the trust write itself but two processes doing unlocked read-modify-write on one file. Even with `HOME` redirected, running the suite concurrently with a live Claude Code session pointed at the same `HOME` would carry it. |
+
+**Related, noticed while writing this entry:** this ledger's header cites its format
+from `.claude/skills/fuseqa/templates/ledger.md`, and the project `CLAUDE.md`
+points at `.claude/skills/fuseqa/SKILL.md`. **Neither path exists in this
+repository** — the project self-hosts `design-md` and `fusereview` but not
+`fuseqa`. Two dangling references to a skill this project generates for others.
+Recorded, not fixed here.
+
+## Addition — 2026-09-14 (change: fix-model-switch-checkpoint-options)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/model-switch-checkpoint/shipped-checkpoint.test.ts` (3 cases) |
+| Capability | `model-switch-checkpoint` |
+| Traces to | spec `model-switch-checkpoint` / Scenarios "At least two options are named", "Switch and Other share one behavior", "The 2–4 bound is asserted in the rendered text"; plus the proposal's Impact statement that already-initialized projects receive the fix by re-running the scaffolder |
+| Shape | CLI — real subprocess through a **symlinked bin shim**, against the built `dist/index.js`; the observable is the generated `CLAUDE.md` (the CLI recipe sanctions "files written") |
+
+Covers three paths the unit suite cannot reach:
+
+1. **The shipped artifact.** `tests/templates/claude-md.test.ts` asserts
+   `renderApplyPhase()` from `src/`. Between that and what a user receives sit
+   `tsc` and the build script's template-copy loop. A build/merge regression is
+   invisible to a source-level assertion — the class that produced v0.9.0's
+   escaped-backtick defect.
+2. **The brownfield merge.** `npm create specfuse@latest .` against a directory
+   whose `CLAUDE.md` already carries a stale, single-option FUSION block. This is
+   the migration path named in the proposal and **no other case covered it**.
+   It also asserts that user text outside the markers survives.
+3. **Idempotence on repeat.** The same command twice; the merge slices by marker
+   index, so a second pass is where duplication would surface.
+
+**Counter-example verification (the cases are not hollow).** Reverting the
+template's Step 0 to its pre-fix text, rebuilding, and re-running turned all
+three red with the expected reasons:
+`expected 1 to be greater than or equal to 2` (×2) and
+`expected [ '继续使用当前模型' ] to include '切换模型'`. Restoring the fix and
+rebuilding returns them green. A case that passes on first run and cannot be
+made to fail guards nothing.
+
+**Isolation:** scratch `HOME`/`XDG_CONFIG_HOME`, OpenSpec off `PATH`, stub `npm`
+exiting non-zero, git identity via env — the recipe from
+`scaffold-tool-boundary/skill-distribution.test.ts`. `--yes` implies
+`initOpenspec`, so without it these cases would install a global package and
+write the developer's `~/.claude.json`.
+
+**Derivation limit, recorded rather than assumed:** the real consumer of the
+generated `CLAUDE.md` is a coding agent reading instructions, which cannot be
+driven from a test. The case therefore stops at "the corrected section is in the
+file the user's project receives". That is the strongest entry available for this
+artifact shape, and the conclusion is recorded here so a future reader does not
+mistake it for full end-to-end coverage of the checkpoint's behaviour.
