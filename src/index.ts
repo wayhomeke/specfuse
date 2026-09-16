@@ -13,7 +13,7 @@ export const program = new Command();
 
 program
   .name('create-specfuse')
-  .description('SpecFuse — AI engineering pipeline scaffolder.\n\nInjects OpenSpec workflow + Superpowers discipline into any project.\nThink → Do → FuseReview → Verify, one command at a time.')
+  .description('SpecFuse — AI engineering pipeline scaffolder.\n\nInjects OpenSpec workflow + Superpowers discipline into any project.\nThink → Do → FuseReview → FuseQA → Verify, one command at a time.')
   .version(pkg.version)
   .argument('[project-name]', 'Target directory (omit or use "." to init in current directory)')
   .option('-y, --yes', 'Non-interactive mode (use defaults, CI-friendly)')

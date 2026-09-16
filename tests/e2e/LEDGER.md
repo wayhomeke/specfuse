@@ -243,3 +243,39 @@ source and template pack, and each named symbol must actually be declared. That
 guard went red during this change's FuseQA beat — the skill enumerated three
 skill definitions and two template packs, not four and three — which is the
 finding recorded in the apply completion report, not an E2E case.
+
+## Addition — 2026-09-16 (change: fix-pipeline-beat-numbering)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/pipeline-description-consistency/description.test.ts` (5 cases) |
+| Capability | `pipeline-description-consistency` |
+| Traces to | spec `pipeline-description-consistency` / Scenarios "CLI help names every beat", "Generated CLAUDE.md names every beat", "Both skills name every beat", "No ordinal labels any beat"; plus the escaped defect this change exists for — `--help` advertising a four-beat pipeline |
+| Shape | CLI — real subprocess with argv, through the symlinked bin shim |
+
+Covers: help text names all five beats; the scaffolded `CLAUDE.md` enumerates all
+five in both checkpoint sections; the scaffolded `fusereview` and `fuseqa` skills
+enumerate all five; no shipped description carries a positional ordinal; FuseDoc
+is not swept into the beat list.
+
+**Counter-example verification (the cases are not hollow).** Each case was made
+to fail against the built artifact before being kept:
+
+| Planted regression | Case that went red |
+|---|---|
+| FuseQA dropped from the FuseQA enumeration in `CLAUDE.md` | "enumerates every beat in both checkpoints" |
+| `fourth beat` written back | "no shipped description labels a beat by its position" |
+| FuseQA dropped from the CLI description | "help text names every beat" |
+
+Restoring and rebuilding returns all five green.
+
+**Why these cannot be unit tests:** the unit guards call `composeCLAUDEmd()` and
+`compose*Skill()` and assert on their return values, so they observe the
+template's output. Whether a scaffolded project *receives* it is a separate
+question — a copy step, a build-script regression, or a stale installed file
+would leave every unit guard green. Only driving the CLI and reading what landed
+on disk answers it.
+
+**Isolation:** scratch `HOME`/`XDG_CONFIG_HOME`, OpenSpec off `PATH`, stub `npm`
+exiting non-zero, git identity via env — the recipe from
+`scaffold-tool-boundary/skill-distribution.test.ts`.
