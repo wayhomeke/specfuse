@@ -36,7 +36,7 @@ const SOURCES: Array<{ file: string; symbol: string }> = [
   { file: 'src/scaffolder.ts', symbol: 'mergeFusionIntoCLAUDEmd' },
   { file: 'src/scaffolder.ts', symbol: 'mergeGitignore' },
   { file: 'src/scaffolder.ts', symbol: 'mergeClaudeSettings' },
-  // The three skills scaffold() installs. composeCLAUDEmd()'s output names
+  // The four skills scaffold() installs. composeCLAUDEmd()'s output names
   // them ("The full review method lives in .claude/skills/fusereview/SKILL.md"),
   // so a skill that does not produce them ships an instruction file pointing at
   // files that do not exist — the same defect class this change removes from
@@ -44,10 +44,11 @@ const SOURCES: Array<{ file: string; symbol: string }> = [
   { file: 'src/templates/design-md-skill.ts', symbol: 'composeDesignMdSkill' },
   { file: 'src/templates/fusereview-skill.ts', symbol: 'composeFuseReviewSkill' },
   { file: 'src/templates/fuseqa-skill.ts', symbol: 'composeFuseQASkill' },
+  { file: 'src/templates/fusedoc-skill.ts', symbol: 'composeFuseDocSkill' },
 ];
 
 /** Template packs those skills carry, copied whole by scaffold(). */
-const TEMPLATE_DIRS = ['src/design-md/templates', 'src/fuseqa/templates'];
+const TEMPLATE_DIRS = ['src/design-md/templates', 'src/fuseqa/templates', 'src/fusedoc/templates'];
 
 describe('init-specfuse skill is stack-free (spec: init-specfuse-skill)', () => {
   it('contains no reference to the removed technology-stack layer', () => {

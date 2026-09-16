@@ -186,3 +186,60 @@ driven from a test. The case therefore stops at "the corrected section is in the
 file the user's project receives". That is the strongest entry available for this
 artifact shape, and the conclusion is recorded here so a future reader does not
 mistake it for full end-to-end coverage of the checkpoint's behaviour.
+
+## Addition — 2026-09-16 (change: add-fusedoc-skill)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/fusedoc-skill-generation/install.test.ts` (7 cases) |
+| Capability | `fusedoc-skill-generation` |
+| Traces to | spec `fusedoc-skill-generation` / Scenarios "Skill reaches the target through the published artifact", "Reference files ship with the skill", "Every reference link resolves"; spec `fusedoc-integration` / Scenario "No third checkpoint question" |
+| Shape | CLI — real subprocess with argv, plus the symlinked bin shim path |
+
+Covers: skill + three reference files installed; every `references/*.md` link
+resolving inside the target project; non-empty reference bodies; the
+documentation standard present in `CLAUDE.md` with the exit sequence still at
+exactly two checkpoints; no escaped backticks; user-authored skill preserved
+while references still copy; invocation through a symlinked bin shim.
+
+**Why these cannot be unit tests — demonstrated, not asserted.** The source
+directory `src/fusedoc/templates/` is copied into `dist/` by the build script's
+literal `src/*/templates` glob, not by `tsc`. Renaming it, or any regression in
+that glob, leaves every unit test green: `tests/templates/fusedoc-skill.test.ts`
+calls `composeFuseDocSkill()` and reads `src/`, and `tests/scaffolder.test.ts`
+imports `scaffold()` in-process, also resolving against `src/`.
+
+Measured on 2026-09-16 by deleting `dist/fusedoc/templates/` while leaving the
+source intact, then running both suites:
+
+| Suite | Result |
+|---|---|
+| `tests/templates/fusedoc-skill.test.ts` + `tests/scaffolder.test.ts` | 58 passed, 0 failed |
+| `tests/e2e/fusedoc-skill-generation/install.test.ts` | 7 failed |
+
+Restoring the directory and rebuilding returns both green. A separate check —
+renaming the source directory itself — turns both red, because
+`copyTemplateDir` already refuses a missing source with
+`Template source directory missing`. So the source-side regression is caught
+earlier and louder; this case exists for the build-side gap, which nothing else
+reaches.
+
+**Isolation:** scratch `HOME`/`XDG_CONFIG_HOME`, OpenSpec off `PATH`, stub `npm`
+exiting non-zero, git identity via env — the recipe from
+`scaffold-tool-boundary/skill-distribution.test.ts`.
+
+**A defect this case's authoring surfaced, recorded because it cost a run:**
+`src/*/templates` written inside a block comment terminates that comment at the
+`*/`. The first draft of this case had it in its header comment and failed to
+parse with a misleading error pointing at an unrelated string literal.
+
+**Derivation limit, recorded rather than assumed:** these cases drive the Claude
+Code install path — the built CLI writing a project directory. SpecFuse has a
+second install path, `skills/init-specfuse/SKILL.md`, which a non-Claude agent
+reads and executes with its own tools. That document cannot be executed here, so
+no E2E case reaches it. What guards it instead is a source-resolution check in
+`tests/skills/init-specfuse-skill.test.ts`: the skill must name every canonical
+source and template pack, and each named symbol must actually be declared. That
+guard went red during this change's FuseQA beat — the skill enumerated three
+skill definitions and two template packs, not four and three — which is the
+finding recorded in the apply completion report, not an E2E case.
