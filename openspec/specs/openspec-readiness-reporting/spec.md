@@ -1,7 +1,8 @@
 # openspec-readiness-reporting Specification
 
 ## Purpose
-TBD - created by archiving change openspec-init-failure-visibility. Update Purpose after archive.
+
+Defines what scaffolding prints when OpenSpec is not ready: the annotated `/opsx:*` line, the unchanged structure of the Next steps block, a trailing notice naming the missing piece and its repair, and the distinction between an install failure and an init failure.
 
 ## Requirements
 

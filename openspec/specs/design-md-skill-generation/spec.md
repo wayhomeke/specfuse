@@ -1,4 +1,10 @@
-## ADDED Requirements
+# design-md-skill-generation Specification
+
+## Purpose
+
+Defines what the `design-md` skill's `SKILL.md` must carry for the questionnaire to run without a Node.js runtime: the question sequence and dimension mapping, the archetype matching algorithm, the token derivation rules, the output format, and the backup-and-overwrite protection.
+
+## Requirements
 
 ### Requirement: SKILL.md contains complete questionnaire logic
 The `composeDesignMdSkill()` function SHALL emit a SKILL.md that contains a 5-question interactive questionnaire section with dimension mapping rules for each answer.

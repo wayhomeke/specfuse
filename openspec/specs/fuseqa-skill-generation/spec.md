@@ -1,7 +1,8 @@
 # fuseqa-skill-generation Specification
 
 ## Purpose
-TBD - created by archiving change add-fuseqa-phase. Update Purpose after archive.
+
+Defines the generation and distribution contract for the FuseQA skill: the artifact-shape decision tree, the prohibition on importing project source, the entry recipes for each artifact shape, the visible-skip rule for cases that cannot execute, and the scaffolder's non-overwriting distribution of the skill and its template pack.
 
 ## Requirements
 

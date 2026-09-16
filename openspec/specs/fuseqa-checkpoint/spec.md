@@ -1,7 +1,8 @@
 # fuseqa-checkpoint Specification
 
 ## Purpose
-TBD - created by archiving change add-fuseqa-phase. Update Purpose after archive.
+
+Defines the apply exit sequence's second mandatory checkpoint: the question the AI must ask after the last task passes verification, its independence from the FuseReview answer, the requirement that both decisions appear on the completion report, and how the FuseQA beat grades and retires the cases it authors.
 
 ## Requirements
 

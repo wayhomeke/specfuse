@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the contract for the scaffold tool boundary of SpecFuse: scaffolding performs no CodeGraph detection, installation, or initialization; `ProjectConfig` carries no CodeGraph field; the setup questionnaire asks exactly three questions; the generated `.gitignore` contains no CodeGraph entry; and subprocess calls are guarded against interactive prompts. The capability reflects the removal of all CodeGraph integration from the scaffolder.
+Defines the contract for the scaffold tool boundary of SpecFuse: scaffolding performs no CodeGraph detection, installation, or initialization; `ProjectConfig` carries no CodeGraph field; the setup questionnaire asks exactly two questions; the generated `.gitignore` contains no CodeGraph entry; and subprocess calls are guarded against interactive prompts. The capability reflects the removal of all CodeGraph integration from the scaffolder.
 ## Requirements
 ### Requirement: Scaffolding performs no CodeGraph detection, installation, or initialization
 
