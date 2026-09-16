@@ -1,11 +1,11 @@
 ---
 name: fusereview
-description: Use when performing the post-apply code review (FuseReview, the fourth pipeline beat) — reviews the accumulated diff of the current change with a fresh context; also runs when the user asks to "code review", "review the change", or audit the implementation quality of recent work.
+description: Use when performing the post-apply code review (FuseReview) — reviews the accumulated diff of the current change with a fresh context; also runs when the user asks to "code review", "review the change", or audit the implementation quality of recent work.
 ---
 
 # FuseReview — Post-Apply Code Review
 
-Fourth beat of the pipeline: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. This skill is guidance, not a checklist: follow the code, keep judgment active, and prefer one substantiated blocker over a list of nits.
+Think reviews direction, Do produces code, **FuseReview reviews the implementation**, FuseQA verifies the artifact through real entry points, Verify validates the whole. This skill is guidance, not a checklist: follow the code, keep judgment active, and prefer one substantiated blocker over a list of nits.
 
 This skill is **self-contained**. The review method below is complete within this file; it does not route to documents that may not exist in this project.
 
@@ -70,18 +70,11 @@ For each retained value, ask whether it is borrowed or owned. Trust the type sys
 
 Locate the owner of the complete emitted or retained result, including wrappers and metadata. Probe tiny and exact limits, oversized single items, and multibyte content against byte limits.
 
-## Stack-adaptive checks
-
-Review error paths and concurrency against this project's declared stack policies:
-
-- **Error handling policy:** `TypeScript strict mode + Error boundaries + React Suspense` — new error paths must conform to it; deviations need justification in the diff or the change's design artifact.
-- **Concurrency model:** `React concurrent features + async/await` — lifecycle, cancellation, and shared-state checks must be reasoned through this model.
-
 ## Output discipline
 
 - Every finding states **Defect / Location / Impact / Evidence**.
 - Separate **Blocking** findings (must fix before Verify) from **Suggestion** findings (recorded, not enforced).
-- Omit what a mechanical gate already enforces: if the stack's lint, test, or typecheck command covers a check and passes, do not re-raise it here.
+- Omit what a mechanical gate already enforces: if the project's lint, test, or typecheck command covers a check and passes, do not re-raise it here.
 
 ## Handling findings
 

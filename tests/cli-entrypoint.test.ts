@@ -42,4 +42,17 @@ describe('CLI entrypoint resolves through a symlinked bin shim', () => {
   it('prints help when run via a symlinked shim', () => {
     expect(run(shim, ['--help'])).toContain('create-specfuse');
   });
+
+  // spec: pipeline-description-consistency
+  // A help line listing four beats advertises a pipeline the product does not
+  // have. This runs through the shim, so it observes the description a real
+  // install prints — not the string literal in src/index.ts.
+  it('describes the pipeline with every one of its five beats', () => {
+    const help = run(shim, ['--help']);
+
+    const missing = ['Think', 'Do', 'FuseReview', 'FuseQA', 'Verify'].filter(
+      (beat) => !new RegExp(`\\b${beat}\\b`).test(help),
+    );
+    expect(missing).toEqual([]);
+  });
 });

@@ -105,10 +105,13 @@ describe("renderApplyFuseReview", () => {
   const output = renderApplyFuseReview();
   const lower = output.toLowerCase();
 
-  it("contains no Grill trace and names FuseReview the fourth beat", () => {
+  it("contains no Grill trace and labels no beat by position", () => {
+    // Used to require the literal "fourth beat", which pinned the stale ordinal:
+    // the string was numbered while Grill occupied a slot, and removing Grill
+    // shifted every beat down by one without this assertion being revisited.
     expect(lower).not.toContain("grill");
-    expect(lower).not.toContain("fifth beat");
-    expect(lower).toContain("fourth beat");
+    expect(lower).not.toMatch(/\b(first|second|third|fourth|fifth|sixth)\s+(pipeline\s+)?beat\b/);
+    expect(lower).toContain("post-apply review");
   });
 
   it("returns string starting with ### Phase 2.5: FuseReview", () => {
@@ -171,7 +174,7 @@ describe("renderApplyFuseReview", () => {
   });
 });
 
-// --- FuseQA checkpoint (fifth beat) ---
+// --- FuseQA checkpoint ---
 // spec: fuseqa-checkpoint
 describe("FuseQA checkpoint", () => {
   const fq = renderFuseQA();

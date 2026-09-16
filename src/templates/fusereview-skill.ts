@@ -3,12 +3,12 @@ import type { TemplateContext } from "../types.js";
 export function composeFuseReviewSkill(_ctx: TemplateContext): string {
   return `---
 name: fusereview
-description: Use when performing the post-apply code review (FuseReview, the fourth pipeline beat) — reviews the accumulated diff of the current change with a fresh context; also runs when the user asks to "code review", "review the change", or audit the implementation quality of recent work.
+description: Use when performing the post-apply code review (FuseReview) — reviews the accumulated diff of the current change with a fresh context; also runs when the user asks to "code review", "review the change", or audit the implementation quality of recent work.
 ---
 
 # FuseReview — Post-Apply Code Review
 
-Fourth beat of the pipeline: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. This skill is guidance, not a checklist: follow the code, keep judgment active, and prefer one substantiated blocker over a list of nits.
+Think reviews direction, Do produces code, **FuseReview reviews the implementation**, FuseQA verifies the artifact through real entry points, Verify validates the whole. This skill is guidance, not a checklist: follow the code, keep judgment active, and prefer one substantiated blocker over a list of nits.
 
 This skill is **self-contained**. The review method below is complete within this file; it does not route to documents that may not exist in this project.
 

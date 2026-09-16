@@ -3,12 +3,12 @@ import type { TemplateContext } from '../types.js';
 export function composeFuseQASkill(_ctx: TemplateContext): string {
   return `---
 name: fuseqa
-description: Use when performing post-apply E2E verification (FuseQA, the fifth pipeline beat) — derives end-to-end cases for the current change from its specs and drives them through real user entry points against the built artifact; also runs when the user asks to "write e2e tests", "end-to-end tests", "QA acceptance", or to add test cases for a change.
+description: Use when performing post-apply E2E verification (FuseQA) — derives end-to-end cases for the current change from its specs and drives them through real user entry points against the built artifact; also runs when the user asks to "write e2e tests", "end-to-end tests", "QA acceptance", or to add test cases for a change.
 ---
 
 # FuseQA — Post-Apply E2E Verification
 
-Fifth beat of the pipeline: Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole.
+Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole.
 
 This beat authors E2E cases for the current change and handles what those cases expose. It **does not execute the existing regression suite** — that belongs to the Verify phase full test run. A new case failing on first run is the TDD RED step, not a diagnosis stage.
 
