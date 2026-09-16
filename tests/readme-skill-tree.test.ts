@@ -14,3 +14,16 @@ describe('README documents every skill the scaffolder installs', () => {
     });
   }
 });
+
+describe('README frames FuseDoc as a standard, not a beat', () => {
+  it('states it is not one of the beats', () => {
+    expect(README).toMatch(/不属于五拍|不是拍/);
+  });
+
+  it('keeps the pipeline at five beats', () => {
+    // A sixth beat would contradict the section that exists to say FuseDoc
+    // is not one — this is the README-side twin of the CLAUDE.md assertion.
+    expect(README).toContain('五拍流水线');
+    expect(README).not.toMatch(/六拍|FuseDoc\s+apply 收尾/);
+  });
+});
