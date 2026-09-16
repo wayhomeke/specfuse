@@ -279,3 +279,41 @@ on disk answers it.
 **Isolation:** scratch `HOME`/`XDG_CONFIG_HOME`, OpenSpec off `PATH`, stub `npm`
 exiting non-zero, git identity via env — the recipe from
 `scaffold-tool-boundary/skill-distribution.test.ts`.
+
+## Addition — 2026-09-17 (change: repair-spec-corpus)
+
+| Field | Content |
+|---|---|
+| Case | No new E2E case — derivation recorded below |
+| Capability | `design-md-archetypes` (and the corpus as a whole) |
+| Traces to | the repair itself: `openspec validate --specs --strict` went from 7 failures to 0 |
+| Shape | data artifact, read by another program |
+
+**Derivation (§1 decision tree), recorded so the conclusion is auditable:**
+
+1. *How does the user obtain it?* — Not shipped. `package.json` `files` is
+   `["dist", "README.md"]`, so the spec corpus never reaches a package consumer.
+   It is obtained by cloning the repository.
+2. *How is it triggered?* — The "read by another program" branch. The consumer
+   is the `openspec` CLI: `validate`, `show`, and `archive`.
+3. *What is externally observable?* — The CLI's exit status and output.
+
+**Verification performed at this beat, against the real consumer:**
+
+- **Read path.** `openspec show <capability> --json` over all thirteen specs:
+  thirteen parsed, zero failures.
+- **Merge path.** In an isolated `openspec/` root copied inside the repository,
+  a scratch change with a delta against `design-md-archetypes` was archived
+  through the real CLI. The merge preserved the three-section structure, grew
+  the capability from four requirements to five, kept all four originals, and
+  left the tree passing `--strict`. This is the path the repair unblocks: the
+  archiving tool previously had to merge into a file that opened with
+  `## REMOVED Requirements`.
+
+**Why no permanent case.** The merge probe copies the whole `openspec/` tree to
+avoid mutating the real specs, which makes a permanent case expensive for
+coverage the guard already provides: `tests/specs/spec-corpus.test.ts` asserts
+the tree passes the tool's own `--strict` validation, and mergeability follows
+from structural validity. Recorded here rather than silently omitted, so a
+future reader can revisit the call — the one-off evidence above is what it
+rests on.
