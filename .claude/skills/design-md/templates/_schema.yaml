@@ -1,0 +1,136 @@
+type: object
+required:
+  - id
+  - name
+  - category
+  - intent
+  - dimensions
+  - anchors
+  - structure
+properties:
+  id:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*$"
+  name:
+    type: string
+  category:
+    type: string
+    enum:
+      - internal-tool
+      - dashboard
+      - consumer
+      - developer
+      - mobile
+      - e-commerce
+      - marketing
+      - form-heavy
+      - content
+  intent:
+    type: object
+    required:
+      - mood
+      - density
+      - philosophy
+    properties:
+      mood:
+        type: string
+      density:
+        type: string
+      philosophy:
+        type: string
+  dimensions:
+    type: object
+    required:
+      - colorTemp
+      - lightness
+      - density
+      - borderRadius
+      - tone
+    properties:
+      colorTemp:
+        type: integer
+        minimum: 1
+        maximum: 5
+      lightness:
+        type: integer
+        minimum: 1
+        maximum: 5
+      density:
+        type: integer
+        minimum: 1
+        maximum: 5
+      borderRadius:
+        type: integer
+        minimum: 1
+        maximum: 5
+      tone:
+        type: integer
+        minimum: 1
+        maximum: 5
+  anchors:
+    type: object
+    required:
+      - colors
+      - typography
+      - spacing
+      - radius
+    properties:
+      colors:
+        type: object
+        required:
+          - primary
+          - auxiliary
+        properties:
+          primary:
+            type: string
+            pattern: "^#[0-9a-fA-F]{6}$"
+          auxiliary:
+            type: array
+            items:
+              type: string
+              pattern: "^#[0-9a-fA-F]{6}$"
+            minItems: 1
+            maxItems: 2
+      typography:
+        type: object
+        required:
+          - baseSize
+          - scale
+        properties:
+          baseSize:
+            type: string
+            pattern: "^\\d+px$"
+          scale:
+            type: number
+            exclusiveMinimum: 1.0
+            exclusiveMaximum: 2.0
+      spacing:
+        type: object
+        required:
+          - unit
+        properties:
+          unit:
+            type: string
+            pattern: "^\\d+px$"
+      radius:
+        type: object
+        required:
+          - base
+        properties:
+          base:
+            type: string
+            pattern: "^\\d+px$"
+  structure:
+    type: object
+    required:
+      - requiredSections
+      - componentTokens
+    properties:
+      requiredSections:
+        type: array
+        items:
+          type: string
+      componentTokens:
+        type: array
+        items:
+          type: string

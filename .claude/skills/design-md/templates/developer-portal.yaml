@@ -1,0 +1,44 @@
+id: developer-portal
+name: Developer Portal
+category: developer
+intent:
+  mood: Technical and precise — code-native aesthetic that developers trust
+  density: Medium-high density, code blocks and API references dominate
+  philosophy: Developers read code more than prose; monospace as first-class citizen, syntax highlighting as semantic color
+dimensions:
+  colorTemp: 1
+  lightness: 2
+  density: 2
+  borderRadius: 2
+  tone: 1
+anchors:
+  colors:
+    primary: "#00D4AA"
+    auxiliary:
+      - "#A78BFA"
+  typography:
+    baseSize: "14px"
+    scale: 1.2
+  spacing:
+    unit: "4px"
+  radius:
+    base: "6px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - code-block
+    - sidebar
+    - badge
+    - tab
+    - tooltip
+    - table

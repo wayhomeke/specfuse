@@ -1,0 +1,43 @@
+id: marketing-creative
+name: Marketing Creative
+category: marketing
+intent:
+  mood: Bold and expressive — breaks grid expectations to create memorability
+  density: Very low density, oversized type and asymmetric layouts demand attention
+  philosophy: Rules exist to be broken intentionally; creative risk signals brand confidence
+dimensions:
+  colorTemp: 4
+  lightness: 4
+  density: 5
+  borderRadius: 4
+  tone: 5
+anchors:
+  colors:
+    primary: "#FF3366"
+    auxiliary:
+      - "#FFCC00"
+  typography:
+    baseSize: "18px"
+    scale: 1.618
+  spacing:
+    unit: "8px"
+  radius:
+    base: "16px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - badge
+    - navigation
+    - hero-section
+    - marquee
+    - footer

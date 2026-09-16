@@ -28,6 +28,22 @@
 This project enforces a fused OpenSpec + Superpowers engineering pipeline.
 AI agents MUST follow these rules without exception.
 
+### Documentation Standard: FuseDoc
+
+FuseDoc is a **documentation standard spanning the pipeline**, not a pipeline beat. It has no checkpoint, no mandatory question, and no position in the apply exit sequence — invoke it on demand from any phase, or manually at any time.
+
+The standard lives at `.claude/skills/fusedoc/SKILL.md`. It governs three things about any prose this project produces or reviews: what a passage must state, whether it reads from the repository or from an authoring session, and where a fact belongs. The skill owns the rules; this file only points at it.
+
+**Where it applies:** whenever a phase writes or reviews prose — proposal, design and specs artifacts, `CLAUDE.md`, READMEs, code comments, diagnostics, visible strings. FuseReview applies it when a reviewed diff changes prose. The archive step applies it when syncing specs into `openspec/specs/`.
+
+**How to invoke:**
+
+```
+/fusedoc <scope>
+```
+
+Scope is required. An invocation naming no scope reports the missing input rather than inferring a repository-wide one.
+
 ### Path A: One-Shot Proposal
 
 When `/opsx:propose` is invoked:
@@ -39,7 +55,9 @@ When `/opsx:propose` is invoked:
    - **If the three-gate test (see DESIGN-TOKENS.md Generation Rules above) triggers:** MUST invoke `/design-md` skill NOW (before generating artifacts). For weak intent, state that visual design was not discussed in brainstorming before running the questionnaire. Complete the questionnaire → generate DESIGN-TOKENS.md → THEN proceed.
    - Only after human confirms the approach, generate ALL artifacts (proposal -> design -> specs -> tasks) in one pass.
 
-2. Every proposal artifact MUST contain:
+2. **Prose in the artifacts follows the FuseDoc standard** (see Documentation Standard above). Invoke `/fusedoc` when drafting or revising artifact prose; it owns the rules, this file does not restate them.
+
+3. Every proposal artifact MUST contain:
    - **Non-goals** section (what this change explicitly does NOT do)
    - **Trade-offs** section (alternatives considered and why they were rejected)
    - **Verification strategy** (how we know this change works)
@@ -63,6 +81,7 @@ When `/opsx:new` is invoked:
    - For **design** artifacts: MUST include dependency diagram, public API surface, error handling strategy.
    - For **specs** artifacts: each spec must be independently testable with success + failure behaviors.
    - For **tasks** artifacts: enforce TDD order, max 2-hour chunks, verification commands per task.
+   - **Prose in every artifact follows the FuseDoc standard** (see Documentation Standard above). Invoke `/fusedoc` when drafting or revising it; the skill owns the rules, this file does not restate them.
    - After drafting each artifact, STOP and wait for user review before advancing.
 
 4. **Pace control: one artifact per `/opsx:continue` invocation.**
@@ -106,7 +125,7 @@ When `/opsx:apply` is invoked:
 2. **MUST activate Superpowers `verification-before-completion` before marking ANY task done.**
    - **IRON LAW: NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE.**
    - Before checking off a task `[x]`, you MUST:
-     a. Run the actual verification command in the terminal (`npx vitest run`)
+     a. Run the project's test command in the terminal
      b. Paste the raw output as evidence
      c. Only then mark the task complete
    - "I believe it works" or "it should pass" is NEVER acceptable.
@@ -154,6 +173,8 @@ FuseReview is the fourth beat: Think reviews direction, Do produces code, **Fuse
 **If the user accepts:** dispatch a reviewer context that did not participate in the implementation (fresh subagent or session) to cold-read `baseline..HEAD` and execute the FuseReview skill. If no separate context is available, run in the current session and annotate "non-cold-read".
 
 **If the user declines:** record the skip decision in the apply completion report together with the change facts (task count, subagent usage, modules), so the skip is auditable rather than invisible.
+
+**Prose changes use the FuseDoc standard:** when the reviewed diff changes prose — docs, comments, READMEs, diagnostics — apply the FuseDoc standard (see Documentation Standard above) alongside the review method. The skill owns the rules; this file does not restate them.
 
 **Handling findings:**
 - **Blocking** findings are fixed test-first: write the failing test that catches the defect, then fix.
@@ -204,6 +225,8 @@ Before `/opsx:archive`:
 1. Run `/opsx:verify` to validate implementation matches all specs
 2. Run the project's full test suite and paste evidence — this run **is the E2E regression gate**: the suite includes every case under `tests/e2e/`, and this gate MUST NOT be skipped
 3. Run the project's linter with zero warnings
+
+Prose synced into `openspec/specs/` follows the FuseDoc standard (see Documentation Standard above). Invoke `/fusedoc` on the synced text; the skill owns the rules, this file does not restate them.
 
 ### General Rules
 
