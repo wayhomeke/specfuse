@@ -31,6 +31,7 @@ my-app/
 │   ├── settings.local.json      # 权限白名单
 │   └── skills/
 │       ├── design-md/           # 设计令牌生成技能
+│       ├── fusedoc/             # 文档标准技能（含 3 份参考文件）
 │       ├── fusereview/          # 实施后代码评审技能
 │       └── fuseqa/              # 实施后端到端验收技能（含 4 份模板）
 └── openspec/

@@ -5,6 +5,7 @@ import {
   renderApplyFuseReview,
   renderFuseQA,
   renderVerifyPhase,
+  renderFuseDocStandard,
 } from "../../src/templates/claude-md.js";
 
 describe("CLAUDE.md template", () => {
@@ -355,5 +356,112 @@ describe("model switch checkpoint option set (spec: model-switch-checkpoint)", (
     expect(optionLabels).toHaveLength(2);
     expect(optionLabels).toContain("继续使用当前模型");
     expect(optionLabels).toContain("切换模型");
+  });
+});
+
+// spec: fusedoc-integration
+describe("FuseDoc is a standard, not a beat", () => {
+  const fd = renderFuseDocStandard();
+  const output = composeCLAUDEmd({ projectName: "test" });
+
+  it("declares a documentation standard spanning the pipeline", () => {
+    expect(fd).toMatch(/documentation standard/i);
+    expect(fd).toMatch(/span(n)?ing the pipeline|across the pipeline/i);
+  });
+
+  it("states it is invoked on demand, not gated", () => {
+    expect(fd).toMatch(/on demand/i);
+    expect(fd).toMatch(/any time|at any point/i);
+  });
+
+  it("names the skill path so it can be invoked manually", () => {
+    expect(fd).toContain(".claude/skills/fusedoc/SKILL.md");
+  });
+
+  it("does not add FuseDoc to the pipeline beat sequence", () => {
+    // The pipeline is Think -> Do -> FuseReview -> FuseQA -> Verify.
+    // FuseDoc is named as none of them.
+    expect(output).not.toMatch(/FuseDoc is the (first|second|third|fourth|fifth|sixth) beat/i);
+  });
+});
+
+describe("FuseDoc pointer direction (review finding: misdirecting reference)", () => {
+  const output = composeCLAUDEmd({ projectName: "test" });
+
+  it("places the standard before every reference that calls it 'above'", () => {
+    // Three of four pointers said "see Documentation Standard above" while the
+    // section sat below them — a reader following Path A is sent the wrong way.
+    const sectionAt = output.indexOf("### Documentation Standard: FuseDoc");
+    expect(sectionAt).toBeGreaterThan(-1);
+
+    const pointerLines = output
+      .split("\n")
+      .map((line, i) => ({ line, at: output.indexOf(line), i }))
+      .filter(({ line }) => /see Documentation Standard above/.test(line));
+
+    expect(pointerLines.length).toBeGreaterThan(0);
+    for (const { line, at } of pointerLines) {
+      expect(at, `points above but sits below: ${line.slice(0, 70)}`).toBeGreaterThan(sectionAt);
+    }
+  });
+});
+
+describe("FuseDoc introduces no checkpoint", () => {
+  const output = composeCLAUDEmd({ projectName: "test" });
+
+  it("defines no mandatory FuseDoc question", () => {
+    expect(output).not.toMatch(/FuseDoc checkpoint/i);
+    expect(output).not.toMatch(/MUST ask the user whether to enter FuseDoc/i);
+  });
+
+  it("keeps the exit sequence at exactly the two existing checkpoints", () => {
+    // Structural property, not a particular sentence: a third mandatory
+    // checkpoint would appear as a third "MUST ask" on the apply exit path.
+    const mandatoryQuestions = output.match(/the AI MUST ask the user whether to enter \w+/g) ?? [];
+    expect(mandatoryQuestions.sort()).toEqual([
+      "the AI MUST ask the user whether to enter FuseQA",
+      "the AI MUST ask the user whether to enter FuseReview",
+    ]);
+  });
+
+  it("does not make apply completion depend on a FuseDoc decision", () => {
+    expect(output).not.toMatch(/apply completion (requires|depends on).*FuseDoc/i);
+    expect(output).not.toMatch(/FuseDoc decision/i);
+  });
+});
+
+describe("FuseDoc references reach the prose-producing phases", () => {
+  const output = composeCLAUDEmd({ projectName: "test" });
+
+  it("references the standard in the artifact-drafting phases", () => {
+    // renderPathA/renderPathB are private; slice the assembled output by heading
+    // rather than widening the module's public surface for a test.
+    const slice = (start: string, end: string) => {
+      const from = output.indexOf(start);
+      const to = output.indexOf(end);
+      expect(from).toBeGreaterThan(-1);
+      return output.slice(from, to);
+    };
+
+    expect(slice("### Path A: One-Shot Proposal", "### Path B: Step-by-Step Change")).toMatch(
+      /FuseDoc/,
+    );
+    expect(slice("### Path B: Step-by-Step Change", "### Exploration")).toMatch(/FuseDoc/);
+  });
+
+  it("references the standard from FuseReview", () => {
+    expect(renderApplyFuseReview()).toMatch(/FuseDoc/);
+  });
+
+  it("references the standard from the archive step", () => {
+    expect(renderVerifyPhase()).toMatch(/FuseDoc/);
+  });
+
+  it("keeps the references as pointers, not restatements", () => {
+    // The skill owns these; the generated CLAUDE.md must not duplicate them.
+    expect(output).not.toContain("Dead design-session citations");
+    expect(output).not.toContain("Flipping an obligation into an endorsement");
+    expect(output).not.toContain("Standing agent instructions");
+    expect(output).not.toContain("overcorrection traps");
   });
 });
