@@ -150,7 +150,7 @@ When \`/opsx:apply\` is invoked:
 export function renderApplyFuseReview(): string {
   return `### Phase 2.5: FuseReview Checkpoint (Post-Apply)
 
-FuseReview is the fourth beat: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
+FuseReview is the post-apply review: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, FuseQA verifies the artifact through real entry points, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
 
 **Baseline:** At apply start, record the current HEAD commit in the change's state as the review baseline. The review object is \`baseline..HEAD\`. If no baseline was recorded, fall back to the merge-base of the current branch and the trunk, and annotate the fallback in the report.
 
@@ -179,7 +179,7 @@ FuseReview is the fourth beat: Think reviews direction, Do produces code, **Fuse
 export function renderFuseQA(): string {
   return `### Phase 2.6: FuseQA Checkpoint (Post-Apply E2E)
 
-FuseQA is the fifth beat: Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole. The full method lives in \`.claude/skills/fuseqa/SKILL.md\`.
+FuseQA is the post-apply verification: Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole. The full method lives in \`.claude/skills/fuseqa/SKILL.md\`.
 
 **Why this beat exists:** unit tests cover source, FuseReview reads a diff without running anything, and the Verify phase runs the same unit suite. A defect can therefore pass every gate and still reach users — an entry-guard bug that works when the built file is called by its real path but does nothing when called through a symlinked bin shim passes typecheck, unit tests and cold-read review alike. Nobody runs the artifact as a user until this beat.
 

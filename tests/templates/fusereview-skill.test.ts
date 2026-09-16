@@ -11,10 +11,15 @@ describe("fusereview-skill template", () => {
     expect(output.length).toBeGreaterThan(0);
   });
 
-  it("contains no Grill trace and names FuseReview the fourth beat", () => {
+  it("contains no Grill trace and labels no beat by position", () => {
+    // This assertion used to require the literal "fourth beat", which pinned the
+    // stale ordinal in place: the string had been numbered when Grill occupied a
+    // slot, and removing Grill shifted every beat down by one without the
+    // assertion being revisited. Asserting absence is what keeps it from coming
+    // back; the beat's identity is asserted by what it does, not where it sits.
     expect(lower).not.toContain("grill");
-    expect(lower).not.toContain("fifth");
-    expect(lower).toContain("fourth beat");
+    expect(lower).not.toMatch(/\b(first|second|third|fourth|fifth|sixth)\s+(pipeline\s+)?beat\b/);
+    expect(lower).toContain("post-apply code review");
   });
 
   it("starts with --- frontmatter containing name: fusereview", () => {
