@@ -11,6 +11,7 @@ import { composeOpenspecConfig } from './templates/openspec-config.js';
 import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeFuseQASkill } from './templates/fuseqa-skill.js';
+import { composeFuseDocSkill } from './templates/fusedoc-skill.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -245,6 +246,15 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await writeText(fuseqaSkillPath, composeFuseQASkill(ctx));
   }
 
+  // FuseDoc skill
+  spinner.text = 'Writing .claude/skills/fusedoc/SKILL.md...';
+  const fusedocSkillPath = path.join(targetDir, '.claude', 'skills', 'fusedoc', 'SKILL.md');
+  const existingFusedocSkill = await readTextSafe(fusedocSkillPath);
+  if (!existingFusedocSkill) {
+    await createDir(path.join(targetDir, '.claude', 'skills', 'fusedoc'));
+    await writeText(fusedocSkillPath, composeFuseDocSkill());
+  }
+
   // Skill templates
   spinner.text = 'Copying skill templates...';
   await copyTemplateDir(
@@ -255,7 +265,14 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     path.join(import.meta.dirname, 'fuseqa', 'templates'),
     path.join(targetDir, '.claude', 'skills', 'fuseqa', 'templates'),
   );
-  spinner.succeed('Installed design-md and fuseqa skills with templates');
+  // The source directory is named templates/ rather than references/ because the
+  // build script copies only src/*/templates into dist; the skill links to
+  // references/, so the copy renames it at the destination.
+  await copyTemplateDir(
+    path.join(import.meta.dirname, 'fusedoc', 'templates'),
+    path.join(targetDir, '.claude', 'skills', 'fusedoc', 'references'),
+  );
+  spinner.succeed('Installed design-md, fusedoc and fuseqa skills with templates');
 
   // OpenSpec
   if (config.initOpenspec) {
@@ -323,6 +340,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   console.log(`    CLAUDE.md                         ${chalk.dim(tag('Bridge declaration'))}`);
   console.log(`    .gitignore                        ${chalk.dim(tag('Shared ignore patterns'))}`);
   console.log(`    .claude/settings.local.json       ${chalk.dim(tag('Permissions'))}`);
+  console.log(`    .claude/skills/fusedoc/           ${chalk.dim('Documentation standard')}`);
   if (config.initOpenspec) {
     console.log(`    openspec/config.yaml              ${chalk.dim('Spec-driven config')}`);
   }

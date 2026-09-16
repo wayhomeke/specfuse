@@ -163,6 +163,78 @@ describe('scaffolder integration', () => {
     expect(readFileSync(skillPath, 'utf-8')).toBe('custom fuseqa content');
   });
 
+  it('greenfield: creates .claude/skills/fusedoc/SKILL.md with its references', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    const skillPath = path.join(tmpDir, '.claude', 'skills', 'fusedoc', 'SKILL.md');
+    expect(existsSync(skillPath)).toBe(true);
+    expect(readFileSync(skillPath, 'utf-8')).toContain('name: fusedoc');
+
+    const refDir = path.join(tmpDir, '.claude', 'skills', 'fusedoc', 'references');
+    expect(existsSync(refDir)).toBe(true);
+    expect(readdirSync(refDir).sort()).toEqual([
+      'examples.md',
+      'probes.md',
+      'recall-batteries.md',
+    ]);
+  });
+
+  it('greenfield: the installed skill links resolve inside the target project', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    const skillDir = path.join(tmpDir, '.claude', 'skills', 'fusedoc');
+    const body = readFileSync(path.join(skillDir, 'SKILL.md'), 'utf-8');
+    const linked = [...body.matchAll(/references\/([a-z-]+\.md)/g)].map((m) => m[1]);
+    expect(linked.length).toBeGreaterThanOrEqual(3);
+    for (const name of new Set(linked)) {
+      expect(existsSync(path.join(skillDir, 'references', name))).toBe(true);
+    }
+  });
+
+  it('names the skill in the printed file listing', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir }));
+
+    expect(out).toContain('.claude/skills/fusedoc/');
+    expect(out).toMatch(/Documentation standard/);
+  });
+
+  it('names the skill in the install progress message', async () => {
+    const written: string[] = [];
+    const spy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation((chunk: string | Uint8Array) => {
+        written.push(String(chunk));
+        return true;
+      });
+    try {
+      await scaffold(baseConfig({ targetDir: tmpDir }));
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(written.join('')).toMatch(/fusedoc/);
+  });
+
+  it('existing: does not overwrite a custom fusedoc SKILL.md', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'skills', 'fusedoc'), { recursive: true });
+    const skillPath = path.join(tmpDir, '.claude', 'skills', 'fusedoc', 'SKILL.md');
+    writeFileSync(skillPath, 'custom fusedoc content');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(skillPath, 'utf-8')).toBe('custom fusedoc content');
+  });
+
+  it('installs unconditionally, asking no extra question', async () => {
+    // No prompt is mocked for FuseDoc, so a scaffold that asked one would hang
+    // or throw. Reaching the end proves the install is unconditional.
+    const config = baseConfig({ targetDir: tmpDir });
+    await scaffold(config);
+
+    expect(existsSync(path.join(tmpDir, '.claude', 'skills', 'fusedoc', 'SKILL.md'))).toBe(true);
+    expect(Object.keys(config)).not.toContain('initFusedoc');
+  });
+
   it('missing template source is fatal, not silently skipped', async () => {
     // A skill referencing templates that were never copied fails later and
     // further from its cause than a failed scaffold does. Simulated by making
@@ -248,6 +320,18 @@ describe('scaffolder integration', () => {
     expect(result).toContain('Never skip TDD');
     const markerCount = (result.match(/FUSION:START/g) || []).length;
     expect(markerCount).toBe(1);
+  });
+
+  it('existing: merged CLAUDE.md gains the FuseDoc references and keeps user content', async () => {
+    mkdirSync(tmpDir, { recursive: true });
+    writeFileSync(path.join(tmpDir, 'CLAUDE.md'), '# My Project\n\nSome existing content.\n');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    const result = readFileSync(path.join(tmpDir, 'CLAUDE.md'), 'utf-8');
+    expect(result).toContain('Documentation Standard: FuseDoc');
+    expect(result).toContain('.claude/skills/fusedoc/SKILL.md');
+    expect(result).toContain('Some existing content.');
   });
 
   it('existing: merges gitignore without duplicates', async () => {
