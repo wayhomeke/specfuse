@@ -361,3 +361,22 @@ following that prose is not mechanically verifiable here.
 | Why the original judgment was wrong | The cases encoded the product's previous contract — FuseQA as a mandatory second checkpoint. That contract no longer holds: FuseQA is an on-demand skill outside the pipeline. Keeping the old assertions would test behavior the product intentionally removed. |
 | Evidence the implementation is correct | The full suite passes against the built artifact (537 tests), including the scaffolded `CLAUDE.md` showing one checkpoint and the FuseQA skill installed with its on-demand frontmatter. |
 | Coverage boundary | No case drives the model following the prose; the cases stop at the files a scaffolded project receives. Recorded so a future reader does not mistake this for execution-level coverage of FuseQA. |
+
+## Addition — 2026-10-23 (change: add-help-links)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/cli-help-links/help-links.test.ts` (2 cases) |
+| Capability | `cli-help-links` |
+| Traces to | spec `cli-help-links` / Scenarios "Repository link present", "README link present", "Version output unchanged" |
+| Shape | CLI — real subprocess with argv through a symlinked bin shim, against the built `dist/index.js` |
+
+Covers: `--help` prints the absolute GitHub repository URL and the absolute
+README URL as exact footer lines, after the `Options:` block; `--version`
+prints only the version and no links.
+
+**Why an E2E case exists despite a unit-level twin:** `tests/cli-entrypoint.test.ts`
+also spawns the built CLI through a shim, but the case lives under its own
+capability directory so the ledger can locate and retire it by the same name as
+the spec. The duplication is deliberate: the help footer is a user-visible
+contract with its own capability.
