@@ -12,6 +12,7 @@ import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeFuseQASkill } from './templates/fuseqa-skill.js';
 import { composeFuseDocSkill } from './templates/fusedoc-skill.js';
+import { composeSpecfuseCommand } from './templates/specfuse-command.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -255,6 +256,16 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await writeText(fusedocSkillPath, composeFuseDocSkill());
   }
 
+  // /specfuse command
+  spinner.text = 'Writing .claude/commands/specfuse.md...';
+  const specfuseCommandPath = path.join(targetDir, '.claude', 'commands', 'specfuse.md');
+  // Existence, not content: a zero-byte file is still a user-owned file and
+  // must survive, exactly like a non-empty one.
+  if (!(await fileExists(specfuseCommandPath))) {
+    await createDir(path.join(targetDir, '.claude', 'commands'));
+    await writeText(specfuseCommandPath, composeSpecfuseCommand());
+  }
+
   // Skill templates
   spinner.text = 'Copying skill templates...';
   await copyTemplateDir(
@@ -341,6 +352,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   console.log(`    .gitignore                        ${chalk.dim(tag('Shared ignore patterns'))}`);
   console.log(`    .claude/settings.local.json       ${chalk.dim(tag('Permissions'))}`);
   console.log(`    .claude/skills/fusedoc/           ${chalk.dim('Documentation standard')}`);
+  console.log(`    .claude/commands/specfuse.md      ${chalk.dim('Unattended pipeline')}`);
   if (config.initOpenspec) {
     console.log(`    openspec/config.yaml              ${chalk.dim('Spec-driven config')}`);
   }

@@ -198,6 +198,45 @@ describe('scaffolder integration', () => {
     expect(out).toMatch(/Documentation standard/);
   });
 
+  // spec: specfuse-auto-mode
+  it('greenfield: creates .claude/commands/specfuse.md with rendered content', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    const commandPath = path.join(tmpDir, '.claude', 'commands', 'specfuse.md');
+    expect(existsSync(commandPath)).toBe(true);
+    const content = readFileSync(commandPath, 'utf-8');
+    expect(content).toContain('unattended pipeline');
+    expect(content).toContain('$ARGUMENTS');
+  });
+
+  it('existing: does not overwrite a custom specfuse command', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'commands'), { recursive: true });
+    const commandPath = path.join(tmpDir, '.claude', 'commands', 'specfuse.md');
+    writeFileSync(commandPath, 'custom command content');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(commandPath, 'utf-8')).toBe('custom command content');
+  });
+
+  it('existing: preserves a zero-byte specfuse command', async () => {
+    // An empty file still exists. Treating it as absent because its contents
+    // happen to be falsy violates the documented non-overwrite rule.
+    mkdirSync(path.join(tmpDir, '.claude', 'commands'), { recursive: true });
+    const commandPath = path.join(tmpDir, '.claude', 'commands', 'specfuse.md');
+    writeFileSync(commandPath, '');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(commandPath, 'utf-8')).toBe('');
+  });
+
+  it('names the command in the printed file listing', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir }));
+
+    expect(out).toContain('.claude/commands/specfuse.md');
+  });
+
   it('names the skill in the install progress message', async () => {
     const written: string[] = [];
     const spy = vi

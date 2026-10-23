@@ -317,3 +317,36 @@ the tree passes the tool's own `--strict` validation, and mergeability follows
 from structural validity. Recorded here rather than silently omitted, so a
 future reader can revisit the call — the one-off evidence above is what it
 rests on.
+
+## Addition — 2026-10-23 (change: add-specfuse-auto-mode)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/specfuse-auto-mode/scaffold-command.test.ts` (4 cases) |
+| Capability | `specfuse-auto-mode` |
+| Traces to | spec `specfuse-auto-mode` / Scenarios "New project receives the command", "Decisions are auditable", "FuseQA is not entered", "Auto-mode section is present", "Interactive rules are preserved", "Install surface names the command" |
+| Shape | CLI — real subprocess with argv through a symlinked bin shim, against the built `dist/index.js` |
+
+Covers: the command file lands in a scaffolded project; its body carries the
+unattended decision policy and the no-commit/no-push prohibition; the generated
+`CLAUDE.md` declares Auto Mode while the interactive FuseReview and FuseQA
+checkpoint sections remain present; the printed file listing names the command.
+
+**Counter-example verification.** Disabling the scaffolder's command-write step
+and rebuilding turned two cases red — "writes .claude/commands/specfuse.md" and
+"the command carries the unattended policy" — while the `CLAUDE.md` and listing
+cases stayed green, as expected. Restoring the block and rebuilding returns all
+four green. The unit suites read `composeSpecfuseCommand()` and
+`composeCLAUDEmd()` from source; `tests/scaffolder.test.ts` calls `scaffold()`
+in-process and does catch a missing write, so this case's additional value is the
+built artifact through the symlinked bin shim — the path a package manager
+installs — not the write step alone.
+
+**Isolation:** scratch `HOME`/`XDG_CONFIG_HOME`, OpenSpec off `PATH`, stub `npm`
+exiting non-zero, git identity via env — the recipe from
+`scaffold-tool-boundary/skill-distribution.test.ts`.
+
+**Derivation limit, recorded rather than assumed:** the command is prose read by
+a coding agent, which cannot be executed by this suite. The cases stop at "the
+policy reached the file the user's project receives". The behavior of the model
+following that prose is not mechanically verifiable here.

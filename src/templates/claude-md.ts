@@ -223,6 +223,32 @@ The standard lives at \`.claude/skills/fusedoc/SKILL.md\`. It governs three thin
 Scope is required. An invocation naming no scope reports the missing input rather than inferring a repository-wide one.`;
 }
 
+export function renderAutoMode(): string {
+  return `### Auto Mode: /specfuse
+
+\`/specfuse <requirement>\` runs the whole pipeline unattended. It is an entry point alongside Path A and Path B, and the rules below override the checkpoint questions for that invocation only. Interactive \`/opsx:*\` behavior is unchanged.
+
+**Automatic decisions.** Do not call \`AskUserQuestion\` for any decision point. The model answers with the recommended option and records the decision with its rationale in the final report:
+- **Brainstorming:** derive 2–3 alternatives with trade-offs, select the recommended one, and write the selection and rationale into \`design.md\`.
+- **Design tokens:** when the three-gate test triggers \`/design-md\`, answer the questionnaire with recommended values; never overwrite an existing \`DESIGN-TOKENS.md\`.
+- **Model switch:** record \`continue with current model\`; do not switch and do not ask.
+- **FuseReview:** record \`auto: entered\` and run the review.
+- **FuseQA:** record \`auto: declined\`; do not enter the beat.
+- **Path B pace control:** generate all artifacts in one pass; do not stop between artifacts for review.
+
+**Execution order.** Brainstorming decisions → proposal → specs → design → tasks → apply under \`test-driven-development\` and \`verification-before-completion\` → FuseReview → verify → archive. The command definition at \`.claude/commands/specfuse.md\` carries the full procedure.
+
+**Exit sequence.** Auto mode enters FuseReview and skips FuseQA. The apply completion report still records both decisions — \`auto: entered\` and \`auto: declined\` — so the dual-record rule is satisfied without a question.
+
+**Verify gates archive.** Archive only after \`/opsx:verify\`, the project's full test suite, and the project's linter pass. If any check still fails after best-effort repair, do not archive; keep the change directory and write each failure with its raw output into the final report.
+
+**Worktree isolation.** When a worktree trigger condition is met, create and enter the worktree before writing any artifact, so the whole pipeline stays inside it. Never merge it back to the trunk; leave it in place for the user to inspect. If worktree creation fails, continue in the current working tree and record the fallback. Because auto mode does not commit, FuseReview reads the working-tree diff from the baseline, including untracked files. Subagent-driven development is not used under auto mode: its integration step requires a merge.
+
+**Prohibitions.** Never run \`git commit\`, \`git push\`, or \`git merge\`. Auto mode does not waive TDD, verification evidence, or the documentation standard.
+
+**Interactive rules unchanged.** The checkpoints in Phase 2, Phase 2.5, and Phase 2.6 still require their questions for \`/opsx:apply\`. Auto mode removes the question, not the decision record.`;
+}
+
 export function renderVerifyPhase(): string {
   return `### Phase 3: Verify / Archive
 
@@ -267,6 +293,8 @@ export function composeCLAUDEmd(_ctx: TemplateContext): string {
     "AI agents MUST follow these rules without exception.",
     "",
     renderFuseDocStandard(),
+    "",
+    renderAutoMode(),
     "",
     renderPathA(),
     "",
