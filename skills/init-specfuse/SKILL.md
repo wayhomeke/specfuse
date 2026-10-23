@@ -6,8 +6,9 @@ description: "Use when initializing a project with the OpenSpec + Superpowers fu
 # SpecFuse Project Initialization
 
 Initialise the current directory with the SpecFuse fusion methodology: a
-**Think → Do → FuseReview → FuseQA → Verify** pipeline, built on OpenSpec as the
-flow engine and Superpowers for behavioural discipline.
+**Think → Do → FuseReview → Verify** pipeline, built on OpenSpec as the
+flow engine and Superpowers for behavioural discipline. FuseQA is an
+on-demand E2E skill outside this sequence.
 
 You are the agent executing this skill. This file does not hand you content to
 copy — this repository is cloned next to you, and the canonical text lives in it.
@@ -41,11 +42,13 @@ made against your own platform's conventions.
 
 **The skill definitions are not optional.** The instruction file you generate
 names them — it says the review method lives in `.claude/skills/fusereview/SKILL.md`,
-the end-to-end method in `.claude/skills/fuseqa/SKILL.md`, and the documentation
+the on-demand E2E method in `.claude/skills/fuseqa/SKILL.md`, and the documentation
 standard in `.claude/skills/fusedoc/SKILL.md`. Omit them and the project ships
 with an instruction file pointing at files that were never written, which
-disables two of the five beats and leaves the documentation standard unenforced.
-Scaffold them alongside everything else, and carry their template packs whole.
+leaves the pipeline without its review beat and without the on-demand FuseQA
+capability. Scaffold them alongside everything else, and carry their template
+packs whole. FuseQA is installed but not wired into the pipeline: it runs only
+when the user invokes `/fuseqa` explicitly.
 
 **The `/specfuse` command is not optional either.** It is the unattended entry
 point that runs the whole pipeline without pausing for decisions. Its procedure
@@ -205,7 +208,7 @@ is not ready, say so and point at the repair instead.
 ## Why this file has no inlined methodology
 
 It used to copy the pipeline text into itself. That copy went four months without
-an update and lost three of the five beats, because nothing connected it to the
+an update and lost three of the pipeline's beats, because nothing connected it to the
 source. Pointing at `composeCLAUDEmd()` instead means there is no copy to drift —
 the only thing that can go stale is a pointer, and a test in this repository
 fails when one does.

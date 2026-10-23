@@ -110,7 +110,7 @@ describe('scaffolded project receives the FuseDoc skill from the built artifact'
     }
   });
 
-  it('emits CLAUDE.md with the documentation standard and no third checkpoint', () => {
+  it('emits CLAUDE.md with the documentation standard and one checkpoint', () => {
     scaffold(dir, 'doc-d');
     const md = readFileSync(path.join(dir, 'doc-d', 'CLAUDE.md'), 'utf-8');
 
@@ -120,7 +120,6 @@ describe('scaffolded project receives the FuseDoc skill from the built artifact'
     // standard, so it adds no gate to the apply exit sequence.
     const mandatory = md.match(/the AI MUST ask the user whether to enter \w+/g) ?? [];
     expect(mandatory.sort()).toEqual([
-      'the AI MUST ask the user whether to enter FuseQA',
       'the AI MUST ask the user whether to enter FuseReview',
     ]);
   });

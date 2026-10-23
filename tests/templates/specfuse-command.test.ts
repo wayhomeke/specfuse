@@ -67,9 +67,11 @@ describe("automatic decision policy", () => {
     expect(output).toMatch(/do not ask/i);
   });
 
-  it("records the two apply-exit decisions", () => {
+  it("records the FuseReview entry and leaves FuseQA on demand", () => {
     expect(output).toContain("auto: entered");
-    expect(output).toContain("auto: declined");
+    expect(output).not.toContain("auto: declined");
+    expect(output).toMatch(/FuseQA:\*\* not part of the pipeline/i);
+    expect(output).toContain("/fuseqa");
   });
 
   it("disables Path B per-artifact review", () => {
@@ -179,7 +181,6 @@ describe("prohibitions and final report", () => {
     for (const item of [
       "change name",
       "FuseReview decision",
-      "FuseQA decision",
       "archive outcome",
       "every automatic decision with its rationale",
       "no commit",

@@ -97,12 +97,14 @@ describe("a scaffolded project receives the unattended command", () => {
       "Do not call AskUserQuestion",
       "continue with current model",
       "auto: entered",
-      "auto: declined",
+      "FuseQA:** not part of the pipeline",
+      "/fuseqa",
       "Archive only when every verify check passes",
       "Never run `git commit`, `git push`, or `git merge`",
     ]) {
       expect(command, `missing clause: ${clause}`).toContain(clause);
     }
+    expect(command).not.toContain("auto: declined");
   });
 
   it("CLAUDE.md declares Auto Mode and keeps the interactive checkpoints", () => {
@@ -112,9 +114,10 @@ describe("a scaffolded project receives the unattended command", () => {
     expect(md).toContain("### Auto Mode: /specfuse");
     expect(md).toContain("continue with current model");
     expect(md).toContain("auto: entered");
-    expect(md).toContain("auto: declined");
+    expect(md).not.toContain("auto: declined");
     expect(md).toContain("### Phase 2.5: FuseReview Checkpoint");
-    expect(md).toContain("### Phase 2.6: FuseQA Checkpoint");
+    expect(md).toContain("### On-Demand: FuseQA");
+    expect(md).not.toContain("### Phase 2.6: FuseQA Checkpoint");
   });
 
   it("prints the command in the file listing", () => {

@@ -3,16 +3,18 @@ import type { TemplateContext } from '../types.js';
 export function composeFuseQASkill(_ctx: TemplateContext): string {
   return `---
 name: fuseqa
-description: Use when performing post-apply E2E verification (FuseQA) — derives end-to-end cases for the current change from its specs and drives them through real user entry points against the built artifact; also runs when the user asks to "write e2e tests", "end-to-end tests", "QA acceptance", or to add test cases for a change.
+description: Use only when the user explicitly asks for local end-to-end verification (FuseQA) — derives end-to-end cases for the current change from its specs and drives them through real user entry points against the built artifact. Not part of the default pipeline; never invoked automatically. Also handles "write e2e tests", "end-to-end tests", "QA acceptance", or adding test cases for a change.
 ---
 
-# FuseQA — Post-Apply E2E Verification
+# FuseQA — On-Demand E2E Verification
 
-Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole.
+FuseQA verifies the artifact through real entry points. It is **not part of the default pipeline and has no checkpoint**: no phase, checkpoint, or automatic decision invokes it, and neither apply completion nor entry to Verify depends on it. Run it explicitly with \`/fuseqa\` when local end-to-end verification is meaningful.
 
-This beat authors E2E cases for the current change and handles what those cases expose. It **does not execute the existing regression suite** — that belongs to the Verify phase full test run. A new case failing on first run is the TDD RED step, not a diagnosis stage.
+It authors E2E cases for the current change and handles what those cases expose. It **does not execute the existing regression suite** — that belongs to the Verify phase full test run. A new case failing on first run is the TDD RED step, not a diagnosis stage. An existing case turning red is a regression caught by the Verify gate.
 
-**What makes this beat necessary:** unit tests cover source, cold-read review runs nothing, and the Verify phase runs the same unit suite. A defect can pass all of them and still reach users. The canonical shape: an entry-guard that compares a resolved module path against an unresolved \`argv[1]\` works when the built file is invoked by its real path and silently does nothing when invoked through a symlinked bin shim — typecheck, unit tests and diff review all pass.
+**When local E2E fits:** FuseQA is useful when the artifact can be deployed and exercised on one machine — a CLI, a small service, a library, a local web app. It cannot reproduce a distributed topology: service discovery, network partitions, shared-state races across nodes, or production data. For distributed systems, run equivalent checks in CI/CD rather than in the development phase; a local green suite there proves very little.
+
+**What local E2E catches that the other gates cannot:** unit tests cover source, cold-read review runs nothing, and the Verify phase runs the same unit suite. A defect can pass all of them and still reach users. The canonical shape: an entry-guard that compares a resolved module path against an unresolved \`argv[1]\` works when the built file is invoked by its real path and silently does nothing when invoked through a symlinked bin shim — typecheck, unit tests and diff review all pass.
 
 ---
 
@@ -45,7 +47,7 @@ Every case declares five fields (schema: \`templates/_case-schema.yaml\`):
 Two hard rules, both mechanically checkable:
 
 - **No importing project source.** A case that imports from \`../src/\` is not a FuseQA case — it is a unit test wearing a costume. This is grep-checkable, so it is checked.
-- **The artifact under test is the build output, not the source.** TDD covers \`src/\`; FuseQA covers what ships. The bin-shim entry-guard defect above passes at source level and fails as a built artifact — that gap is this beat's whole subject.
+- **The artifact under test is the build output, not the source.** TDD covers \`src/\`; FuseQA covers what ships. The bin-shim entry-guard defect above passes at source level and fails as a built artifact — that gap is this skill's whole subject.
 
 ---
 
@@ -96,7 +98,7 @@ A red case carries evidence but its cause is undetermined. Attribution is usuall
 - **Implementation defect → Blocking.** The red case IS the failing test; fix the implementation.
 - **Spec gap → Suggestion** by default; escalate to Blocking if the undefined behavior breaks something users see.
 - **False red → case debt**, outside the grading. Fix or remove the case and record **why the implementation is correct**, with evidence. "The test was wrong" alone is not an attribution.
-- **Attribution over its time box → Suggestion.** Never hold up apply completion on an unresolved attribution.
+- **Attribution over its time box → Suggestion.** Never hold up the change's completion on an unresolved attribution.
 
 ---
 
