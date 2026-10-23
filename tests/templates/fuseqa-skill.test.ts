@@ -7,11 +7,12 @@ const skill = composeFuseQASkill({ projectName: 'test' });
 describe('FuseQA skill frontmatter', () => {
   const fm = skill.slice(4, skill.indexOf('\n---', 4));
 
-  it('declares name fuseqa and explicit, on-demand invocation', () => {
+  it('declares name fuseqa and explicit, on-demand invocation under /specfuse', () => {
     expect(skill.startsWith('---\n')).toBe(true);
     expect(fm).toContain('name: fuseqa');
     expect(fm).toMatch(/explicitly asks/i);
-    expect(fm).toMatch(/not part of the default pipeline/i);
+    expect(fm).toMatch(/not part of the default .*pipeline/i);
+    expect(fm).toMatch(/specfuse:full/i);
     expect(fm).toMatch(/end-to-end|E2E/i);
     expect(fm).not.toMatch(/\bbeat\b/i);
   });
@@ -27,11 +28,12 @@ describe('FuseQA skill frontmatter', () => {
 });
 
 describe('FuseQA skill: on-demand scope', () => {
-  it('states that nothing invokes it and completion does not depend on it', () => {
-    expect(skill).toMatch(/not part of the default pipeline/i);
+  it('states the default and full-command postures', () => {
+    expect(skill).toMatch(/not part of the default .*pipeline/i);
     expect(skill).toMatch(/no checkpoint/i);
-    expect(skill).toMatch(/no phase, checkpoint, or automatic decision invokes it/i);
+    expect(skill).toMatch(/never invokes it/i);
     expect(skill).toMatch(/neither apply completion nor entry to Verify depends/i);
+    expect(skill).toMatch(/specfuse:full/i);
   });
 
   it('states the local and distributed boundary', () => {

@@ -2,7 +2,7 @@
 
 > 把 AI 编码从即兴发挥，改造成工程流水线。
 
-SpecFuse 不发明新工具。它把 OpenSpec（流程引擎）和 Superpowers（行为约束）编排成一条 **Think → Do → FuseReview → Verify** 四拍流水线，一条命令注入任何项目——它不产生新能力，它约束产出可靠性。端到端 QA 是独立的按需技能，不属于流水线。
+SpecFuse 不发明新工具。它把 OpenSpec（流程引擎）和 Superpowers（行为约束）编排成一条 **Think → Do → FuseReview → Verify** 四拍流水线，一条命令注入任何项目——它不产生新能力，它约束产出可靠性。端到端 QA 默认是按需技能；`/specfuse:full` 会把它作为完整流水线的一步自动执行。
 
 ## 快速开始
 
@@ -31,12 +31,14 @@ my-app/
 │   ├── settings.local.json         # 权限白名单
 │   ├── commands/
 │   │   ├── opsx/                   # OpenSpec 提供：/opsx:* 命令面
-│   │   └── specfuse.md             # SpecFuse 提供：全自动入口
+│   │   ├── specfuse.md             # SpecFuse 提供：全自动四拍入口
+│   │   └── specfuse/
+│   │       └── full.md             # SpecFuse 提供：全自动完整入口（含 FuseQA）
 │   └── skills/
 │       ├── design-md/              # 设计令牌生成技能（含 16 个原型模板）
 │       ├── fusedoc/                # 文档标准技能（含 3 份参考文件）
 │       ├── fusereview/             # 实施后代码评审技能
-│       ├── fuseqa/                 # 按需端到端验收技能（含 4 份模板；不属于流水线）
+│       ├── fuseqa/                 # 端到端验收技能（默认按需；/specfuse:full 自动执行）
 │       └── openspec-*/             # OpenSpec 提供：随其 init 生成
 └── openspec/
     ├── config.yaml                 # spec 规则（流程约束）
@@ -44,7 +46,7 @@ my-app/
     └── changes/archive/            # 变更档案
 ```
 
-项目目录会自动加入 Claude Code 信任列表。`commands/opsx/` 与 `openspec-*` 由 OpenSpec 自己的 `init` 产生，随其版本更新；`commands/specfuse.md` 与四个技能由 SpecFuse 写入，已存在则不覆盖；`CLAUDE.md` 按 FUSION 标记合并（见下文）。
+项目目录会自动加入 Claude Code 信任列表。`commands/opsx/` 与 `openspec-*` 由 OpenSpec 自己的 `init` 产生，随其版本更新；`commands/specfuse.md`、`commands/specfuse/full.md` 与四个技能由 SpecFuse 写入，已存在则不覆盖；`CLAUDE.md` 按 FUSION 标记合并（见下文）。
 
 ## 四个阶段
 
@@ -57,17 +59,18 @@ FuseReview  apply 收尾检查点                —— 冷读评审
 Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 ```
 
-FuseQA 不在其中：它是按需技能，只有显式调用 `/fuseqa` 才执行。
+默认四拍不含 FuseQA：需要时显式调用 `/fuseqa`，或用 `/specfuse:full` 自动执行。
 
-### 无人值守：`/specfuse`
+### 无人值守：`/specfuse` 与 `/specfuse:full`
 
 需求已经明确、不想逐拍确认时，用一条命令跑完整条流水线：
 
-```bash
-/specfuse <需求描述>
-```
+| 命令 | 流程 | FuseQA |
+|---|---|---|
+| `/specfuse <需求描述>` | Think → Do → FuseReview → Verify → archive | 不进入；需要时单独调用 `/fuseqa` |
+| `/specfuse:full <需求描述>` | Think → Do → FuseReview → **FuseQA** → Verify → archive | 自动进入，记录 `auto: entered` |
 
-brainstorm、`/design-md` 问卷、模型切换与收尾检查点都由模型按推荐答案自答，并记录在最终报告中：模型切换默认不切换，FuseReview 自动进入，FuseQA 不进入，verify 全部通过后 archive，全程不 commit、不 push。verify 仍失败时不 archive，保留变更目录并把失败写进报告。默认的 `/opsx:*` 交互行为不受影响。
+两者都由模型按推荐答案自答并记录在最终报告中：模型切换默认不切换，FuseReview 自动进入，verify 全部通过后 archive，全程不 commit、不 push。verify 仍失败时不 archive，保留变更目录并把失败写进报告。`/specfuse:full` 把 FuseQA 放在 FuseReview 之后、Verify 之前，让它新写的用例进入随后的全量测试。默认的 `/opsx:*` 交互行为不受影响。
 
 ### Think
 
@@ -87,9 +90,9 @@ brainstorm、`/design-md` 问卷、模型切换与收尾检查点都由模型按
 - Blocking 发现走 TDD 修复；修复后只复审修复 diff，不进行第二轮全量评审。
 - 跳过评审必须记录在收尾报告中留痕。
 
-### FuseQA（按需，不属于流水线）
+### FuseQA（默认按需；`/specfuse:full` 自动执行）
 
-- 只有显式调用 `/fuseqa` 才执行；没有检查点，不进入 apply 收尾，也不影响 verify。
+- 默认只有显式调用 `/fuseqa` 才执行；`/specfuse:full` 会在 FuseReview 之后、Verify 之前自动执行。没有检查点，不进入 apply 收尾，也不影响 verify。
 - 适合能在本地完整部署和验证的小项目：CLI、小型服务、库、本地 Web 应用。
 - 分布式系统在本地复现不了真实拓扑、网络分区与共享状态竞争，应在 CI/CD 中运行等价检查，而不是在开发阶段做本地 QA。
 - 方法仍完整保留：从 specs 的 Scenario 派生用例、真实入口、构建产物而非 `src/`、归因分级、用例台账。
@@ -126,8 +129,9 @@ brainstorm、`/design-md` 问卷、模型切换与收尾检查点都由模型按
 | `openspec/config.yaml` | 已存在 → 跳过 |
 | `.claude/skills/*` | 已存在 → 不覆盖 |
 | `.claude/commands/specfuse.md` | 已存在 → 不覆盖 |
+| `.claude/commands/specfuse/full.md` | 已存在 → 不覆盖 |
 
-技能与命令已存在时不会被覆盖。已有项目升级到四拍时，先删除 `.claude/skills/fuseqa/SKILL.md`、`.claude/skills/fusereview/SKILL.md` 和 `.claude/commands/specfuse.md`，再运行 scaffolder：`CLAUDE.md` 的 FUSION 块会被替换，这三个文件会按新模板重写。其它用户自定义技能不受影响。
+技能与命令已存在时不会被覆盖。已有项目升级到四拍时，先删除 `.claude/skills/fuseqa/SKILL.md`、`.claude/skills/fusereview/SKILL.md` 和 `.claude/commands/specfuse.md`，再运行 scaffolder：`CLAUDE.md` 的 FUSION 块会被替换，这三个文件会按新模板重写；`specfuse/full.md` 不存在时会自动补写。其它用户自定义技能不受影响。
 
 删除 `CLAUDE.md` 里的 FUSION 块，项目即回到无调度状态——整套编排零侵入、可逆。
 

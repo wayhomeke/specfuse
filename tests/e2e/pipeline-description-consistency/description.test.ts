@@ -114,7 +114,7 @@ describe('a scaffolded project receives a complete pipeline description', () => 
     const fuseqaFile = path.join(base, '.claude', 'skills', 'fuseqa', 'SKILL.md');
     expect(existsSync(fuseqaFile), 'fuseqa skill missing').toBe(true);
     const fuseqa = readFileSync(fuseqaFile, 'utf-8');
-    expect(fuseqa).toMatch(/not part of the default pipeline/i);
+    expect(fuseqa).toMatch(/not part of the default .*pipeline/i);
     expect(fuseqa).toMatch(/deployed and exercised on one machine/i);
     expect(fuseqa).toMatch(/CI\/CD/i);
   });
