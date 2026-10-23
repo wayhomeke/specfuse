@@ -6,6 +6,7 @@ import {
   renderFuseQA,
   renderVerifyPhase,
   renderFuseDocStandard,
+  renderAutoMode,
 } from "../../src/templates/claude-md.js";
 
 describe("CLAUDE.md template", () => {
@@ -466,5 +467,82 @@ describe("FuseDoc references reach the prose-producing phases", () => {
     expect(output).not.toContain("Flipping an obligation into an endorsement");
     expect(output).not.toContain("Standing agent instructions");
     expect(output).not.toContain("overcorrection traps");
+  });
+});
+
+// spec: specfuse-auto-mode
+describe("Auto Mode: /specfuse", () => {
+  const out = composeCLAUDEmd({ projectName: "test" });
+  const auto = renderAutoMode();
+
+  it("is an exported zero-argument renderer", () => {
+    expect(renderAutoMode.length).toBe(0);
+  });
+
+  it("is assembled before Path A", () => {
+    const autoAt = out.indexOf("### Auto Mode: /specfuse");
+    const pathAAt = out.indexOf("### Path A: One-Shot Proposal");
+    expect(autoAt).toBeGreaterThan(-1);
+    expect(autoAt).toBeLessThan(pathAAt);
+  });
+
+  it("names every decision point it answers automatically", () => {
+    const lower = auto.toLowerCase();
+    for (const point of [
+      "brainstorming",
+      "model switch",
+      "fusereview",
+      "fuseqa",
+      "design-md",
+      "pace control",
+    ]) {
+      expect(lower, `missing decision point: ${point}`).toContain(point);
+    }
+  });
+
+  it("states the default model decision and the two exit records", () => {
+    expect(auto).toContain("continue with current model");
+    expect(auto).toContain("auto: entered");
+    expect(auto).toContain("auto: declined");
+    expect(auto).toMatch(/with its rationale/i);
+  });
+
+  it("keeps the verification discipline and disables subagent integration", () => {
+    expect(auto).toContain("verification-before-completion");
+    expect(auto).toMatch(/Subagent-driven development is not used/i);
+  });
+
+  it("selects the worktree before artifacts and records the fallback", () => {
+    expect(auto).toMatch(/before writing any artifact/i);
+    expect(auto).toMatch(/worktree creation fails/i);
+    expect(auto).toMatch(/record the fallback/i);
+  });
+
+  it("gates archive on the verify phase, not a nonexistent CLI", () => {
+    expect(auto).toContain("/opsx:verify");
+    expect(auto).not.toContain("openspec verify");
+  });
+
+  it("gates archive on verify and preserves the change on failure", () => {
+    expect(auto).toMatch(/archive only after/i);
+    expect(auto).toMatch(/keep the change directory/i);
+    expect(auto).toMatch(/raw output/i);
+  });
+
+  it("forbids commit, push, and merge", () => {
+    expect(auto).toMatch(/Never run `git commit`, `git push`, or `git merge`/);
+  });
+
+  it("leaves interactive /opsx:* rules unchanged", () => {
+    expect(auto).toMatch(/`\/opsx:\*`/);
+    expect(auto).toMatch(/unchanged/i);
+  });
+
+  it("adds no third mandatory checkpoint question", () => {
+    const mandatory = out.match(/the AI MUST ask the user whether to enter \w+/g) ?? [];
+    expect(mandatory.sort()).toEqual([
+      "the AI MUST ask the user whether to enter FuseQA",
+      "the AI MUST ask the user whether to enter FuseReview",
+    ]);
   });
 });
