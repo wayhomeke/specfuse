@@ -43,6 +43,21 @@ describe('CLI entrypoint resolves through a symlinked bin shim', () => {
     expect(run(shim, ['--help'])).toContain('create-specfuse');
   });
 
+  // spec: cli-help-links
+  it('prints the repository and README links in the help footer', () => {
+    const help = run(shim, ['--help']);
+    expect(help).toMatch(/^Repository: https:\/\/github\.com\/wayhomeke\/specfuse$/m);
+    expect(help).toMatch(
+      /^Documentation: https:\/\/github\.com\/wayhomeke\/specfuse\/blob\/main\/README\.md$/m,
+    );
+    expect(help.indexOf('Repository:')).toBeGreaterThan(help.indexOf('-h, --help'));
+  });
+
+  it('keeps version output free of help links', () => {
+    const version = run(shim, ['--version']);
+    expect(version).not.toContain('github.com');
+  });
+
   // spec: pipeline-description-consistency
   // The product has four beats. A help line that lists a fifth, omits one, or
   // re-adds FuseQA advertises a pipeline that does not exist. This runs through

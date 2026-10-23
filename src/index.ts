@@ -14,6 +14,10 @@ export const program = new Command();
 program
   .name('create-specfuse')
   .description('SpecFuse — AI engineering pipeline scaffolder.\n\nInjects OpenSpec workflow + Superpowers discipline into any project.\nThink → Do → FuseReview → Verify, one command at a time.')
+  .addHelpText(
+    'after',
+    '\nRepository: https://github.com/wayhomeke/specfuse\nDocumentation: https://github.com/wayhomeke/specfuse/blob/main/README.md\n',
+  )
   .version(pkg.version)
   .argument('[project-name]', 'Target directory (omit or use "." to init in current directory)')
   .option('-y, --yes', 'Non-interactive mode (use defaults, CI-friendly)')
