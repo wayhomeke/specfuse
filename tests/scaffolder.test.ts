@@ -237,6 +237,43 @@ describe('scaffolder integration', () => {
     expect(out).toContain('.claude/commands/specfuse.md');
   });
 
+  // spec: specfuse-full
+  it('greenfield: creates .claude/commands/specfuse/full.md with rendered content', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    const commandPath = path.join(tmpDir, '.claude', 'commands', 'specfuse', 'full.md');
+    expect(existsSync(commandPath)).toBe(true);
+    const content = readFileSync(commandPath, 'utf-8');
+    expect(content).toContain('/specfuse:full');
+    expect(content).toContain('record `auto: entered` and run the `fuseqa` skill');
+  });
+
+  it('existing: does not overwrite a custom full specfuse command', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'commands', 'specfuse'), { recursive: true });
+    const commandPath = path.join(tmpDir, '.claude', 'commands', 'specfuse', 'full.md');
+    writeFileSync(commandPath, 'custom full command');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(commandPath, 'utf-8')).toBe('custom full command');
+  });
+
+  it('existing: preserves a zero-byte full specfuse command', async () => {
+    mkdirSync(path.join(tmpDir, '.claude', 'commands', 'specfuse'), { recursive: true });
+    const commandPath = path.join(tmpDir, '.claude', 'commands', 'specfuse', 'full.md');
+    writeFileSync(commandPath, '');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(commandPath, 'utf-8')).toBe('');
+  });
+
+  it('names the full command in the printed file listing', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir }));
+
+    expect(out).toContain('.claude/commands/specfuse/full.md');
+  });
+
   it('names the skill in the install progress message', async () => {
     const written: string[] = [];
     const spy = vi

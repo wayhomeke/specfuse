@@ -12,7 +12,7 @@ import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeFuseQASkill } from './templates/fuseqa-skill.js';
 import { composeFuseDocSkill } from './templates/fusedoc-skill.js';
-import { composeSpecfuseCommand } from './templates/specfuse-command.js';
+import { composeSpecfuseCommand, composeSpecfuseFullCommand } from './templates/specfuse-command.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -266,6 +266,14 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await writeText(specfuseCommandPath, composeSpecfuseCommand());
   }
 
+  // /specfuse:full command
+  spinner.text = 'Writing .claude/commands/specfuse/full.md...';
+  const specfuseFullCommandPath = path.join(targetDir, '.claude', 'commands', 'specfuse', 'full.md');
+  if (!(await fileExists(specfuseFullCommandPath))) {
+    await createDir(path.join(targetDir, '.claude', 'commands', 'specfuse'));
+    await writeText(specfuseFullCommandPath, composeSpecfuseFullCommand());
+  }
+
   // Skill templates
   spinner.text = 'Copying skill templates...';
   await copyTemplateDir(
@@ -353,6 +361,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   console.log(`    .claude/settings.local.json       ${chalk.dim(tag('Permissions'))}`);
   console.log(`    .claude/skills/fusedoc/           ${chalk.dim('Documentation standard')}`);
   console.log(`    .claude/commands/specfuse.md      ${chalk.dim('Unattended pipeline')}`);
+  console.log(`    .claude/commands/specfuse/full.md ${chalk.dim('Complete unattended pipeline')}`);
   if (config.initOpenspec) {
     console.log(`    openspec/config.yaml              ${chalk.dim('Spec-driven config')}`);
   }

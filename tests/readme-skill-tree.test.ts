@@ -17,12 +17,26 @@ describe('README documents every skill the scaffolder installs', () => {
 
 describe('README documents the unattended entry point', () => {
   it('lists .claude/commands/specfuse.md in the generated tree', () => {
-    expect(README).toMatch(/[├└]── specfuse\.md\s+# SpecFuse 提供：全自动入口/);
+    expect(README).toMatch(/[├└]── specfuse\.md\s+# SpecFuse 提供：全自动四拍入口/);
   });
 
   it('describes the unattended mode in its own section', () => {
     expect(README).toContain('### 无人值守：`/specfuse`');
     expect(README).toMatch(/不 commit、不 push/);
+  });
+});
+
+describe('README documents the full unattended variant', () => {
+  it('lists the full command in the generated tree', () => {
+    expect(README).toMatch(
+      /└── full\.md\s+# SpecFuse 提供：全自动完整入口（含 FuseQA）/,
+    );
+  });
+
+  it('names /specfuse:full and its FuseQA decision in the comparison table', () => {
+    expect(README).toMatch(
+      /\| `\/specfuse:full <需求描述>` \| Think → Do → FuseReview → \*\*FuseQA\*\* → Verify → archive \| 自动进入，记录 `auto: entered` \|/,
+    );
   });
 });
 
@@ -52,9 +66,10 @@ describe('README documents the migration for existing projects', () => {
 });
 
 describe('README documents FuseQA as on demand', () => {
-  it('states that it is outside the pipeline and invoked explicitly', () => {
-    expect(README).toContain('### FuseQA（按需，不属于流水线）');
-    expect(README).toMatch(/只有显式调用 `\/fuseqa` 才执行/);
+  it('states that it is on demand under /specfuse and automatic under /specfuse:full', () => {
+    expect(README).toContain('### FuseQA（默认按需；`/specfuse:full` 自动执行）');
+    expect(README).toMatch(/默认只有显式调用 `\/fuseqa` 才执行/);
+    expect(README).toMatch(/`\/specfuse:full` 会在 FuseReview 之后、Verify 之前自动执行/);
   });
 
   it('states the local versus CI/CD boundary', () => {
