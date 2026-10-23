@@ -187,7 +187,7 @@ file the user's project receives". That is the strongest entry available for thi
 artifact shape, and the conclusion is recorded here so a future reader does not
 mistake it for full end-to-end coverage of the checkpoint's behaviour.
 
-## Addition — 2026-09-16 (change: add-fusedoc-skill)
+## Addition — 2026-09-16 (change: add-fusedoc-skill) — superseded by the 2026-10-23 correction
 
 | Field | Content |
 |---|---|
@@ -244,7 +244,7 @@ guard went red during this change's FuseQA beat — the skill enumerated three
 skill definitions and two template packs, not four and three — which is the
 finding recorded in the apply completion report, not an E2E case.
 
-## Addition — 2026-09-16 (change: fix-pipeline-beat-numbering)
+## Addition — 2026-09-16 (change: fix-pipeline-beat-numbering) — superseded by the 2026-10-23 correction
 
 | Field | Content |
 |---|---|
@@ -324,7 +324,7 @@ rests on.
 |---|---|
 | Case | `tests/e2e/specfuse-auto-mode/scaffold-command.test.ts` (4 cases) |
 | Capability | `specfuse-auto-mode` |
-| Traces to | spec `specfuse-auto-mode` / Scenarios "New project receives the command", "Decisions are auditable", "FuseQA is not entered", "Auto-mode section is present", "Interactive rules are preserved", "Install surface names the command" |
+| Traces to | spec `specfuse-auto-mode` / Scenarios "New project receives the command", "Decisions are auditable", "FuseQA is not invoked", "Auto-mode section is present", "Interactive rules are preserved", "Install surface names the command" |
 | Shape | CLI — real subprocess with argv through a symlinked bin shim, against the built `dist/index.js` |
 
 Covers: the command file lands in a scaffolded project; its body carries the
@@ -350,3 +350,14 @@ exiting non-zero, git identity via env — the recipe from
 a coding agent, which cannot be executed by this suite. The cases stop at "the
 policy reached the file the user's project receives". The behavior of the model
 following that prose is not mechanically verifiable here.
+
+
+## Correction — 2026-10-23 (change: make-fuseqa-on-demand)
+
+| Field | Content |
+|---|---|
+| Cases | `tests/e2e/pipeline-description-consistency/description.test.ts`, `tests/e2e/scaffold-tool-boundary/skill-distribution.test.ts`, `tests/e2e/fusedoc-skill-generation/install.test.ts`, `tests/e2e/specfuse-auto-mode/scaffold-command.test.ts` |
+| What changed | Beat lists reduced from five to four; the FuseQA checkpoint assertions became on-demand assertions; the auto-mode command and `CLAUDE.md` assertions no longer expect `auto: declined`; FuseQA-skill cases now assert that the skill is still installed and declares explicit invocation. |
+| Why the original judgment was wrong | The cases encoded the product's previous contract — FuseQA as a mandatory second checkpoint. That contract no longer holds: FuseQA is an on-demand skill outside the pipeline. Keeping the old assertions would test behavior the product intentionally removed. |
+| Evidence the implementation is correct | The full suite passes against the built artifact (537 tests), including the scaffolded `CLAUDE.md` showing one checkpoint and the FuseQA skill installed with its on-demand frontmatter. |
+| Coverage boundary | No case drives the model following the prose; the cases stop at the files a scaffolded project receives. Recorded so a future reader does not mistake this for execution-level coverage of FuseQA. |

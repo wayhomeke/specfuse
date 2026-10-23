@@ -23,7 +23,7 @@ import path from 'node:path';
  * one of them green. This drives the CLI and reads what landed on disk.
  */
 const DIST = path.resolve(import.meta.dirname, '..', '..', '..', 'dist', 'index.js');
-const BEATS = ['Think', 'Do', 'FuseReview', 'FuseQA', 'Verify'] as const;
+const BEATS = ['Think', 'Do', 'FuseReview', 'Verify'] as const;
 const ENUMERATION = /Think reviews direction[^.]*\./g;
 
 describe('a scaffolded project receives a complete pipeline description', () => {
@@ -81,36 +81,42 @@ describe('a scaffolded project receives a complete pipeline description', () => 
     const help = run(['--help']);
     const missing = BEATS.filter((b) => !new RegExp(`\\b${b}\\b`).test(help));
     expect(missing).toEqual([]);
+    expect(help).not.toMatch(/\bFuseQA\b/);
   });
 
-  it('the scaffolded CLAUDE.md enumerates every beat in both checkpoints', () => {
+  it('the scaffolded CLAUDE.md enumerates every beat in the FuseReview section', () => {
     const base = scaffold('desc-a');
     const md = readFileSync(path.join(base, 'CLAUDE.md'), 'utf-8');
 
     const enumerations = md.match(ENUMERATION) ?? [];
-    expect(enumerations.length).toBeGreaterThanOrEqual(2);
+    expect(enumerations.length).toBeGreaterThanOrEqual(1);
 
     for (const sentence of enumerations) {
       const missing = BEATS.filter((b) => !new RegExp(`\\b${b}\\b`).test(sentence));
       expect(missing, `dropped from: ${sentence.slice(0, 70)}`).toEqual([]);
+      expect(sentence).not.toMatch(/\bFuseQA\b/);
     }
   });
 
-  it('the scaffolded skills enumerate every beat', () => {
+  it('the FuseReview skill enumerates every beat and FuseQA states it is on demand', () => {
     const base = scaffold('desc-b');
 
-    for (const skill of ['fusereview', 'fuseqa']) {
-      const file = path.join(base, '.claude', 'skills', skill, 'SKILL.md');
-      expect(existsSync(file), `${skill} skill missing`).toBe(true);
-
-      const enumerations = enumerationsIn(file);
-      expect(enumerations.length, `${skill} has no enumeration`).toBeGreaterThan(0);
-
-      for (const sentence of enumerations) {
-        const missing = BEATS.filter((b) => !new RegExp(`\\b${b}\\b`).test(sentence));
-        expect(missing, `${skill}: dropped from ${sentence.slice(0, 70)}`).toEqual([]);
-      }
+    const reviewFile = path.join(base, '.claude', 'skills', 'fusereview', 'SKILL.md');
+    expect(existsSync(reviewFile), 'fusereview skill missing').toBe(true);
+    const enumerations = enumerationsIn(reviewFile);
+    expect(enumerations.length, 'fusereview has no enumeration').toBeGreaterThan(0);
+    for (const sentence of enumerations) {
+      const missing = BEATS.filter((b) => !new RegExp(`\\b${b}\\b`).test(sentence));
+      expect(missing, `fusereview: dropped from ${sentence.slice(0, 70)}`).toEqual([]);
+      expect(sentence).not.toMatch(/\bFuseQA\b/);
     }
+
+    const fuseqaFile = path.join(base, '.claude', 'skills', 'fuseqa', 'SKILL.md');
+    expect(existsSync(fuseqaFile), 'fuseqa skill missing').toBe(true);
+    const fuseqa = readFileSync(fuseqaFile, 'utf-8');
+    expect(fuseqa).toMatch(/not part of the default pipeline/i);
+    expect(fuseqa).toMatch(/deployed and exercised on one machine/i);
+    expect(fuseqa).toMatch(/CI\/CD/i);
   });
 
   it('no shipped description labels a beat by its position', () => {

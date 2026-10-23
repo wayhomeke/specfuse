@@ -114,16 +114,17 @@ describe('scaffolded project receives the FuseQA skill from the built artifact',
     expect(readdirSync(tdir).sort()).toEqual(EXPECTED_TEMPLATES);
   });
 
-  it('emits CLAUDE.md with FuseQA ordered between FuseReview and Verify', () => {
+  it('emits CLAUDE.md with FuseReview before Verify and FuseQA on demand after it', () => {
     scaffold(dir, 'app-b');
     const md = readFileSync(path.join(dir, 'app-b', 'CLAUDE.md'), 'utf-8');
 
     const fr = md.indexOf('Phase 2.5: FuseReview');
-    const fq = md.indexOf('Phase 2.6: FuseQA');
     const vp = md.indexOf('Phase 3: Verify');
+    const fq = md.indexOf('On-Demand: FuseQA');
     expect(fr).toBeGreaterThan(-1);
-    expect(fq).toBeGreaterThan(fr);
-    expect(vp).toBeGreaterThan(fq);
+    expect(vp).toBeGreaterThan(fr);
+    expect(fq).toBeGreaterThan(vp);
+    expect(md).not.toContain('Phase 2.6: FuseQA');
   });
 
   it('emits markdown with no escaped backticks in either file', () => {

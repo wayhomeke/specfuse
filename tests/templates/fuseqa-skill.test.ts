@@ -5,22 +5,47 @@ const skill = composeFuseQASkill({ projectName: 'test' });
 
 // spec: fuseqa-skill-generation
 describe('FuseQA skill frontmatter', () => {
-  it('declares name fuseqa and the in-flow trigger', () => {
+  const fm = skill.slice(4, skill.indexOf('\n---', 4));
+
+  it('declares name fuseqa and explicit, on-demand invocation', () => {
     expect(skill.startsWith('---\n')).toBe(true);
-    const fm = skill.slice(4, skill.indexOf('\n---', 4));
     expect(fm).toContain('name: fuseqa');
-    expect(fm).toMatch(/post-apply/i);
+    expect(fm).toMatch(/explicitly asks/i);
+    expect(fm).toMatch(/not part of the default pipeline/i);
     expect(fm).toMatch(/end-to-end|E2E/i);
+    expect(fm).not.toMatch(/\bbeat\b/i);
   });
 
   it('carries at least two colloquial trigger phrases', () => {
-    const fm = skill.slice(4, skill.indexOf('\n---', 4));
     const colloquial = [/write e2e tests?/i, /end-to-end tests?/i, /QA acceptance/i, /add test cases?/i];
     expect(colloquial.filter((r) => r.test(fm)).length).toBeGreaterThanOrEqual(2);
   });
 
   it('states it authors cases and does not run the existing regression suite', () => {
     expect(skill).toMatch(/does not (execute|run) the existing/i);
+  });
+});
+
+describe('FuseQA skill: on-demand scope', () => {
+  it('states that nothing invokes it and completion does not depend on it', () => {
+    expect(skill).toMatch(/not part of the default pipeline/i);
+    expect(skill).toMatch(/no checkpoint/i);
+    expect(skill).toMatch(/no phase, checkpoint, or automatic decision invokes it/i);
+    expect(skill).toMatch(/neither apply completion nor entry to Verify depends/i);
+  });
+
+  it('states the local and distributed boundary', () => {
+    expect(skill).toMatch(/deployed and exercised on one machine/i);
+    expect(skill).toMatch(/distributed/i);
+    expect(skill).toMatch(/CI\/CD/i);
+  });
+
+  it('does not claim a pipeline beat position', () => {
+    expect(skill).not.toMatch(/post-apply beat|pipeline beat|one of the (four|five) beats/i);
+  });
+
+  it('assigns an existing red case to the Verify gate', () => {
+    expect(skill).toMatch(/existing case turning red is a regression caught by the Verify gate/i);
   });
 });
 
