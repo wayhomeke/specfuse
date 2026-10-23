@@ -29,7 +29,9 @@ my-app/
 ├── .gitignore                      # 共享忽略规则
 ├── .claude/
 │   ├── settings.local.json         # 权限白名单
-│   ├── commands/opsx/              # OpenSpec 提供：/opsx:* 命令面
+│   ├── commands/
+│   │   ├── opsx/                   # OpenSpec 提供：/opsx:* 命令面
+│   │   └── specfuse.md             # SpecFuse 提供：全自动入口
 │   └── skills/
 │       ├── design-md/              # 设计令牌生成技能（含 16 个原型模板）
 │       ├── fusedoc/                # 文档标准技能（含 3 份参考文件）
@@ -42,7 +44,7 @@ my-app/
     └── changes/archive/            # 变更档案
 ```
 
-项目目录会自动加入 Claude Code 信任列表。`commands/` 与 `openspec-*` 由 OpenSpec 自己的 `init` 产生，随其版本更新；其余由 SpecFuse 写入，已存在则不覆盖。
+项目目录会自动加入 Claude Code 信任列表。`commands/opsx/` 与 `openspec-*` 由 OpenSpec 自己的 `init` 产生，随其版本更新；`commands/specfuse.md` 与四个技能由 SpecFuse 写入，已存在则不覆盖；`CLAUDE.md` 按 FUSION 标记合并（见下文）。
 
 ## 五个阶段
 
@@ -55,6 +57,16 @@ FuseReview  apply 收尾检查点                —— 冷读评审
 FuseQA      apply 收尾检查点                —— 真实入口端到端验收
 Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 ```
+
+### 无人值守：`/specfuse`
+
+需求已经明确、不想逐拍确认时，用一条命令跑完整条流水线：
+
+```bash
+/specfuse <需求描述>
+```
+
+brainstorm、`/design-md` 问卷、模型切换与两个收尾检查点都由模型按推荐答案自答，并记录在最终报告中：模型切换默认不切换，FuseReview 自动进入，FuseQA 记录为跳过，verify 全部通过后 archive，全程不 commit、不 push。verify 仍失败时不 archive，保留变更目录并把失败写进报告。默认的 `/opsx:*` 交互行为不受影响。
 
 ### Think
 
@@ -114,6 +126,7 @@ Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 | `.claude/settings.local.json` | 合并 `permissions.allow`，其余键原样透传 |
 | `openspec/config.yaml` | 已存在 → 跳过 |
 | `.claude/skills/*` | 已存在 → 不覆盖 |
+| `.claude/commands/specfuse.md` | 已存在 → 不覆盖 |
 
 删除 `CLAUDE.md` 里的 FUSION 块，项目即回到无调度状态——整套编排零侵入、可逆。
 

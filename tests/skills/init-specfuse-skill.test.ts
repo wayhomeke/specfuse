@@ -45,6 +45,10 @@ const SOURCES: Array<{ file: string; symbol: string }> = [
   { file: 'src/templates/fusereview-skill.ts', symbol: 'composeFuseReviewSkill' },
   { file: 'src/templates/fuseqa-skill.ts', symbol: 'composeFuseQASkill' },
   { file: 'src/templates/fusedoc-skill.ts', symbol: 'composeFuseDocSkill' },
+  // The `/specfuse` command is installed by the same scaffolder and governs a
+  // second entry point into the pipeline. A skill that names the skills but not
+  // the command leaves the unattended path undocumented at install time.
+  { file: 'src/templates/specfuse-command.ts', symbol: 'composeSpecfuseCommand' },
 ];
 
 /** Template packs those skills carry, copied whole by scaffold(). */
@@ -204,5 +208,15 @@ describe('init-specfuse skill content contract (spec: init-specfuse-skill)', () 
 
   it('asks the OpenSpec question whether or not the directory is new', () => {
     expect(flat).toMatch(/Ask this either way/i);
+  });
+
+  it('names the /specfuse command among the produced surfaces', () => {
+    expect(flat).toContain('/specfuse');
+    expect(flat).toContain('src/templates/specfuse-command.ts');
+  });
+
+  it('carries the non-overwrite rule for the command', () => {
+    expect(flat).toMatch(/leave an existing one alone, including a zero-byte file/i);
+    expect(flat).toMatch(/Never overwrite a skill definition or command the user has authored/i);
   });
 });

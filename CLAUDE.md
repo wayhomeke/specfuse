@@ -44,6 +44,30 @@ The standard lives at `.claude/skills/fusedoc/SKILL.md`. It governs three things
 
 Scope is required. An invocation naming no scope reports the missing input rather than inferring a repository-wide one.
 
+### Auto Mode: /specfuse
+
+`/specfuse <requirement>` runs the whole pipeline unattended. It is an entry point alongside Path A and Path B, and the rules below override the checkpoint questions for that invocation only. Interactive `/opsx:*` behavior is unchanged.
+
+**Automatic decisions.** Do not call `AskUserQuestion` for any decision point. The model answers with the recommended option and records the decision with its rationale in the final report:
+- **Brainstorming:** derive 2–3 alternatives with trade-offs, select the recommended one, and write the selection and rationale into `design.md`.
+- **Design tokens:** when the three-gate test triggers `/design-md`, answer the questionnaire with recommended values; never overwrite an existing `DESIGN-TOKENS.md`.
+- **Model switch:** record `continue with current model`; do not switch and do not ask.
+- **FuseReview:** record `auto: entered` and run the review.
+- **FuseQA:** record `auto: declined`; do not enter the beat.
+- **Path B pace control:** generate all artifacts in one pass; do not stop between artifacts for review.
+
+**Execution order.** Brainstorming decisions → proposal → specs → design → tasks → apply under `test-driven-development` and `verification-before-completion` → FuseReview → verify → archive. The command definition at `.claude/commands/specfuse.md` carries the full procedure.
+
+**Exit sequence.** Auto mode enters FuseReview and skips FuseQA. The apply completion report still records both decisions — `auto: entered` and `auto: declined` — so the dual-record rule is satisfied without a question.
+
+**Verify gates archive.** Archive only after `/opsx:verify`, the project's full test suite, and the project's linter pass. If any check still fails after best-effort repair, do not archive; keep the change directory and write each failure with its raw output into the final report.
+
+**Worktree isolation.** When a worktree trigger condition is met, create and enter the worktree before writing any artifact, so the whole pipeline stays inside it. Never merge it back to the trunk; leave it in place for the user to inspect. If worktree creation fails, continue in the current working tree and record the fallback. Because auto mode does not commit, FuseReview reads the working-tree diff from the baseline, including untracked files. Subagent-driven development is not used under auto mode: its integration step requires a merge.
+
+**Prohibitions.** Never run `git commit`, `git push`, or `git merge`. Auto mode does not waive TDD, verification evidence, or the documentation standard.
+
+**Interactive rules unchanged.** The checkpoints in Phase 2, Phase 2.5, and Phase 2.6 still require their questions for `/opsx:apply`. Auto mode removes the question, not the decision record.
+
 ### Path A: One-Shot Proposal
 
 When `/opsx:propose` is invoked:
@@ -162,7 +186,7 @@ When `/opsx:apply` is invoked:
 
 ### Phase 2.5: FuseReview Checkpoint (Post-Apply)
 
-FuseReview is the fourth beat: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in `.claude/skills/fusereview/SKILL.md`.
+FuseReview is the post-apply review: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, FuseQA verifies the artifact through real entry points, Verify validates the whole. The full review method lives in `.claude/skills/fusereview/SKILL.md`.
 
 **Baseline:** At apply start, record the current HEAD commit in the change's state as the review baseline. The review object is `baseline..HEAD`. If no baseline was recorded, fall back to the merge-base of the current branch and the trunk, and annotate the fallback in the report.
 
@@ -189,7 +213,7 @@ FuseReview is the fourth beat: Think reviews direction, Do produces code, **Fuse
 
 ### Phase 2.6: FuseQA Checkpoint (Post-Apply E2E)
 
-FuseQA is the fifth beat: Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole. The full method lives in `.claude/skills/fuseqa/SKILL.md`.
+FuseQA is the post-apply verification: Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole. The full method lives in `.claude/skills/fuseqa/SKILL.md`.
 
 **Why this beat exists:** unit tests cover source, FuseReview reads a diff without running anything, and the Verify phase runs the same unit suite. A defect can therefore pass every gate and still reach users — an entry-guard bug that works when the built file is called by its real path but does nothing when called through a symlinked bin shim passes typecheck, unit tests and cold-read review alike. Nobody runs the artifact as a user until this beat.
 

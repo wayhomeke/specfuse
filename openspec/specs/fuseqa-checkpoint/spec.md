@@ -8,17 +8,17 @@ Defines the apply exit sequence's second mandatory checkpoint: the question the 
 
 ### Requirement: FuseQA checkpoint question is mandatory and independent
 
-`renderFuseQA()` output SHALL require the AI to ask the FuseQA checkpoint question after the last task in `tasks.md` passes verification, SHALL state that the FuseReview answer does not affect whether FuseQA is asked, and SHALL forbid merging the two checkpoints into one question.
+`renderFuseQA()` output SHALL require the AI to ask the FuseQA checkpoint question after the last task in `tasks.md` passes verification for `/opsx:apply` invocations, SHALL state that the FuseReview answer does not affect whether FuseQA is asked, and SHALL forbid merging the two checkpoints into one question. Auto-mode invocations are governed by the `specfuse-auto-mode` capability; this requirement SHALL NOT be read as applying to them.
 
 #### Scenario: Mandatory question stated
 
 - **WHEN** `renderFuseQA()` is called
-- **THEN** its output contains a MUST-level instruction to ask the user whether to enter FuseQA after the last task passes verification, and states that silent advancement to `/opsx:verify` or `/opsx:archive` is forbidden
+- **THEN** its output contains a MUST-level instruction to ask the user whether to enter FuseQA after the last task passes verification for interactive invocations, and states that silent advancement to `/opsx:verify` or `/opsx:archive` is forbidden
 
 #### Scenario: Independence from the FuseReview answer
 
 - **WHEN** `renderFuseQA()` is called
-- **THEN** its output states that any FuseReview answer, accept or decline, leaves the FuseQA question mandatory
+- **THEN** its output states that for interactive invocations any FuseReview answer, accept or decline, leaves the FuseQA question mandatory
 
 #### Scenario: Merged questioning forbidden
 
@@ -32,7 +32,7 @@ Defines the apply exit sequence's second mandatory checkpoint: the question the 
 
 ### Requirement: Apply completion requires both checkpoint decisions on record
 
-`renderFuseQA()` output SHALL make the apply completion report carry both the FuseReview decision and the FuseQA decision, and SHALL state that a report missing either record means apply is not complete.
+`renderFuseQA()` output SHALL make the apply completion report carry both the FuseReview decision and the FuseQA decision for interactive invocations, and SHALL state that a report missing either record means apply is not complete. The auto-mode equivalent, where both decisions are recorded automatically, is governed by the `specfuse-auto-mode` capability.
 
 #### Scenario: Dual record required
 

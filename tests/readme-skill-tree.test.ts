@@ -15,6 +15,17 @@ describe('README documents every skill the scaffolder installs', () => {
   }
 });
 
+describe('README documents the unattended entry point', () => {
+  it('lists .claude/commands/specfuse.md in the generated tree', () => {
+    expect(README).toMatch(/[├└]── specfuse\.md\s+# SpecFuse 提供：全自动入口/);
+  });
+
+  it('describes the unattended mode in its own section', () => {
+    expect(README).toContain('### 无人值守：`/specfuse`');
+    expect(README).toMatch(/不 commit、不 push/);
+  });
+});
+
 describe('README frames FuseDoc as a standard, not a beat', () => {
   it('states it is not one of the beats', () => {
     expect(README).toMatch(/不属于五拍|不是拍/);
