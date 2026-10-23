@@ -380,3 +380,22 @@ also spawns the built CLI through a shim, but the case lives under its own
 capability directory so the ledger can locate and retire it by the same name as
 the spec. The duplication is deliberate: the help footer is a user-visible
 contract with its own capability.
+
+## Addition — 2026-10-23 (change: add-specfuse-full-command)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/specfuse-full/scaffold-full-command.test.ts` (4 cases) |
+| Capability | `specfuse-full` |
+| Traces to | spec `specfuse-full` / Scenarios "New project receives the full command", "Install surface names the command", "Phase order stated", "Full variant named" |
+| Shape | CLI — real subprocess with argv through a symlinked bin shim, against the built `dist/index.js` |
+
+Covers: both command files land in a scaffolded project; the complete command
+orders FuseReview → FuseQA → Verify → Archive and records both `auto: entered`
+decisions; `CLAUDE.md` names `/specfuse:full` while keeping `/specfuse`'s FuseQA
+on-demand statement; the printed listing names the new file.
+
+**Why this cannot be a unit test:** the unit guards read the composers' return
+values. A missing scaffolder write, a wrong namespaced path, or a stale built
+artifact would leave them green; this case drives the artifact a package
+manager installs.

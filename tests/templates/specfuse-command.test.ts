@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { composeSpecfuseCommand } from "../../src/templates/specfuse-command.js";
+import {
+  composeSpecfuseCommand,
+  composeSpecfuseFullCommand,
+} from "../../src/templates/specfuse-command.js";
 
 /**
  * The command file is the whole contract between `/specfuse` and the model:
@@ -192,5 +195,52 @@ describe("prohibitions and final report", () => {
 
   it("points artifact prose at the FuseDoc standard", () => {
     expect(output).toContain(".claude/skills/fusedoc/SKILL.md");
+  });
+});
+
+describe("specfuse full command template", () => {
+  const output = composeSpecfuseFullCommand();
+
+  it("renders the namespaced command and usage", () => {
+    expect(output.startsWith("---\n")).toBe(true);
+    expect(output).toContain("# /specfuse:full");
+    expect(output).toContain("/specfuse:full <requirement description>");
+    expect(output).toContain("$ARGUMENTS");
+  });
+
+  it("enters FuseQA automatically between FuseReview and Verify", () => {
+    expect(output).toMatch(/\*\*FuseQA:\*\* record `auto: entered`/);
+    expect(output).toMatch(/after FuseReview, before Verify/i);
+    expect(output).not.toContain("auto: declined");
+  });
+
+  it("orders FuseReview, FuseQA, Verify, and Archive", () => {
+    const headings = [
+      "### 4. FuseReview",
+      "### 5. FuseQA",
+      "### 6. Verify",
+      "### 7. Archive",
+    ];
+    let last = -1;
+    for (const heading of headings) {
+      const at = output.indexOf(heading);
+      expect(at, `missing or out of order: ${heading}`).toBeGreaterThan(last);
+      last = at;
+    }
+  });
+
+  it("records both decisions in the final report", () => {
+    expect(output).toContain("FuseReview decision (`auto: entered`)");
+    expect(output).toContain("FuseQA decision (`auto: entered`)");
+  });
+
+  it("keeps the shared prohibitions and verify gate", () => {
+    expect(output).toMatch(/Archive only when every verify check passes/i);
+    expect(output).toMatch(/Never run `git commit`, `git push`, or `git merge`/);
+    expect(output).toMatch(/Do not call AskUserQuestion/);
+  });
+
+  it("includes FuseQA in the worktree pipeline list", () => {
+    expect(output).toMatch(/FuseReview, FuseQA, verify, and archive/i);
   });
 });

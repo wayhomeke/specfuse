@@ -179,7 +179,7 @@ FuseReview is the post-apply review: Think reviews direction, Do produces code, 
 export function renderFuseQAOnDemand(): string {
   return `### On-Demand: FuseQA (E2E Verification)
 
-FuseQA verifies the built artifact through real user entry points. It is **not part of the pipeline — not a pipeline beat — and has no checkpoint**: no phase, checkpoint, or auto-mode decision invokes it, and neither apply completion nor entry to Verify depends on a FuseQA decision. Run it explicitly with \`/fuseqa\` when local end-to-end verification is meaningful.
+FuseQA verifies the built artifact through real user entry points. It is **not part of the default \`/specfuse\` pipeline — not a pipeline beat — and has no checkpoint**: \`/specfuse\` never invokes it, and neither apply completion nor entry to Verify depends on a FuseQA decision. Run it explicitly with \`/fuseqa\` when local end-to-end verification is meaningful; \`/specfuse:full\` is the complete variant that enters it automatically after FuseReview and before Verify.
 
 **Applicability.** Use it when the artifact can be deployed and exercised locally — a CLI, a small service, a library, a local web app. A distributed system cannot be meaningfully exercised on one machine; run equivalent checks in CI/CD rather than in the development phase.
 
@@ -220,12 +220,14 @@ export function renderAutoMode(): string {
 - **Design tokens:** when the three-gate test triggers \`/design-md\`, answer the questionnaire with recommended values; never overwrite an existing \`DESIGN-TOKENS.md\`.
 - **Model switch:** record \`continue with current model\`; do not switch and do not ask.
 - **FuseReview:** record \`auto: entered\` and run the review.
-- **FuseQA:** not part of the pipeline; do not invoke it. It remains available only through an explicit \`/fuseqa\` request.
+- **FuseQA:** under \`/specfuse\`, not part of the pipeline; do not invoke it. It remains available only through an explicit \`/fuseqa\` request or the \`/specfuse:full\` variant.
 - **Path B pace control:** generate all artifacts in one pass; do not stop between artifacts for review.
 
 **Execution order.** Brainstorming decisions → proposal → specs → design → tasks → apply under \`test-driven-development\` and \`verification-before-completion\` → FuseReview → verify → archive. The command definition at \`.claude/commands/specfuse.md\` carries the full procedure.
 
-**Exit sequence.** Auto mode enters FuseReview. The apply completion report records the FuseReview decision only. FuseQA is not part of the pipeline: it is not invoked and no FuseQA decision is recorded; it remains an explicit \`/fuseqa\` invocation outside the pipeline.
+**Exit sequence.** Under \`/specfuse\`, auto mode enters FuseReview. The apply completion report records the FuseReview decision only. FuseQA is not invoked and no FuseQA decision is recorded; it remains an explicit \`/fuseqa\` invocation outside this command.
+
+**Full variant.** \`/specfuse:full\` runs the same policy but enters FuseQA after FuseReview and before Verify, recording \`auto: entered\` for both decisions. It keeps the no-commit/no-push and verify-gates-archive rules unchanged; \`/specfuse\` still leaves FuseQA on demand.
 
 **Verify gates archive.** Archive only after \`/opsx:verify\`, the project's full test suite, and the project's linter pass. If any check still fails after best-effort repair, do not archive; keep the change directory and write each failure with its raw output into the final report.
 

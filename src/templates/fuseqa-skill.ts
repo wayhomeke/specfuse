@@ -3,12 +3,12 @@ import type { TemplateContext } from '../types.js';
 export function composeFuseQASkill(_ctx: TemplateContext): string {
   return `---
 name: fuseqa
-description: Use only when the user explicitly asks for local end-to-end verification (FuseQA) — derives end-to-end cases for the current change from its specs and drives them through real user entry points against the built artifact. Not part of the default pipeline; never invoked automatically. Also handles "write e2e tests", "end-to-end tests", "QA acceptance", or adding test cases for a change.
+description: Use only when the user explicitly asks for local end-to-end verification (FuseQA) — derives end-to-end cases for the current change from its specs and drives them through real user entry points against the built artifact. Not part of the default \`/specfuse\` pipeline and never invoked by it; \`/specfuse:full\` is the complete variant that enters it. Also handles "write e2e tests", "end-to-end tests", "QA acceptance", or adding test cases for a change.
 ---
 
 # FuseQA — On-Demand E2E Verification
 
-FuseQA verifies the artifact through real entry points. It is **not part of the default pipeline and has no checkpoint**: no phase, checkpoint, or automatic decision invokes it, and neither apply completion nor entry to Verify depends on it. Run it explicitly with \`/fuseqa\` when local end-to-end verification is meaningful.
+FuseQA verifies the artifact through real entry points. It is **not part of the default \`/specfuse\` pipeline and has no checkpoint**: \`/specfuse\` never invokes it, and neither apply completion nor entry to Verify depends on it. Run it explicitly with \`/fuseqa\` when local end-to-end verification is meaningful; \`/specfuse:full\` is the complete variant that enters it after FuseReview and before Verify.
 
 It authors E2E cases for the current change and handles what those cases expose. It **does not execute the existing regression suite** — that belongs to the Verify phase full test run. A new case failing on first run is the TDD RED step, not a diagnosis stage. An existing case turning red is a regression caught by the Verify gate.
 

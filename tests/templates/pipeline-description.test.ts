@@ -82,9 +82,10 @@ describe('FuseQA is not a pipeline beat', () => {
     }
   });
 
-  it('states that it is outside the pipeline and never invoked automatically', () => {
-    expect(skill).toMatch(/not part of the default pipeline/i);
-    expect(skill).toMatch(/never invoked automatically/i);
+  it('states that it is outside the default pipeline and named by the full variant', () => {
+    expect(skill).toMatch(/not part of the default .*pipeline/i);
+    expect(skill).toMatch(/never invokes it/i);
+    expect(skill).toMatch(/specfuse:full/i);
   });
 });
 

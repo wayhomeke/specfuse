@@ -180,9 +180,10 @@ describe("renderApplyFuseReview", () => {
 describe("FuseQA on demand", () => {
   const fq = renderFuseQAOnDemand();
 
-  it("declares that it is not part of the pipeline and has no checkpoint", () => {
-    expect(fq).toMatch(/not part of the pipeline/i);
+  it("declares that it is not part of the default /specfuse pipeline and has no checkpoint", () => {
+    expect(fq).toMatch(/not part of the default .*pipeline/i);
     expect(fq).toMatch(/no checkpoint/i);
+    expect(fq).toMatch(/specfuse:full/i);
     expect(fq).not.toMatch(/MUST ask the user whether to enter FuseQA/i);
   });
 
@@ -470,9 +471,16 @@ describe("Auto Mode: /specfuse", () => {
     expect(auto).toMatch(/with its rationale/i);
   });
 
-  it("leaves FuseQA on demand rather than recording a decision", () => {
-    expect(auto).toMatch(/FuseQA is not part of the pipeline/i);
+  it("leaves FuseQA on demand under /specfuse rather than recording a decision", () => {
+    expect(auto).toMatch(/under `\/specfuse`, not part of the pipeline/i);
     expect(auto).toContain("/fuseqa");
+    expect(auto).toContain("/specfuse:full");
+  });
+
+  it("names /specfuse:full as the variant that enters FuseQA", () => {
+    expect(auto).toContain("/specfuse:full");
+    expect(auto).toMatch(/enters FuseQA after FuseReview and before Verify/i);
+    expect(auto).toMatch(/auto: entered/);
   });
 
   it("keeps the verification discipline and disables subagent integration", () => {

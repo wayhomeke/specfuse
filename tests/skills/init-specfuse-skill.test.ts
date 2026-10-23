@@ -49,6 +49,7 @@ const SOURCES: Array<{ file: string; symbol: string }> = [
   // second entry point into the pipeline. A skill that names the skills but not
   // the command leaves the unattended path undocumented at install time.
   { file: 'src/templates/specfuse-command.ts', symbol: 'composeSpecfuseCommand' },
+  { file: 'src/templates/specfuse-command.ts', symbol: 'composeSpecfuseFullCommand' },
 ];
 
 /** Template packs those skills carry, copied whole by scaffold(). */
@@ -215,8 +216,19 @@ describe('init-specfuse skill content contract (spec: init-specfuse-skill)', () 
     expect(flat).toContain('src/templates/specfuse-command.ts');
   });
 
+  it('names the /specfuse:full command and its composer', () => {
+    expect(flat).toContain('/specfuse:full');
+    expect(flat).toContain('composeSpecfuseFullCommand');
+  });
+
   it('carries the non-overwrite rule for the command', () => {
     expect(flat).toMatch(/leave an existing one alone, including a zero-byte file/i);
     expect(flat).toMatch(/Never overwrite a skill definition or command the user has authored/i);
+  });
+
+  it('carries the non-overwrite rule for the full command', () => {
+    expect(flat).toMatch(
+      /commands\/specfuse\/full\.md.*leave an existing complete command alone/i,
+    );
   });
 });
