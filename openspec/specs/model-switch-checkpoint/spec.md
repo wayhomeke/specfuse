@@ -68,7 +68,7 @@ Defines the apply-entrance model switch checkpoint: the option set the AI must o
 #### Scenario: Named export present
 
 - **WHEN** the module `src/templates/claude-md.ts` is imported
-- **THEN** `renderApplyPhase` is among its named exports, alongside `renderApplyFuseReview`, `renderFuseQA`, and `renderVerifyPhase`
+- **THEN** `renderApplyPhase` is among its named exports, alongside `renderApplyFuseReview`, `renderFuseQAOnDemand`, and `renderVerifyPhase`
 
 #### Scenario: Checkpoint sits at the apply entrance
 

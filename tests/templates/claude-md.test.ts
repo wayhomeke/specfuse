@@ -3,7 +3,7 @@ import {
   composeCLAUDEmd,
   renderApplyPhase,
   renderApplyFuseReview,
-  renderFuseQA,
+  renderFuseQAOnDemand,
   renderVerifyPhase,
   renderFuseDocStandard,
   renderAutoMode,
@@ -175,43 +175,33 @@ describe("renderApplyFuseReview", () => {
   });
 });
 
-// --- FuseQA checkpoint ---
+// --- FuseQA on demand ---
 // spec: fuseqa-checkpoint
-describe("FuseQA checkpoint", () => {
-  const fq = renderFuseQA();
+describe("FuseQA on demand", () => {
+  const fq = renderFuseQAOnDemand();
 
-  it("asks a MUST-level question and forbids silent advancement", () => {
-    expect(fq).toContain("MUST");
-    expect(fq).toMatch(/forbidden/i);
-    expect(fq).toContain("/opsx:verify");
+  it("declares that it is not part of the pipeline and has no checkpoint", () => {
+    expect(fq).toMatch(/not part of the pipeline/i);
+    expect(fq).toMatch(/no checkpoint/i);
+    expect(fq).not.toMatch(/MUST ask the user whether to enter FuseQA/i);
   });
 
-  it("states the question is independent of the FuseReview answer", () => {
-    expect(fq).toMatch(/FuseReview/);
-    expect(fq).toMatch(/any FuseReview answer|regardless of/i);
+  it("states that neither completion nor Verify depends on a FuseQA decision", () => {
+    expect(fq).toMatch(/neither apply completion nor entry to Verify depends/i);
   });
 
-  it("forbids merging the two checkpoints into one question", () => {
-    expect(fq).toMatch(/never merge|MUST NOT be merged|single question/i);
-  });
-});
-
-describe("FuseQA facts, scope and skill reference", () => {
-  const fq = renderFuseQA();
-
-  it("presents the three change facts", () => {
-    expect(fq).toMatch(/user-observable entry point/i);
-    expect(fq).toMatch(/capabilit/i);
-    expect(fq).toMatch(/E2E case count/i);
+  it("requires explicit invocation", () => {
+    expect(fq).toContain("/fuseqa");
+    expect(fq).toMatch(/explicitly/i);
   });
 
-  it("states there are no automatic thresholds and the user decides", () => {
-    expect(fq).toMatch(/no automatic trigger thresholds/i);
-    expect(fq).toMatch(/decision belongs to the user/i);
+  it("states the local and distributed boundary", () => {
+    expect(fq).toMatch(/deployed and exercised locally/i);
+    expect(fq).toMatch(/distributed/i);
+    expect(fq).toMatch(/CI\/CD/i);
   });
 
   it("assigns regression execution to the Verify phase", () => {
-    expect(fq).toMatch(/Regression execution is NOT part of this beat/i);
     expect(fq).toMatch(/Verify phase full test run/i);
   });
 
@@ -220,14 +210,13 @@ describe("FuseQA facts, scope and skill reference", () => {
     expect(fq).toMatch(/TDD RED step/);
   });
 
-  it("references the skill path and preserves manual invocation", () => {
+  it("references the skill path", () => {
     expect(fq).toContain(".claude/skills/fuseqa/SKILL.md");
-    expect(fq).toMatch(/invoke the FuseQA skill explicitly at any time/i);
   });
 });
 
 describe("FuseQA grading by attribution", () => {
-  const fq = renderFuseQA();
+  const fq = renderFuseQAOnDemand();
 
   it("grades an implementation defect as Blocking", () => {
     expect(fq).toMatch(/Implementation defect .*Blocking/i);
@@ -245,12 +234,12 @@ describe("FuseQA grading by attribution", () => {
 
   it("bounds attribution with a time box that cannot hold up completion", () => {
     expect(fq).toMatch(/time box/i);
-    expect(fq).toMatch(/MUST NOT hold up apply completion/i);
+    expect(fq).toMatch(/MUST NOT hold up completion/i);
   });
 });
 
 describe("FuseQA case lifecycle", () => {
-  const fq = renderFuseQA();
+  const fq = renderFuseQAOnDemand();
 
   it("places cases under tests/e2e/<capability>/ aligned with specs", () => {
     expect(fq).toContain("tests/e2e/<capability>/");
@@ -258,26 +247,13 @@ describe("FuseQA case lifecycle", () => {
   });
 
   it("requires a reason for removal", () => {
-    expect(fq).toMatch(/Removal.*records why/i);
+    expect(fq).toMatch(/Removal records why/i);
     expect(fq).toMatch(/indistinguishable in the ledger/i);
   });
 
   it("requires an added case to trace to its source", () => {
-    expect(fq).toMatch(/Addition\*\* records its source/i);
+    expect(fq).toMatch(/Addition records its source/i);
     expect(fq).toMatch(/spec Scenario|escaped defect/i);
-  });
-});
-
-describe("FuseQA dual-record completion condition", () => {
-  const fq = renderFuseQA();
-
-  it("requires both checkpoint decisions in the completion report", () => {
-    expect(fq).toMatch(/MUST record the FuseReview decision AND the FuseQA decision/i);
-  });
-
-  it("states a missing record means apply is incomplete and blocks verify", () => {
-    expect(fq).toMatch(/not complete/i);
-    expect(fq).toMatch(/\/opsx:verify.*MUST NOT be entered/i);
   });
 });
 
@@ -291,41 +267,30 @@ describe("Verify phase names the E2E regression gate", () => {
   });
 });
 
-describe("FuseReview decline does not end the exit sequence", () => {
-  it("states FuseQA remains mandatory after declining FuseReview", () => {
+describe("FuseReview is the only apply-exit checkpoint", () => {
+  it("records the skip and proceeds to Verify", () => {
     const fr = renderApplyFuseReview();
-    expect(fr).toMatch(/Declining does not end the apply exit sequence/i);
-    expect(fr).toMatch(/FuseQA checkpoint that follows remains mandatory/i);
+    expect(fr).toMatch(/recording the skip is the required trace/i);
+    expect(fr).toMatch(/one checkpoint/i);
+    expect(fr).not.toMatch(/FuseQA checkpoint/i);
   });
 });
 
 describe("CLAUDE.md assembly order", () => {
   const out = composeCLAUDEmd({ projectName: "test" });
 
-  it("orders FuseReview before FuseQA before Verify", () => {
+  it("orders FuseReview before Verify, with FuseQA after Verify as on-demand", () => {
     const fr = out.indexOf("Phase 2.5: FuseReview Checkpoint");
-    const fq = out.indexOf("Phase 2.6: FuseQA Checkpoint");
     const vp = out.indexOf("Phase 3: Verify / Archive");
+    const fq = out.indexOf("On-Demand: FuseQA");
     expect(fr).toBeGreaterThan(-1);
-    expect(fq).toBeGreaterThan(-1);
-    expect(vp).toBeGreaterThan(-1);
-    expect(fr).toBeLessThan(fq);
-    expect(fq).toBeLessThan(vp);
-  });
-});
-
-describe("FuseQA skip is recorded with facts (spec: fuseqa-checkpoint)", () => {
-  it("requires a declined FuseQA to be recorded with the change facts", () => {
-    // Asserted against renderFuseQA specifically: the FuseReview section has its
-    // own auditable-skip line, so a suite-wide match would pass on the wrong text.
-    const fq = renderFuseQA();
-    expect(fq).toMatch(/declined FuseQA is recorded together with the change facts/i);
-    expect(fq).toMatch(/auditable rather than invisible/i);
+    expect(vp).toBeGreaterThan(fr);
+    expect(fq).toBeGreaterThan(vp);
   });
 });
 
 describe("FuseReview lower bound is the Do phase (spec: apply-exit-checkpoint)", () => {
-  it("places FuseReview after the apply phase, not merely before FuseQA", () => {
+  it("places FuseReview after the apply phase", () => {
     const out = composeCLAUDEmd({ projectName: "test" });
     const apply = out.indexOf("Phase 2: Apply / Implement");
     const fr = out.indexOf("Phase 2.5: FuseReview Checkpoint");
@@ -383,7 +348,7 @@ describe("FuseDoc is a standard, not a beat", () => {
   });
 
   it("does not add FuseDoc to the pipeline beat sequence", () => {
-    // The pipeline is Think -> Do -> FuseReview -> FuseQA -> Verify.
+    // The pipeline is Think -> Do -> FuseReview -> Verify.
     // FuseDoc is named as none of them.
     expect(output).not.toMatch(/FuseDoc is the (first|second|third|fourth|fifth|sixth) beat/i);
   });
@@ -418,12 +383,11 @@ describe("FuseDoc introduces no checkpoint", () => {
     expect(output).not.toMatch(/MUST ask the user whether to enter FuseDoc/i);
   });
 
-  it("keeps the exit sequence at exactly the two existing checkpoints", () => {
-    // Structural property, not a particular sentence: a third mandatory
-    // checkpoint would appear as a third "MUST ask" on the apply exit path.
+  it("keeps the exit sequence at exactly one checkpoint", () => {
+    // Structural property, not a particular sentence: a second mandatory
+    // checkpoint would appear as a second "MUST ask" on the apply exit path.
     const mandatoryQuestions = output.match(/the AI MUST ask the user whether to enter \w+/g) ?? [];
     expect(mandatoryQuestions.sort()).toEqual([
-      "the AI MUST ask the user whether to enter FuseQA",
       "the AI MUST ask the user whether to enter FuseReview",
     ]);
   });
@@ -492,7 +456,6 @@ describe("Auto Mode: /specfuse", () => {
       "brainstorming",
       "model switch",
       "fusereview",
-      "fuseqa",
       "design-md",
       "pace control",
     ]) {
@@ -500,11 +463,16 @@ describe("Auto Mode: /specfuse", () => {
     }
   });
 
-  it("states the default model decision and the two exit records", () => {
+  it("states the default model decision and the single exit record", () => {
     expect(auto).toContain("continue with current model");
     expect(auto).toContain("auto: entered");
-    expect(auto).toContain("auto: declined");
+    expect(auto).not.toContain("auto: declined");
     expect(auto).toMatch(/with its rationale/i);
+  });
+
+  it("leaves FuseQA on demand rather than recording a decision", () => {
+    expect(auto).toMatch(/FuseQA is not part of the pipeline/i);
+    expect(auto).toContain("/fuseqa");
   });
 
   it("keeps the verification discipline and disables subagent integration", () => {
@@ -538,10 +506,9 @@ describe("Auto Mode: /specfuse", () => {
     expect(auto).toMatch(/unchanged/i);
   });
 
-  it("adds no third mandatory checkpoint question", () => {
+  it("adds no second mandatory checkpoint question", () => {
     const mandatory = out.match(/the AI MUST ask the user whether to enter \w+/g) ?? [];
     expect(mandatory.sort()).toEqual([
-      "the AI MUST ask the user whether to enter FuseQA",
       "the AI MUST ask the user whether to enter FuseReview",
     ]);
   });

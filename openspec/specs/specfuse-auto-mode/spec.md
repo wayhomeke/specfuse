@@ -31,7 +31,7 @@ Defines the `/specfuse` command surface: its unattended decision policy, continu
 
 ### Requirement: Decision points are answered with the recommended option and recorded
 
-Under `/specfuse`, the model SHALL answer every pipeline decision point itself using the recommended option, and SHALL record each decision with its rationale in the final report. The decision points are: brainstorming questions, the `/design-md` questionnaire, the model-switch checkpoint, the FuseReview checkpoint, the FuseQA checkpoint, and Path B's per-artifact review. `AskUserQuestion` SHALL NOT be called for any of them.
+Under `/specfuse`, the model SHALL answer every pipeline decision point itself using the recommended option, and SHALL record each decision with its rationale in the final report. The decision points are: brainstorming questions, the `/design-md` questionnaire, the model-switch checkpoint, the FuseReview checkpoint, and Path B's per-artifact review. `AskUserQuestion` SHALL NOT be called for any of them. FuseQA is not a decision point because it is not part of the pipeline.
 
 #### Scenario: Brainstorming runs without questions
 
@@ -81,25 +81,6 @@ Under `/specfuse`, the model SHALL answer every pipeline decision point itself u
 
 - **WHEN** FuseReview completes
 - **THEN** the full test suite, lint, and the `/opsx:verify` phase run before archive is attempted
-
-### Requirement: Auto mode enters FuseReview and records FuseQA as declined
-
-Under `/specfuse`, the FuseReview checkpoint SHALL NOT be asked; the decision SHALL be recorded as `auto: entered`. FuseQA SHALL NOT be entered; its decision SHALL be recorded as `auto: declined`. Both records SHALL appear in the apply completion report.
-
-#### Scenario: FuseReview runs automatically
-
-- **WHEN** the last apply task passes verification under `/specfuse`
-- **THEN** FuseReview is entered without a question, using a reviewer context that did not implement the change when one is available
-
-#### Scenario: Blocking findings are fixed test-first
-
-- **WHEN** FuseReview reports a Blocking finding
-- **THEN** the defect is fixed test-first and only the fix diff is re-reviewed
-
-#### Scenario: FuseQA is not entered
-
-- **WHEN** the apply exit sequence runs under `/specfuse`
-- **THEN** FuseQA is recorded as `auto: declined`, no E2E case authoring is performed, and verify is entered with both decisions on record
 
 ### Requirement: Verify failure blocks archive
 
@@ -175,14 +156,38 @@ When a Git Worktree trigger condition is met, `/specfuse` SHALL create and enter
 #### Scenario: Auto-mode section is present
 
 - **WHEN** `composeCLAUDEmd(ctx)` is called
-- **THEN** the output contains `### Auto Mode: /specfuse` and names the skipped questions, the default model decision, the FuseReview entry, the FuseQA skip, verify-before-archive, and the no-commit/no-push rule
+- **THEN** the output contains `### Auto Mode: /specfuse` and names the skipped questions, the default model decision, the FuseReview entry, verify-before-archive, and the no-commit/no-push rule
+
+#### Scenario: FuseQA stays on demand
+
+- **WHEN** `composeCLAUDEmd(ctx)` is called
+- **THEN** the auto-mode section states that FuseQA is not entered automatically and remains available only through an explicit `/fuseqa` invocation
 
 #### Scenario: Interactive rules are preserved
 
 - **WHEN** `composeCLAUDEmd(ctx)` is called
-- **THEN** the model-switch, FuseReview, and FuseQA checkpoint sections still require their questions for `/opsx:apply`
+- **THEN** the model-switch and FuseReview checkpoint sections still require their questions for `/opsx:apply`
 
 #### Scenario: No third checkpoint is introduced
 
 - **WHEN** `composeCLAUDEmd(ctx)` is called
-- **THEN** the apply exit path still contains exactly the FuseReview and FuseQA checkpoint questions for interactive invocations, and auto mode adds no new question
+- **THEN** the interactive apply exit path contains exactly the FuseReview checkpoint question, and auto mode adds no new question
+
+### Requirement: Auto mode enters FuseReview and leaves FuseQA on demand
+
+Under `/specfuse`, the FuseReview checkpoint SHALL NOT be asked; the decision SHALL be recorded as `auto: entered`. FuseQA SHALL NOT be invoked and no FuseQA decision SHALL appear in the completion report.
+
+#### Scenario: FuseReview runs automatically
+
+- **WHEN** the last apply task passes verification under `/specfuse`
+- **THEN** FuseReview is entered without a question, using a reviewer context that did not implement the change when one is available
+
+#### Scenario: Blocking findings are fixed test-first
+
+- **WHEN** FuseReview reports a Blocking finding
+- **THEN** the defect is fixed test-first and only the fix diff is re-reviewed
+
+#### Scenario: FuseQA is not invoked
+
+- **WHEN** the apply exit sequence runs under `/specfuse`
+- **THEN** FuseQA is not invoked, no E2E case authoring is performed by the pipeline, and the completion report records the FuseReview decision only

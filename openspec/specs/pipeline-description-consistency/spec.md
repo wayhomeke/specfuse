@@ -1,28 +1,28 @@
 # pipeline-description-consistency Specification
 
 ## Purpose
-Defines the consistency contract for every description of the pipeline that SpecFuse ships: the CLI help text, the generated `CLAUDE.md`, and the FuseReview and FuseQA skills. Each must name all five beats, and none may carry a positional ordinal — an ordinal has to be recomputed by hand every time a beat is added or removed, which is how the shipped descriptions drifted a beat behind.
+Defines the consistency contract for every description of the pipeline that SpecFuse ships: the CLI help text, the generated `CLAUDE.md`, and the FuseReview skill. Each must name all four beats, none may carry a positional ordinal, and the FuseQA skill must state that it is outside the pipeline — an ordinal has to be recomputed by hand every time a beat is added or removed, which is how the shipped descriptions drifted a beat behind.
 
 ## Requirements
 
 ### Requirement: Shipped pipeline descriptions name every beat
 
-Every surface that describes the pipeline's sequence SHALL name all five beats — Think, Do, FuseReview, FuseQA, Verify. A description that omits a beat advertises a pipeline the product does not have.
+Every surface that describes the pipeline's sequence SHALL name all four beats — Think, Do, FuseReview, Verify. A description that omits a beat, or that lists FuseQA among them, advertises a pipeline the product does not have.
 
 #### Scenario: CLI help names every beat
 
 - **WHEN** the built CLI is invoked with `--help`
-- **THEN** its description names Think, Do, FuseReview, FuseQA, and Verify
+- **THEN** its description names Think, Do, FuseReview, and Verify, and does not list FuseQA as a beat
 
 #### Scenario: Generated CLAUDE.md names every beat
 
 - **WHEN** `composeCLAUDEmd()` is called
-- **THEN** both the FuseReview and the FuseQA section opening sentences name all five beats
+- **THEN** the FuseReview section opening sentence names all four beats in order
 
 #### Scenario: Both skills name every beat
 
 - **WHEN** `composeFuseReviewSkill()` and `composeFuseQASkill()` are called
-- **THEN** each output's body opening sentence names all five beats
+- **THEN** the FuseReview skill names all four beats in order, and the FuseQA skill states that it is not a beat and runs on demand
 
 ### Requirement: Shipped pipeline descriptions carry no positional ordinal
 
@@ -36,7 +36,7 @@ A shipped description SHALL NOT label a beat by its position in the sequence. Th
 #### Scenario: Skill frontmatter still identifies the beat
 
 - **WHEN** `composeFuseReviewSkill()` and `composeFuseQASkill()` are called
-- **THEN** each YAML frontmatter `description` identifies its beat by what it does — post-apply code review for FuseReview, post-apply E2E verification for FuseQA — without a positional ordinal
+- **THEN** each YAML frontmatter `description` identifies its capability by what it does — post-apply code review for FuseReview, on-demand local E2E verification for FuseQA — without a positional ordinal
 
 ### Requirement: The contract is enforced through the shipped artifact
 
@@ -51,6 +51,11 @@ The guard SHALL exercise the built artifact through its real entry path, not an 
 
 - **WHEN** the guard inspects the generated text
 - **THEN** it calls `composeCLAUDEmd()`, `composeFuseReviewSkill()`, and `composeFuseQASkill()` rather than reading the repository's own installed copies
+
+#### Scenario: FuseQA is checked for absence from the beat list
+
+- **WHEN** the guard inspects `composeFuseQASkill()` output
+- **THEN** it asserts that FuseQA is not described as a pipeline beat and that the on-demand boundary is stated
 
 ### Requirement: Installed skill copies match their rendered output
 

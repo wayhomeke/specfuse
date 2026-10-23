@@ -26,12 +26,12 @@ The generated `CLAUDE.md` SHALL present FuseDoc as a documentation standard that
 
 ### Requirement: FuseDoc introduces no checkpoint
 
-The apply exit sequence contains exactly two mandatory checkpoint questions, FuseReview then FuseQA. FuseDoc SHALL NOT add a third, and SHALL NOT make any phase's completion conditional on a FuseDoc decision.
+The apply exit sequence contains exactly one mandatory checkpoint question, FuseReview. FuseDoc SHALL NOT add a second, and SHALL NOT make any phase's completion conditional on a FuseDoc decision.
 
 #### Scenario: No third checkpoint question
 
 - **WHEN** the fusion `CLAUDE.md` is generated
-- **THEN** it defines no mandatory FuseDoc checkpoint question, and the apply exit sequence still requires exactly the FuseReview and FuseQA decisions on record
+- **THEN** it defines no mandatory FuseDoc checkpoint question, and the apply exit sequence requires exactly the FuseReview decision on record
 
 #### Scenario: Apply completion does not depend on FuseDoc
 

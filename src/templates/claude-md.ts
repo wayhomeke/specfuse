@@ -150,7 +150,7 @@ When \`/opsx:apply\` is invoked:
 export function renderApplyFuseReview(): string {
   return `### Phase 2.5: FuseReview Checkpoint (Post-Apply)
 
-FuseReview is the post-apply review: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, FuseQA verifies the artifact through real entry points, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
+FuseReview is the post-apply review: Think reviews direction, Do produces code, **FuseReview reviews the implementation**, Verify validates the whole. The full review method lives in \`.claude/skills/fusereview/SKILL.md\`.
 
 **Baseline:** At apply start, record the current HEAD commit in the change's state as the review baseline. The review object is \`baseline..HEAD\`. If no baseline was recorded, fall back to the merge-base of the current branch and the trunk, and annotate the fallback in the report.
 
@@ -171,42 +171,29 @@ FuseReview is the post-apply review: Think reviews direction, Do produces code, 
 
 **Merge gate (subagent mode):** in subagent mode the second stage of the two-stage review executes the FuseReview skill on each subagent's diff before merge, automatically, without a user checkpoint.
 
-**Declining does not end the apply exit sequence:** answering "no" here dismisses FuseReview only. The FuseQA checkpoint that follows remains mandatory.
+**Declining does not end the apply exit sequence:** recording the skip is the required trace; Verify follows. The apply exit sequence has one checkpoint, so there is no second decision to answer.
 
 **Manual invocation:** the user may invoke the FuseReview skill explicitly at any time, independent of the checkpoint.`;
 }
 
-export function renderFuseQA(): string {
-  return `### Phase 2.6: FuseQA Checkpoint (Post-Apply E2E)
+export function renderFuseQAOnDemand(): string {
+  return `### On-Demand: FuseQA (E2E Verification)
 
-FuseQA is the post-apply verification: Think reviews direction, Do produces code, FuseReview reviews the implementation, **FuseQA verifies the artifact through real entry points**, Verify validates the whole. The full method lives in \`.claude/skills/fuseqa/SKILL.md\`.
+FuseQA verifies the built artifact through real user entry points. It is **not part of the pipeline — not a pipeline beat — and has no checkpoint**: no phase, checkpoint, or auto-mode decision invokes it, and neither apply completion nor entry to Verify depends on a FuseQA decision. Run it explicitly with \`/fuseqa\` when local end-to-end verification is meaningful.
 
-**Why this beat exists:** unit tests cover source, FuseReview reads a diff without running anything, and the Verify phase runs the same unit suite. A defect can therefore pass every gate and still reach users — an entry-guard bug that works when the built file is called by its real path but does nothing when called through a symlinked bin shim passes typecheck, unit tests and cold-read review alike. Nobody runs the artifact as a user until this beat.
+**Applicability.** Use it when the artifact can be deployed and exercised locally — a CLI, a small service, a library, a local web app. A distributed system cannot be meaningfully exercised on one machine; run equivalent checks in CI/CD rather than in the development phase.
 
-**Checkpoint (mandatory question):** After the last task in \`tasks.md\` passes verification, the AI MUST ask the user whether to enter FuseQA. Silent advancement to \`/opsx:verify\` or \`/opsx:archive\` is forbidden — the question may be answered "no", but it may never be skipped.
+**Scope.** Author E2E cases for the current change's entry-point behavior and handle what those new cases expose. Executing the existing E2E suite belongs to the Verify phase full test run; there is no separate red-diagnosis stage — a new case failing on first run is the TDD RED step, and an existing case turning red is a regression caught by Verify.
 
-**Independent of FuseReview:** the apply exit sequence contains TWO checkpoint questions, asked in order (FuseReview, then FuseQA). **Any FuseReview answer — accept or decline — leaves the FuseQA question mandatory.** The two MUST NOT be merged into a single question: they gate different things, and one "no" must never dismiss both.
+**Findings are graded by attribution.** Attribute a red case first, then grade it:
+- **Implementation defect → Blocking.** The red case IS the failing test that catches the defect; fix the implementation directly.
+- **Spec gap → Suggestion** by default; escalate to Blocking when the undefined behavior causes user-visible breakage.
+- **False red → case debt**, outside the grading. Fix or remove the case and record why the implementation is correct, with evidence.
+- **Attribution exceeding its time box → Suggestion.** It MUST NOT hold up completion.
 
-**Apply completion requires both decisions on record:** the apply completion report MUST record the FuseReview decision AND the FuseQA decision. A report missing either record means apply is **not complete**, and \`/opsx:verify\` MUST NOT be entered. A declined FuseQA is recorded together with the change facts, so the skip is auditable rather than invisible.
+**Cases are project assets with a recorded lifecycle.** Cases live in \`tests/e2e/<capability>/\`, the capability name matching \`openspec/specs/<capability>/\`. Addition records its source (the spec Scenario or the escaped defect); correction records why the prior judgment was wrong; removal records why the case is no longer valid. Without a reason, "deleting a red case" and "hiding a defect" are indistinguishable in the ledger.
 
-**Present facts, do not judge:** the question lists whether the change touched a user-observable entry point, which capabilities are affected, and the current E2E case count. A recommendation may be attached, but the decision belongs to the user. There are no automatic trigger thresholds of any kind.
-
-**Scope — two things only:** author E2E cases for this change's entry-point changes, and handle what those new cases expose.
-- **Regression execution is NOT part of this beat.** Running the existing E2E suite belongs to the Verify phase full test run.
-- **There is no separate red-diagnosis stage.** A new case failing on first run is the TDD RED step; an existing case turning red is a regression the Verify gate catches.
-
-**Findings are graded by attribution, not by redness.** A red case carries evidence (it went red) but its cause is undetermined, so attribute first, then grade:
-- **Implementation defect → Blocking.** The red case IS the failing test that catches the defect, so fix the implementation directly. This grade does not bend — it is the entire reason this beat exists.
-- **Spec gap → Suggestion** by default: behavior the spec never defined means the product is not wrong. Escalate to Blocking when the undefined behavior causes user-visible breakage.
-- **False red → case debt, outside the Blocking/Suggestion grading.** Fix or remove the case, and record in the ledger why the implementation is correct, with evidence. Never just "the test was wrong".
-- **Attribution exceeding its time box → downgrade to Suggestion.** It MUST NOT hold up apply completion.
-
-**Cases are project assets with a recorded lifecycle.** Cases live in \`tests/e2e/<capability>/\`, the capability name matching \`openspec/specs/<capability>/\`.
-- **Addition** records its source: the spec Scenario it derives from, or the escaped defect it was written for.
-- **Correction** records why the original judgment was wrong.
-- **Removal** records why the case is no longer valid. Without a reason, "deleting a red case" and "hiding a defect" are indistinguishable in the ledger.
-
-**Manual invocation:** the user may invoke the FuseQA skill explicitly at any time, independent of the checkpoint.`;
+The full method lives at \`.claude/skills/fuseqa/SKILL.md\`.`;
 }
 
 export function renderFuseDocStandard(): string {
@@ -233,12 +220,12 @@ export function renderAutoMode(): string {
 - **Design tokens:** when the three-gate test triggers \`/design-md\`, answer the questionnaire with recommended values; never overwrite an existing \`DESIGN-TOKENS.md\`.
 - **Model switch:** record \`continue with current model\`; do not switch and do not ask.
 - **FuseReview:** record \`auto: entered\` and run the review.
-- **FuseQA:** record \`auto: declined\`; do not enter the beat.
+- **FuseQA:** not part of the pipeline; do not invoke it. It remains available only through an explicit \`/fuseqa\` request.
 - **Path B pace control:** generate all artifacts in one pass; do not stop between artifacts for review.
 
 **Execution order.** Brainstorming decisions → proposal → specs → design → tasks → apply under \`test-driven-development\` and \`verification-before-completion\` → FuseReview → verify → archive. The command definition at \`.claude/commands/specfuse.md\` carries the full procedure.
 
-**Exit sequence.** Auto mode enters FuseReview and skips FuseQA. The apply completion report still records both decisions — \`auto: entered\` and \`auto: declined\` — so the dual-record rule is satisfied without a question.
+**Exit sequence.** Auto mode enters FuseReview. The apply completion report records the FuseReview decision only. FuseQA is not part of the pipeline: it is not invoked and no FuseQA decision is recorded; it remains an explicit \`/fuseqa\` invocation outside the pipeline.
 
 **Verify gates archive.** Archive only after \`/opsx:verify\`, the project's full test suite, and the project's linter pass. If any check still fails after best-effort repair, do not archive; keep the change directory and write each failure with its raw output into the final report.
 
@@ -246,7 +233,7 @@ export function renderAutoMode(): string {
 
 **Prohibitions.** Never run \`git commit\`, \`git push\`, or \`git merge\`. Auto mode does not waive TDD, verification evidence, or the documentation standard.
 
-**Interactive rules unchanged.** The checkpoints in Phase 2, Phase 2.5, and Phase 2.6 still require their questions for \`/opsx:apply\`. Auto mode removes the question, not the decision record.`;
+**Interactive rules unchanged.** The model-switch and FuseReview checkpoints in Phase 2 and Phase 2.5 still require their questions for \`/opsx:apply\`. Auto mode removes the question, not the decision record.`;
 }
 
 export function renderVerifyPhase(): string {
@@ -306,9 +293,9 @@ export function composeCLAUDEmd(_ctx: TemplateContext): string {
     "",
     renderApplyFuseReview(),
     "",
-    renderFuseQA(),
-    "",
     renderVerifyPhase(),
+    "",
+    renderFuseQAOnDemand(),
     "",
     renderGeneralRules(),
     "<!-- FUSION:END -->",

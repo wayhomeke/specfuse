@@ -27,7 +27,7 @@ Do not call AskUserQuestion at any decision point. Answer each with the recommen
 - **Design tokens:** when the three-gate test triggers \`/design-md\`, answer the questionnaire with recommended values and generate \`DESIGN-TOKENS.md\`; never overwrite an existing \`DESIGN-TOKENS.md\`.
 - **Model switch:** record \`continue with current model\`; do not switch and do not ask.
 - **FuseReview:** record \`auto: entered\` and run the review.
-- **FuseQA:** record \`auto: declined\`; do not enter the beat.
+- **FuseQA:** not part of the pipeline; do not invoke it. It remains available only through an explicit \`/fuseqa\` request.
 - **Pace control:** do not stop between artifacts for review.
 
 ## Execution order
@@ -73,6 +73,6 @@ When a Git Worktree trigger condition is met, the worktree is selected in step 0
 
 ## Final report
 
-State the change name and location, the artifacts written, the task count, verification output, the FuseReview decision (\`auto: entered\`), the FuseQA decision (\`auto: declined\`), the archive outcome, any worktree path, every automatic decision with its rationale, and that no commit and no push were performed.
+State the change name and location, the artifacts written, the task count, verification output, the FuseReview decision (\`auto: entered\`), the archive outcome, any worktree path, every automatic decision with its rationale, and that no commit and no push were performed. FuseQA is not part of the pipeline, so no FuseQA decision is recorded.
 `;
 }

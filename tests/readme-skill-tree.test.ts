@@ -28,13 +28,37 @@ describe('README documents the unattended entry point', () => {
 
 describe('README frames FuseDoc as a standard, not a beat', () => {
   it('states it is not one of the beats', () => {
-    expect(README).toMatch(/不属于五拍|不是拍/);
+    expect(README).toMatch(/不属于四拍|不是拍/);
   });
 
-  it('keeps the pipeline at five beats', () => {
-    // A sixth beat would contradict the section that exists to say FuseDoc
+  it('keeps the pipeline at four beats', () => {
+    // A fifth beat would contradict the section that exists to say FuseDoc
     // is not one — this is the README-side twin of the CLAUDE.md assertion.
-    expect(README).toContain('五拍流水线');
-    expect(README).not.toMatch(/六拍|FuseDoc\s+apply 收尾/);
+    expect(README).toContain('四拍流水线');
+    expect(README).not.toMatch(/五拍|六拍|FuseDoc\s+apply 收尾/);
+  });
+});
+
+describe('README documents the migration for existing projects', () => {
+  it('names every derived file to remove before re-running the scaffolder', () => {
+    for (const file of [
+      '.claude/skills/fuseqa/SKILL.md',
+      '.claude/skills/fusereview/SKILL.md',
+      '.claude/commands/specfuse.md',
+    ]) {
+      expect(README).toContain(file);
+    }
+  });
+});
+
+describe('README documents FuseQA as on demand', () => {
+  it('states that it is outside the pipeline and invoked explicitly', () => {
+    expect(README).toContain('### FuseQA（按需，不属于流水线）');
+    expect(README).toMatch(/只有显式调用 `\/fuseqa` 才执行/);
+  });
+
+  it('states the local versus CI/CD boundary', () => {
+    expect(README).toMatch(/适合能在本地完整部署/);
+    expect(README).toMatch(/CI\/CD/);
   });
 });

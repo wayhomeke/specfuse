@@ -44,15 +44,16 @@ describe('CLI entrypoint resolves through a symlinked bin shim', () => {
   });
 
   // spec: pipeline-description-consistency
-  // A help line listing four beats advertises a pipeline the product does not
-  // have. This runs through the shim, so it observes the description a real
-  // install prints — not the string literal in src/index.ts.
-  it('describes the pipeline with every one of its five beats', () => {
+  // The product has four beats. A help line that lists a fifth, omits one, or
+  // re-adds FuseQA advertises a pipeline that does not exist. This runs through
+  // the shim, observing what a real install prints.
+  it('describes the pipeline with every one of its four beats and no FuseQA beat', () => {
     const help = run(shim, ['--help']);
 
-    const missing = ['Think', 'Do', 'FuseReview', 'FuseQA', 'Verify'].filter(
+    const missing = ['Think', 'Do', 'FuseReview', 'Verify'].filter(
       (beat) => !new RegExp(`\\b${beat}\\b`).test(help),
     );
     expect(missing).toEqual([]);
+    expect(help).not.toMatch(/\bFuseQA\b/);
   });
 });

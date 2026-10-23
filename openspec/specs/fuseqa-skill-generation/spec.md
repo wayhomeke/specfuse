@@ -6,25 +6,6 @@ Defines the generation and distribution contract for the FuseQA skill: the artif
 
 ## Requirements
 
-### Requirement: Skill frontmatter triggers on both flow and colloquial phrasing
-
-`composeFuseQASkill(ctx)` SHALL emit YAML frontmatter whose `name` is `fuseqa` and whose `description` covers both the in-flow trigger and colloquial user requests, so the Skill tool can activate it.
-
-#### Scenario: Frontmatter name and flow trigger
-
-- **WHEN** `composeFuseQASkill(ctx)` is called
-- **THEN** the output starts with YAML frontmatter containing `name: fuseqa` and a `description` naming the post-apply E2E verification beat
-
-#### Scenario: Colloquial triggers present
-
-- **WHEN** `composeFuseQASkill(ctx)` is called
-- **THEN** the `description` contains at least two colloquial trigger phrases covering end-to-end test authoring and QA acceptance
-
-#### Scenario: Activation failure mode stated in the skill body
-
-- **WHEN** `composeFuseQASkill(ctx)` is called
-- **THEN** the body states that FuseQA authors cases for the current change and does not execute the existing regression suite
-
 ### Requirement: Skill carries the artifact-shape decision tree
 
 `composeFuseQASkill(ctx)` output SHALL contain a three-question decision tree that derives the real entry point for any artifact shape, including artifacts with no executable entry point.
@@ -138,3 +119,32 @@ Defines the generation and distribution contract for the FuseQA skill: the artif
 
 - **WHEN** `scaffold(config)` copies the FuseQA templates
 - **THEN** Markdown templates are copied as well as YAML ones, so no template is dropped by an extension filter
+
+### Requirement: Skill declares on-demand scope and explicit invocation
+
+`composeFuseQASkill(ctx)` SHALL emit YAML frontmatter whose `name` is `fuseqa` and whose `description` states that the skill runs only when the user asks for it, that it is not a pipeline beat, and that it suits local end-to-end verification. The body SHALL state the local-versus-distributed boundary.
+
+#### Scenario: Frontmatter names an on-demand capability
+
+- **WHEN** `composeFuseQASkill(ctx)` is called
+- **THEN** the output starts with YAML frontmatter containing `name: fuseqa` and a `description` stating that invocation is explicit and the skill is not a pipeline beat
+
+#### Scenario: Colloquial triggers remain for explicit requests
+
+- **WHEN** `composeFuseQASkill(ctx)` is called
+- **THEN** the `description` contains at least two colloquial trigger phrases covering end-to-end test authoring and QA acceptance, understood as user requests rather than pipeline triggers
+
+#### Scenario: Body states the applicability boundary
+
+- **WHEN** `composeFuseQASkill(ctx)` is called
+- **THEN** the body states that FuseQA is useful when the artifact can be deployed and exercised locally, and that distributed systems should run equivalent checks in CI/CD rather than in the development phase
+
+#### Scenario: Body carries no beat claim
+
+- **WHEN** `composeFuseQASkill(ctx)` is called
+- **THEN** the output does not describe FuseQA as a pipeline beat, a post-apply checkpoint, or part of the apply exit sequence
+
+#### Scenario: Activation failure mode stated in the skill body
+
+- **WHEN** `composeFuseQASkill(ctx)` is called
+- **THEN** the body states that FuseQA authors cases for the current change and does not execute the existing regression suite
