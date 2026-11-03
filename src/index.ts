@@ -9,6 +9,10 @@ import { scaffold } from './scaffolder.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkg = JSON.parse(readFileSync(resolve(__dirname, '..', 'package.json'), 'utf-8'));
 
+export function formatVersionBanner(version: string): string {
+  return `SpecFuse v${version}`;
+}
+
 export const program = new Command();
 
 program
@@ -23,6 +27,7 @@ program
   .option('-y, --yes', 'Non-interactive mode (use defaults, CI-friendly)')
   .action(async (projectName: string | undefined, opts: { yes?: boolean }) => {
     try {
+      console.log(formatVersionBanner(pkg.version));
       const config = await collectProjectConfig(projectName, opts.yes);
       await scaffold(config);
     } catch (err) {
