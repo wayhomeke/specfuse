@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { program } from '../src/index.js';
+import { program, formatVersionBanner } from '../src/index.js';
 
 describe('CLI options — stack-free', () => {
   const longs = program.options.map((o) => o.long);
@@ -14,5 +14,11 @@ describe('CLI options — stack-free', () => {
 
   it('still exposes --yes for non-interactive mode', () => {
     expect(longs).toContain('--yes');
+  });
+});
+
+describe('version banner', () => {
+  it('formats the banner from the package version', () => {
+    expect(formatVersionBanner('1.2.3')).toBe('SpecFuse v1.2.3');
   });
 });
