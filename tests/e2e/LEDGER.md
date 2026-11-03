@@ -399,3 +399,24 @@ on-demand statement; the printed listing names the new file.
 values. A missing scaffolder write, a wrong namespaced path, or a stale built
 artifact would leave them green; this case drives the artifact a package
 manager installs.
+
+## Addition — 2026-11-02 (change: add-version-banner)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/cli-version-banner/version-banner.test.ts` (3 cases) |
+| Capability | `cli-version-banner` |
+| Traces to | spec `cli-version-banner` / Scenarios "Non-interactive run prints the banner", "Banner is printed once", "Version output stays bare", "Help output stays banner-free" |
+| Shape | CLI — real subprocess with argv through a symlinked bin shim, against the built `dist/index.js`, in an isolated scratch directory |
+
+Covers: a `--yes` scaffold prints exactly one `SpecFuse v<package.json version>`
+line; `--version` stays bare; `--help` does not contain the startup banner.
+
+**Coverage boundary, recorded rather than assumed:** the interactive run is not
+driven by this case. The banner is printed synchronously before the first
+prompt, and the `--yes` path observes the same action; an interactive harness
+would add TTY dependence without covering a different branch.
+
+**Why not only a unit test:** the formatter is unit-tested, but only the built
+CLI shows whether the action prints it before scaffolding and whether Commander's
+`--version`/`--help` paths stay free of it.
