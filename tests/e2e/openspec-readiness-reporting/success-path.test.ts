@@ -87,6 +87,17 @@ describe.skipIf(!hasOpenspec)('scaffolding reports nothing when OpenSpec is read
     const opsx = path.join(dir, 'ready-app', '.claude', 'commands', 'opsx');
     expect(existsSync(opsx)).toBe(true);
     expect(readdirSync(opsx).length).toBeGreaterThan(0);
+
+    // The same init must also supply the dsh-discoverable adapter output.
+    const agentsSkill = path.join(
+      dir,
+      'ready-app',
+      '.agents',
+      'skills',
+      'openspec-propose',
+      'SKILL.md',
+    );
+    expect(existsSync(agentsSkill), `${agentsSkill} is missing`).toBe(true);
   }, 60_000);
 
   it('confines the real openspec init and the trust write to the scratch HOME', () => {

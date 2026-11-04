@@ -1,0 +1,43 @@
+id: marketing-corporate
+name: Marketing Corporate
+category: marketing
+intent:
+  mood: Polished and authoritative — conveys enterprise stability
+  density: Low density, hero sections and generous whitespace establish premium feel
+  philosophy: Whitespace is a luxury signal; fewer elements with larger scale create perceived quality
+dimensions:
+  colorTemp: 2
+  lightness: 5
+  density: 5
+  borderRadius: 3
+  tone: 3
+anchors:
+  colors:
+    primary: "#1E3A5F"
+    auxiliary:
+      - "#0EA5E9"
+  typography:
+    baseSize: "16px"
+    scale: 1.5
+  spacing:
+    unit: "8px"
+  radius:
+    base: "8px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - badge
+    - navigation
+    - hero-section
+    - testimonial
+    - footer

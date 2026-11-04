@@ -1,0 +1,43 @@
+id: content-blog
+name: Content Blog
+category: content
+intent:
+  mood: Calm and readable — typography-first editorial aesthetic
+  density: Very low density, maximizes reading comfort and line length control
+  philosophy: Text is king; generous margins, optimal measure (65-75 characters), and clear type hierarchy create effortless reading
+dimensions:
+  colorTemp: 3
+  lightness: 4
+  density: 4
+  borderRadius: 2
+  tone: 3
+anchors:
+  colors:
+    primary: "#1A1A1A"
+    auxiliary:
+      - "#6366F1"
+  typography:
+    baseSize: "18px"
+    scale: 1.333
+  spacing:
+    unit: "8px"
+  radius:
+    base: "4px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - blockquote
+    - code-block
+    - badge
+    - table
+    - navigation

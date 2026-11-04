@@ -12,7 +12,7 @@ import { composeDesignMdSkill } from './templates/design-md-skill.js';
 import { composeFuseReviewSkill } from './templates/fusereview-skill.js';
 import { composeFuseQASkill } from './templates/fuseqa-skill.js';
 import { composeFuseDocSkill } from './templates/fusedoc-skill.js';
-import { composeSpecfuseCommand, composeSpecfuseFullCommand } from './templates/specfuse-command.js';
+import { composeSpecfuseCommand, composeSpecfuseDshSkill, composeSpecfuseFullCommand } from './templates/specfuse-command.js';
 import { composeCLAUDEmd } from './templates/claude-md.js';
 import { createDir, writeText, writeJSON, writeYAML } from './utils/fs.js';
 import { gitInit, gitInitialCommit } from './utils/git.js';
@@ -79,6 +79,16 @@ async function readTextSafe(filePath: string): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Writes a generated skill only when the destination does not exist. Existence,
+ * not content, decides: a zero-byte file is still user-owned and must survive.
+ */
+async function installSkillFile(skillPath: string, content: string): Promise<void> {
+  if (await fileExists(skillPath)) return;
+  await createDir(path.dirname(skillPath));
+  await writeText(skillPath, content);
 }
 
 function mergeFusionIntoCLAUDEmd(existing: string, fusionBlock: string): string {
@@ -220,77 +230,69 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     await writeJSON(settingsPath, generatedSettings);
   }
 
-  // Design-md skill
-  spinner.text = 'Writing .claude/skills/design-md/SKILL.md...';
-  const designMdSkillPath = path.join(targetDir, '.claude', 'skills', 'design-md', 'SKILL.md');
-  const existingDesignMdSkill = await readTextSafe(designMdSkillPath);
-  if (!existingDesignMdSkill) {
-    await createDir(path.join(targetDir, '.claude', 'skills', 'design-md'));
-    await writeText(designMdSkillPath, composeDesignMdSkill());
+  // Shared skills. dsh scans .agents/skills; Claude Code scans .claude/skills.
+  // Both roots receive the same rendered body and the same assets.
+  const sharedSkills = [
+    { name: 'design-md', compose: () => composeDesignMdSkill() },
+    { name: 'fusereview', compose: () => composeFuseReviewSkill(ctx) },
+    { name: 'fuseqa', compose: () => composeFuseQASkill(ctx) },
+    { name: 'fusedoc', compose: () => composeFuseDocSkill() },
+  ];
+  for (const root of ['.claude/skills', '.agents/skills']) {
+    for (const skill of sharedSkills) {
+      spinner.text = `Writing ${root}/${skill.name}/SKILL.md...`;
+      await installSkillFile(
+        path.join(targetDir, root, skill.name, 'SKILL.md'),
+        skill.compose(),
+      );
+    }
   }
 
-  // FuseReview skill
-  spinner.text = 'Writing .claude/skills/fusereview/SKILL.md...';
-  const fusereviewSkillPath = path.join(targetDir, '.claude', 'skills', 'fusereview', 'SKILL.md');
-  const existingFusereviewSkill = await readTextSafe(fusereviewSkillPath);
-  if (!existingFusereviewSkill) {
-    await createDir(path.join(targetDir, '.claude', 'skills', 'fusereview'));
-    await writeText(fusereviewSkillPath, composeFuseReviewSkill(ctx));
-  }
-
-  // FuseQA skill
-  spinner.text = 'Writing .claude/skills/fuseqa/SKILL.md...';
-  const fuseqaSkillPath = path.join(targetDir, '.claude', 'skills', 'fuseqa', 'SKILL.md');
-  const existingFuseqaSkill = await readTextSafe(fuseqaSkillPath);
-  if (!existingFuseqaSkill) {
-    await createDir(path.join(targetDir, '.claude', 'skills', 'fuseqa'));
-    await writeText(fuseqaSkillPath, composeFuseQASkill(ctx));
-  }
-
-  // FuseDoc skill
-  spinner.text = 'Writing .claude/skills/fusedoc/SKILL.md...';
-  const fusedocSkillPath = path.join(targetDir, '.claude', 'skills', 'fusedoc', 'SKILL.md');
-  const existingFusedocSkill = await readTextSafe(fusedocSkillPath);
-  if (!existingFusedocSkill) {
-    await createDir(path.join(targetDir, '.claude', 'skills', 'fusedoc'));
-    await writeText(fusedocSkillPath, composeFuseDocSkill());
-  }
-
-  // /specfuse command
+  // Claude Code slash commands.
   spinner.text = 'Writing .claude/commands/specfuse.md...';
-  const specfuseCommandPath = path.join(targetDir, '.claude', 'commands', 'specfuse.md');
-  // Existence, not content: a zero-byte file is still a user-owned file and
-  // must survive, exactly like a non-empty one.
-  if (!(await fileExists(specfuseCommandPath))) {
-    await createDir(path.join(targetDir, '.claude', 'commands'));
-    await writeText(specfuseCommandPath, composeSpecfuseCommand());
-  }
+  await installSkillFile(
+    path.join(targetDir, '.claude', 'commands', 'specfuse.md'),
+    composeSpecfuseCommand(),
+  );
 
-  // /specfuse:full command
   spinner.text = 'Writing .claude/commands/specfuse/full.md...';
-  const specfuseFullCommandPath = path.join(targetDir, '.claude', 'commands', 'specfuse', 'full.md');
-  if (!(await fileExists(specfuseFullCommandPath))) {
-    await createDir(path.join(targetDir, '.claude', 'commands', 'specfuse'));
-    await writeText(specfuseFullCommandPath, composeSpecfuseFullCommand());
-  }
+  await installSkillFile(
+    path.join(targetDir, '.claude', 'commands', 'specfuse', 'full.md'),
+    composeSpecfuseFullCommand(),
+  );
+
+  // dsh entry points: user-invocable skills, hidden from the model catalog.
+  spinner.text = 'Writing .agents/skills/specfuse/SKILL.md...';
+  await installSkillFile(
+    path.join(targetDir, '.agents', 'skills', 'specfuse', 'SKILL.md'),
+    composeSpecfuseDshSkill('default'),
+  );
+
+  spinner.text = 'Writing .agents/skills/specfuse-full/SKILL.md...';
+  await installSkillFile(
+    path.join(targetDir, '.agents', 'skills', 'specfuse-full', 'SKILL.md'),
+    composeSpecfuseDshSkill('full'),
+  );
 
   // Skill templates
   spinner.text = 'Copying skill templates...';
-  await copyTemplateDir(
-    path.join(import.meta.dirname, 'design-md', 'templates'),
-    path.join(targetDir, '.claude', 'skills', 'design-md', 'templates'),
-  );
-  await copyTemplateDir(
-    path.join(import.meta.dirname, 'fuseqa', 'templates'),
-    path.join(targetDir, '.claude', 'skills', 'fuseqa', 'templates'),
-  );
-  // The source directory is named templates/ rather than references/ because the
-  // build script copies only src/*/templates into dist; the skill links to
-  // references/, so the copy renames it at the destination.
-  await copyTemplateDir(
-    path.join(import.meta.dirname, 'fusedoc', 'templates'),
-    path.join(targetDir, '.claude', 'skills', 'fusedoc', 'references'),
-  );
+  for (const root of ['.claude/skills', '.agents/skills']) {
+    await copyTemplateDir(
+      path.join(import.meta.dirname, 'design-md', 'templates'),
+      path.join(targetDir, root, 'design-md', 'templates'),
+    );
+    await copyTemplateDir(
+      path.join(import.meta.dirname, 'fuseqa', 'templates'),
+      path.join(targetDir, root, 'fuseqa', 'templates'),
+    );
+    // The source directory is named templates/ rather than references/ because
+    // the build script copies only src/*/templates into dist; the skill links
+    // to references/, so the copy renames it at the destination.
+    await copyTemplateDir(
+      path.join(import.meta.dirname, 'fusedoc', 'templates'),
+      path.join(targetDir, root, 'fusedoc', 'references'),
+    );
+  }
   spinner.succeed('Installed design-md, fusedoc and fuseqa skills with templates');
 
   // OpenSpec
@@ -322,7 +324,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
       const ok = await initOpenspec(targetDir);
       openspecStatus = ok ? 'ready' : 'init-failed';
       if (!ok) {
-        spinner.warn('OpenSpec init failed. Run manually: openspec init --tools claude --force');
+        spinner.warn('OpenSpec init failed. Run manually: openspec init --tools claude,agents --force');
       }
     } else {
       spinner.text = 'Installing OpenSpec CLI...';
@@ -331,7 +333,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
         const ok = await initOpenspec(targetDir);
         openspecStatus = ok ? 'ready' : 'init-failed';
         if (!ok) {
-          spinner.warn('OpenSpec installed but init failed. Run manually: openspec init --tools claude --force');
+          spinner.warn('OpenSpec installed but init failed. Run manually: openspec init --tools claude,agents --force');
         }
       } else {
         openspecStatus = 'install-failed';
@@ -362,6 +364,9 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
   console.log(`    .claude/skills/fusedoc/           ${chalk.dim('Documentation standard')}`);
   console.log(`    .claude/commands/specfuse.md      ${chalk.dim('Unattended pipeline')}`);
   console.log(`    .claude/commands/specfuse/full.md ${chalk.dim('Complete unattended pipeline')}`);
+  console.log(`    .agents/skills/                   ${chalk.dim('dsh-discoverable skills')}`);
+  console.log(`    .agents/skills/specfuse/          ${chalk.dim('dsh: /specfuse')}`);
+  console.log(`    .agents/skills/specfuse-full/     ${chalk.dim('dsh: /specfuse-full')}`);
   if (config.initOpenspec) {
     console.log(`    openspec/config.yaml              ${chalk.dim('Spec-driven config')}`);
   }
@@ -391,7 +396,7 @@ export async function scaffold(config: ProjectConfig): Promise<void> {
     if (openspecStatus === 'install-failed') {
       console.log(chalk.dim('    npm i -g @fission-ai/openspec'));
     }
-    console.log(chalk.dim('    openspec init --tools claude --force'));
+    console.log(chalk.dim('    openspec init --tools claude,agents --force'));
   }
 
   if (!hasSuperpowersPlugin()) {

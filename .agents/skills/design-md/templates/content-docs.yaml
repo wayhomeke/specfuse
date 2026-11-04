@@ -1,0 +1,44 @@
+id: content-docs
+name: Content Documentation
+category: content
+intent:
+  mood: Clear and scannable — structure reveals content hierarchy instantly
+  density: Medium density, sidebar + content + on-page nav three-column pattern
+  philosophy: Documentation is wayfinding; persistent navigation and deep linking matter more than visual flair
+dimensions:
+  colorTemp: 2
+  lightness: 4
+  density: 3
+  borderRadius: 2
+  tone: 2
+anchors:
+  colors:
+    primary: "#0F172A"
+    auxiliary:
+      - "#3B82F6"
+  typography:
+    baseSize: "16px"
+    scale: 1.25
+  spacing:
+    unit: "4px"
+  radius:
+    base: "6px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - sidebar
+    - code-block
+    - badge
+    - table
+    - breadcrumb
+    - tab

@@ -1,0 +1,44 @@
+id: enterprise-admin
+name: Enterprise Admin
+category: internal-tool
+intent:
+  mood: Serious and structured — conveys control and authority over complex systems
+  density: High density, data tables and multi-panel layouts for admin operations
+  philosophy: Admin panels serve operators who manage resources at scale; batch actions and bulk views over single-item flows
+dimensions:
+  colorTemp: 1
+  lightness: 3
+  density: 1
+  borderRadius: 2
+  tone: 1
+anchors:
+  colors:
+    primary: "#1E40AF"
+    auxiliary:
+      - "#6366F1"
+  typography:
+    baseSize: "13px"
+    scale: 1.2
+  spacing:
+    unit: "4px"
+  radius:
+    base: "4px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - table
+    - card
+    - sidebar
+    - modal
+    - badge
+    - breadcrumb
+    - dropdown
