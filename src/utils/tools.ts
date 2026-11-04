@@ -48,7 +48,7 @@ export async function installOpenspec(): Promise<boolean> {
 
 export async function initOpenspec(cwd: string): Promise<boolean> {
   try {
-    await execShell('openspec init --tools claude --force', opts(INIT_TIMEOUT_MS, { cwd }));
+    await execShell('openspec init --tools claude,agents --force', opts(INIT_TIMEOUT_MS, { cwd }));
     await configureOpenspecProfile();
     return true;
   } catch {

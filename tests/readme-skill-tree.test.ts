@@ -53,6 +53,18 @@ describe('README frames FuseDoc as a standard, not a beat', () => {
   });
 });
 
+describe('README documents dsh compatibility', () => {
+  it('lists the shared-agents skill root and the dsh entry points', () => {
+    expect(README).toContain('.agents/skills/');
+    expect(README).toContain('/specfuse-full');
+    expect(README).toContain('/openspec-propose');
+  });
+
+  it('links the dsh guide', () => {
+    expect(README).toContain('docs/dsh.md');
+  });
+});
+
 describe('README documents the migration for existing projects', () => {
   it('names every derived file to remove before re-running the scaffolder', () => {
     for (const file of [

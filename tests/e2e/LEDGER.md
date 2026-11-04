@@ -420,3 +420,60 @@ would add TTY dependence without covering a different branch.
 **Why not only a unit test:** the formatter is unit-tested, but only the built
 CLI shows whether the action prints it before scaffolding and whether Commander's
 `--version`/`--help` paths stay free of it.
+
+## Addition — 2026-11-04 (change: add-dsh-harness-compatibility)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/dsh-harness-compatibility/skill-distribution.test.ts` (5 cases); `tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts` (3 cases, gated) |
+| Capability | `dsh-harness-compatibility` |
+| Traces to | spec `dsh-harness-compatibility` / Scenarios "Fresh scaffold installs both roots", "Shared skill bodies are identical across roots", "Asset directories accompany the dsh bundles", "Existing dsh skill is preserved", "Install listing names the dsh root", "Entry skill frontmatter matches dsh invocation policy", "Catalog contains the shared skills", "Entry skills remain user-only", "Missing `/specfuse` requirement prints usage and stops", "Missing `/specfuse-full` requirement prints usage and stops" |
+| Shape | CLI — real subprocess with argv through a symlinked bin shim, against the built `dist/index.js`; plus a real `npx @deepseek-ai/dsh` headless process consuming the scaffolded project |
+
+Covers: both skill roots are written and byte-identical; the dsh entry skills
+carry `disable-model-invocation: true` and `user-invocable: true`; template and
+reference assets exist under `.agents`; a user-authored dsh skill survives a
+re-scaffold; the printed listing names the dsh root. The real-model case lists
+the skill catalog, confirms the entry skills are absent from it, and drives
+both `/specfuse` and `/specfuse-full` with no requirement to their exact usage
+lines.
+
+**Why these cannot be unit tests:** `tests/scaffolder.test.ts` imports
+`scaffold()` with `utils/tools.js` mocked, so it cannot observe whether the
+built artifact resolves `dist/*/templates`. The catalog and the `/name` gesture
+are dsh behavior: only a real dsh process shows that the frontmatter policy is
+accepted and that the entry skills are hidden from the model.
+
+**Gate, recorded rather than assumed:** the real-model case self-skips unless
+`SPECFUSE_DSH_E2E=1`, Node 24.9+, and an endpoint are present. The endpoint is
+an exported `DEEPSEEK_BASE_URL`/`DEEPSEEK_API_KEY` pair, or the
+`SOURCE_BASE_URL`/`SOURCE_AUTH_TOKEN` pair in `~/private.env` when the
+explicit pair is absent. The skip is printed so an unexecuted case never reads
+as a pass. The scaffold runs with a scratch `HOME`; no credential value is
+written to disk.
+
+## Addition — 2026-11-04 (change: add-dsh-harness-compatibility, extended readiness)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/openspec-readiness-reporting/success-path.test.ts` (extended by 1 assertion) |
+| Capability | `openspec-readiness-reporting` |
+| Traces to | spec `dsh-harness-compatibility` / Scenario "One invocation installs both adapters" |
+| Shape | CLI — real subprocess with the real OpenSpec CLI on PATH |
+
+Covers: one `openspec init --tools claude,agents --force` produces both
+`.claude/commands/opsx/` and `.agents/skills/openspec-propose/SKILL.md`.
+
+**Why it extends the existing case:** the readiness suite already drives a real
+OpenSpec init in an isolated scratch HOME; adding the dsh artifact assertion
+there proves both adapters came from the same invocation rather than from a
+second setup step the scaffolder does not run.
+
+## Correction — 2026-11-04 (change: add-dsh-harness-compatibility)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts` |
+| What changed | The scaffold subprocess now uses a scratch `HOME`/`XDG_CONFIG_HOME` and asserts the trust write lands there; `git init` and scaffold status are asserted; a `catalog-canary` skill proves dsh scans the scratch project; child environments are scrubbed of `KEY`/`SECRET`/`TOKEN`/`PASSWORD`/`CREDENTIAL` before the two `DEEPSEEK_*` values are injected. |
+| Why the original was wrong | It inherited the developer's real `HOME`, so `scaffold()` appended a trust entry to `~/.claude.json`; and it ignored setup failures, which could let dsh fall back to the repository's own `.agents/skills` and pass without exercising the scaffold. FuseReview found both before Verify. |
+| Status | Fixed and re-run: 3/3 real dsh cases pass under Node 24.22.2. |

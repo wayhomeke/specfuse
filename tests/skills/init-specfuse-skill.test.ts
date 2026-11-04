@@ -50,6 +50,10 @@ const SOURCES: Array<{ file: string; symbol: string }> = [
   // the command leaves the unattended path undocumented at install time.
   { file: 'src/templates/specfuse-command.ts', symbol: 'composeSpecfuseCommand' },
   { file: 'src/templates/specfuse-command.ts', symbol: 'composeSpecfuseFullCommand' },
+  // dsh has no command mechanism; the two entry points are user-invocable
+  // skills under the shared-agents root. A manual install that stops at the
+  // Claude command files leaves dsh without an entry point.
+  { file: 'src/templates/specfuse-command.ts', symbol: 'composeSpecfuseDshSkill' },
 ];
 
 /** Template packs those skills carry, copied whole by scaffold(). */
@@ -144,6 +148,13 @@ describe('init-specfuse skill defers platform support to runtime (spec: init-spe
     const pasted = COPIED_LIST_MARKERS.filter((id) => md.includes(id));
     expect(pasted).toEqual([]);
   });
+
+  it('does not hardcode an OpenSpec tool-id list in an init command', () => {
+    // The adapter id is a runtime fact: `openspec init --help` owns it. A
+    // concrete `--tools <id>` example here is a list written into the skill,
+    // and it goes stale when OpenSpec renames an adapter.
+    expect(md).not.toMatch(/--tools\s+(?:claude,agents|agents|claude)\b/);
+  });
 });
 
 // The remaining scenarios are content assertions: they say what the document
@@ -219,6 +230,12 @@ describe('init-specfuse skill content contract (spec: init-specfuse-skill)', () 
   it('names the /specfuse:full command and its composer', () => {
     expect(flat).toContain('/specfuse:full');
     expect(flat).toContain('composeSpecfuseFullCommand');
+  });
+
+  it('names the shared-agents root and the dsh entry composer', () => {
+    expect(flat).toContain('.agents/skills/');
+    expect(flat).toContain('composeSpecfuseDshSkill');
+    expect(flat).toContain('/specfuse-full');
   });
 
   it('carries the non-overwrite rule for the command', () => {

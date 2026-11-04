@@ -82,8 +82,9 @@ describe('FuseDoc skill: host capabilities are pre-wired', () => {
   });
 
   it('excludes the skill own directory from audit', () => {
-    expect(skill).toContain('.claude/skills/fusedoc/');
+    expect(skill).not.toContain('.claude/skills/');
     expect(skill).toMatch(/this skill's own directory/i);
+    expect(skill).toMatch(/directory containing this `SKILL\.md`/i);
   });
 
   it('requires uncovered dimensions to be reported, never assumed', () => {

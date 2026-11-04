@@ -19,7 +19,7 @@ npm install -g @fission-ai/openspec    # 流程引擎；装好后自动注册 /o
 /plugins add obra/superpowers          # 行为约束插件（在 Claude Code 内执行）
 ```
 
-装完即可在项目里启动 `claude`，用 `/opsx:propose` 开始第一个变更。
+装完即可在项目里启动 `claude`，用 `/opsx:propose` 开始第一个变更。dsh 用户执行 `npx @deepseek-ai/dsh headless "..."` 或 `npx @deepseek-ai/dsh web`（Node >= 24.9），用 `/specfuse` 启动整条流水线；安装、命令映射与模型端点见 [docs/dsh.md](docs/dsh.md)。
 
 ## 生成物
 
@@ -40,13 +40,38 @@ my-app/
 │       ├── fusereview/             # 实施后代码评审技能
 │       ├── fuseqa/                 # 端到端验收技能（默认按需；/specfuse:full 自动执行）
 │       └── openspec-*/             # OpenSpec 提供：随其 init 生成
+├── .agents/
+│   └── skills/
+│       ├── design-md/              # dsh 共享技能（与 .claude 同源）
+│       ├── fusedoc/
+│       ├── fusereview/
+│       ├── fuseqa/
+│       ├── specfuse/               # dsh：/specfuse
+│       ├── specfuse-full/          # dsh：/specfuse-full
+│       └── openspec-*/             # OpenSpec 提供：随其 init 生成
 └── openspec/
     ├── config.yaml                 # spec 规则（流程约束）
     ├── specs/                      # 主规格
     └── changes/archive/            # 变更档案
 ```
 
-项目目录会自动加入 Claude Code 信任列表。`commands/opsx/` 与 `openspec-*` 由 OpenSpec 自己的 `init` 产生，随其版本更新；`commands/specfuse.md`、`commands/specfuse/full.md` 与四个技能由 SpecFuse 写入，已存在则不覆盖；`CLAUDE.md` 按 FUSION 标记合并（见下文）。
+项目目录会自动加入 Claude Code 信任列表。`commands/opsx/` 与 `openspec-*` 由 OpenSpec 自己的 `init` 产生，随其版本更新；`commands/specfuse.md`、`commands/specfuse/full.md` 与四个技能由 SpecFuse 写入，已存在则不覆盖；`CLAUDE.md` 按 FUSION 标记合并（见下文）。`openspec init` 使用 `--tools claude,agents`，同时生成 Claude Code 命令面与 dsh 可发现的技能。
+
+## dsh 兼容
+
+SpecFuse 同时写入 Claude Code 与 DeepSeek Harness 的发现根。dsh 读取 `CLAUDE.md`，扫描 `.agents/skills/`，并把消息中的 `/name` 解释为用户可调用的技能：
+
+| Claude Code | dsh |
+|---|---|
+| `/specfuse <需求>` | `/specfuse <需求>` |
+| `/specfuse:full <需求>` | `/specfuse-full <需求>` |
+| `/opsx:propose` | `/openspec-propose` |
+| `/opsx:new`、`/opsx:continue` | `/openspec-new-change`、`/openspec-continue-change` |
+| `/opsx:apply` | `/openspec-apply-change` |
+| `/opsx:verify`、`/opsx:archive` | `/openspec-verify-change`、`/openspec-archive-change` |
+| `/design-md`、`/fusedoc`、`/fusereview`、`/fuseqa` | 同名 |
+
+`specfuse` 与 `specfuse-full` 是 user-invocable、`disable-model-invocation: true` 的技能：只有用户显式输入才会执行，模型不会自行启动整条流水线。`/specfuse` 后的文本就是需求；没有文本时输出 `SPECFUSE_USAGE:` 并停止。
 
 ## 四个阶段
 
@@ -130,8 +155,9 @@ Verify      /opsx:verify → /opsx:archive   —— 全量验收与归档
 | `.claude/skills/*` | 已存在 → 不覆盖 |
 | `.claude/commands/specfuse.md` | 已存在 → 不覆盖 |
 | `.claude/commands/specfuse/full.md` | 已存在 → 不覆盖 |
+| `.agents/skills/*` | 已存在 → 不覆盖 |
 
-技能与命令已存在时不会被覆盖。已有项目升级到四拍时，先删除 `.claude/skills/fuseqa/SKILL.md`、`.claude/skills/fusereview/SKILL.md` 和 `.claude/commands/specfuse.md`，再运行 scaffolder：`CLAUDE.md` 的 FUSION 块会被替换，这三个文件会按新模板重写；`specfuse/full.md` 不存在时会自动补写。其它用户自定义技能不受影响。
+技能与命令已存在时不会被覆盖。已有项目升级到四拍时，先删除 `.claude/skills/fuseqa/SKILL.md`、`.claude/skills/fusereview/SKILL.md`、`.claude/commands/specfuse.md`，以及对应的 `.agents/skills/fuseqa/`、`.agents/skills/fusereview/`、`.agents/skills/specfuse/`、`.agents/skills/specfuse-full/`，再运行 scaffolder：`CLAUDE.md` 的 FUSION 块会被替换，这些文件会按新模板重写。其它用户自定义技能不受影响。
 
 删除 `CLAUDE.md` 里的 FUSION 块，项目即回到无调度状态——整套编排零侵入、可逆。
 
@@ -174,6 +200,16 @@ npm run build      # tsc + 拷贝模板资产到 dist/
 npm test           # vitest run，含 tests/e2e/ 下的端到端用例
 npm run lint       # eslint，零告警
 npx tsc --noEmit   # 类型检查
+```
+
+真实 dsh e2e 默认跳过。在 Node 24.9+ 且 `~/private.env` 可用时，先映射端点再显式开启：
+
+```bash
+set -a; source ~/private.env; set +a
+SPECFUSE_DSH_E2E=1 \
+DEEPSEEK_BASE_URL="$SOURCE_BASE_URL" \
+DEEPSEEK_API_KEY="$SOURCE_AUTH_TOKEN" \
+npx vitest run tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts
 ```
 
 生成设计模板预览页面（输出到 `docs/samples/`）：

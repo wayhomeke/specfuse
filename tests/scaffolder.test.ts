@@ -618,7 +618,7 @@ describe('OpenSpec readiness reporting — install failed', () => {
     const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
 
     expect(out).toContain('npm i -g @fission-ai/openspec');
-    expect(out).toContain('openspec init --tools claude --force');
+    expect(out).toContain('openspec init --tools claude,agents --force');
   });
 
   it('states the consequence: the opsx commands do not exist yet', async () => {
@@ -659,7 +659,7 @@ describe('OpenSpec readiness reporting — init failed', () => {
   it('lists only the init command, because the CLI is already installed', async () => {
     const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
 
-    expect(out).toContain('openspec init --tools claude --force');
+    expect(out).toContain('openspec init --tools claude,agents --force');
     expect(out).not.toContain('npm i -g @fission-ai/openspec');
   });
 
@@ -838,7 +838,121 @@ describe('OpenSpec readiness reporting — installed, then init failed', () => {
   it('lists only the init command, since the CLI got installed', async () => {
     const out = await captureScaffold(baseConfig({ targetDir: tmpDir, initOpenspec: true }));
 
-    expect(out).toContain('openspec init --tools claude --force');
+    expect(out).toContain('openspec init --tools claude,agents --force');
     expect(out).not.toContain('npm i -g @fission-ai/openspec');
+  });
+});
+
+describe('dsh harness distribution', () => {
+  let tmpDir: string;
+
+  // Project-local scratch: the repository ignores tmp/, and keeping it here
+  // avoids writing outside the checkout when the suite runs.
+  beforeEach(() => {
+    tmpDir = path.resolve(
+      import.meta.dirname,
+      '..',
+      'tmp',
+      `scaffolder-dsh-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+  });
+
+  afterEach(() => {
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  const SHARED = ['design-md', 'fusedoc', 'fusereview', 'fuseqa'] as const;
+
+  it('installs the shared skills under .agents/skills', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    for (const name of SHARED) {
+      const skillPath = path.join(tmpDir, '.agents', 'skills', name, 'SKILL.md');
+      expect(existsSync(skillPath), `${skillPath} is missing`).toBe(true);
+      expect(readFileSync(skillPath, 'utf-8')).toContain(`name: ${name}`);
+    }
+  });
+
+  it('renders the shared skill bodies identically under both roots', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    for (const name of SHARED) {
+      const claude = readFileSync(
+        path.join(tmpDir, '.claude', 'skills', name, 'SKILL.md'),
+        'utf-8',
+      );
+      const agents = readFileSync(
+        path.join(tmpDir, '.agents', 'skills', name, 'SKILL.md'),
+        'utf-8',
+      );
+      expect(agents, `${name} drifted between roots`).toBe(claude);
+    }
+  });
+
+  it('copies template and reference assets to the dsh root', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    expect(
+      readdirSync(path.join(tmpDir, '.agents', 'skills', 'fusedoc', 'references')).sort(),
+    ).toEqual(['examples.md', 'probes.md', 'recall-batteries.md']);
+    expect(
+      readdirSync(path.join(tmpDir, '.agents', 'skills', 'design-md', 'templates')).filter(
+        (f) => f.endsWith('.yaml'),
+      ).length,
+    ).toBe(17);
+    expect(
+      readdirSync(path.join(tmpDir, '.agents', 'skills', 'fuseqa', 'templates')).sort(),
+    ).toEqual(['_case-schema.yaml', 'derivation-checklist.md', 'entry-recipes.md', 'ledger.md']);
+  });
+
+  it('installs the dsh entry skills as user-invocable, model-disabled skills', async () => {
+    await scaffold(baseConfig({ targetDir: tmpDir }));
+
+    const specfuse = readFileSync(
+      path.join(tmpDir, '.agents', 'skills', 'specfuse', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(specfuse).toContain('name: specfuse');
+    expect(specfuse).toContain('disable-model-invocation: true');
+    expect(specfuse).toContain('user-invocable: true');
+    expect(specfuse).toContain('SPECFUSE_USAGE: /specfuse <requirement description>');
+
+    const full = readFileSync(
+      path.join(tmpDir, '.agents', 'skills', 'specfuse-full', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(full).toContain('name: specfuse-full');
+    expect(full).toContain('disable-model-invocation: true');
+    expect(full).toContain('SPECFUSE_FULL_USAGE: /specfuse-full <requirement description>');
+  });
+
+  it('preserves an existing dsh entry skill', async () => {
+    const skillDir = path.join(tmpDir, '.agents', 'skills', 'specfuse');
+    mkdirSync(skillDir, { recursive: true });
+    const skillPath = path.join(skillDir, 'SKILL.md');
+    writeFileSync(skillPath, 'custom dsh entry');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(skillPath, 'utf-8')).toBe('custom dsh entry');
+  });
+
+  it('preserves a zero-byte dsh shared skill', async () => {
+    const skillDir = path.join(tmpDir, '.agents', 'skills', 'fuseqa');
+    mkdirSync(skillDir, { recursive: true });
+    const skillPath = path.join(skillDir, 'SKILL.md');
+    writeFileSync(skillPath, '');
+
+    await scaffold(baseConfig({ targetDir: tmpDir, isExisting: true }));
+
+    expect(readFileSync(skillPath, 'utf-8')).toBe('');
+  });
+
+  it('names the dsh root and entry points in the printed listing', async () => {
+    const out = await captureScaffold(baseConfig({ targetDir: tmpDir }));
+
+    expect(out).toContain('.agents/skills/');
+    expect(out).toContain('.agents/skills/specfuse/');
+    expect(out).toContain('.agents/skills/specfuse-full/');
   });
 });

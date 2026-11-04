@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   composeSpecfuseCommand,
+  composeSpecfuseDshSkill,
   composeSpecfuseFullCommand,
 } from "../../src/templates/specfuse-command.js";
 
@@ -242,5 +243,106 @@ describe("specfuse full command template", () => {
 
   it("includes FuseQA in the worktree pipeline list", () => {
     expect(output).toMatch(/FuseReview, FuseQA, verify, and archive/i);
+  });
+});
+
+describe("specfuse dsh entry skill", () => {
+  const output = composeSpecfuseDshSkill("default");
+
+  it("renders dsh frontmatter that hides the skill from the model catalog", () => {
+    expect(output.startsWith("---\n")).toBe(true);
+    expect(output).toMatch(/^name: specfuse$/m);
+    expect(output).toMatch(/^disable-model-invocation: true$/m);
+    expect(output).toMatch(/^user-invocable: true$/m);
+    expect(output).toMatch(/^description:\s+\S/m);
+    expect(output).not.toContain("argument-hint:");
+  });
+
+  it("takes the requirement from the text following the invocation", () => {
+    expect(output).toMatch(/text following `\/specfuse`/i);
+    expect(output).not.toContain("$ARGUMENTS");
+  });
+
+  it("prints the exact usage line and stops when the requirement is absent", () => {
+    expect(output).toContain("SPECFUSE_USAGE: /specfuse <requirement description>");
+    expect(output).toMatch(/stop/i);
+    expect(output).toMatch(/Do not create a change/i);
+  });
+
+  it("keeps the phase order and the automatic decision policy", () => {
+    const headings = [
+      "### 0. Select the workspace",
+      "### 1. Create the change",
+      "### 2. Generate the artifacts",
+      "### 3. Apply",
+      "### 4. FuseReview",
+      "### 5. Verify",
+      "### 6. Archive",
+    ];
+    let last = -1;
+    for (const heading of headings) {
+      const at = output.indexOf(heading);
+      expect(at, `missing or out of order: ${heading}`).toBeGreaterThan(last);
+      last = at;
+    }
+    expect(output).toContain("continue with current model");
+    expect(output).toContain("auto: entered");
+  });
+
+  it("uses the dsh-discoverable FuseDoc path", () => {
+    expect(output).toContain(".agents/skills/fusedoc/SKILL.md");
+    expect(output).not.toContain(".claude/skills/");
+  });
+
+  it("uses the OpenSpec verify path available in dsh", () => {
+    expect(output).toContain("openspec validate <change> --strict");
+    expect(output).not.toContain("/opsx:verify");
+  });
+
+  it("keeps TDD and the no-commit prohibitions without Claude-only tools", () => {
+    expect(output).toMatch(/Red-Green-Refactor/);
+    expect(output).toMatch(/paste the raw output/i);
+    expect(output).toMatch(/Never run `git commit`, `git push`, or `git merge`/);
+    expect(output).not.toContain("AskUserQuestion");
+    expect(output).toMatch(/do not ask/i);
+  });
+});
+
+describe("specfuse-full dsh entry skill", () => {
+  const output = composeSpecfuseDshSkill("full");
+
+  it("names the full entry point and frontmatter", () => {
+    expect(output).toMatch(/^name: specfuse-full$/m);
+    expect(output).toMatch(/^disable-model-invocation: true$/m);
+    expect(output).toMatch(/^user-invocable: true$/m);
+    expect(output).toMatch(/text following `\/specfuse-full`/i);
+    expect(output).toContain("SPECFUSE_FULL_USAGE: /specfuse-full <requirement description>");
+  });
+
+  it("uses the dsh entry name in the title, not the Claude namespace", () => {
+    expect(output).toContain("# /specfuse-full — complete unattended pipeline");
+    expect(output).not.toContain("/specfuse:full");
+  });
+
+  it("orders FuseReview, FuseQA, Verify, and Archive", () => {
+    const headings = [
+      "### 4. FuseReview",
+      "### 5. FuseQA",
+      "### 6. Verify",
+      "### 7. Archive",
+    ];
+    let last = -1;
+    for (const heading of headings) {
+      const at = output.indexOf(heading);
+      expect(at, `missing or out of order: ${heading}`).toBeGreaterThan(last);
+      last = at;
+    }
+    expect(output).toContain("FuseQA decision (`auto: entered`)");
+  });
+
+  it("points at the dsh-discoverable FuseQA skill", () => {
+    expect(output).toContain(".agents/skills/fuseqa/SKILL.md");
+    expect(output).toContain(".agents/skills/fusedoc/SKILL.md");
+    expect(output).not.toContain(".claude/skills/");
   });
 });
