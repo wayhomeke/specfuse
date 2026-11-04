@@ -1,0 +1,43 @@
+id: mobile-utility
+name: Mobile Utility
+category: mobile
+intent:
+  mood: Efficient and task-oriented — get in, do the thing, get out
+  density: Medium density, compact controls optimized for quick task completion
+  philosophy: Speed equals respect for user time; minimize taps, maximize glanceability
+dimensions:
+  colorTemp: 2
+  lightness: 3
+  density: 2
+  borderRadius: 3
+  tone: 2
+anchors:
+  colors:
+    primary: "#007AFF"
+    auxiliary:
+      - "#34C759"
+  typography:
+    baseSize: "15px"
+    scale: 1.2
+  spacing:
+    unit: "4px"
+  radius:
+    base: "8px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - card
+    - badge
+    - tab-bar
+    - list-item
+    - bottom-sheet
+    - toggle

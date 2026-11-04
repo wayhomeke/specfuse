@@ -103,6 +103,17 @@ describe('subprocess guards — non-interactive hardening', () => {
     expect(await initOpenspec('/tmp/test-project')).toBe(false);
   });
 
+  it('initializes both the Claude Code and shared-agents adapters in one call', async () => {
+    mockExecSuccess();
+    const { initOpenspec } = await import('../../src/utils/tools.js');
+    await initOpenspec('/tmp/test-project');
+    const initCalls = mockExec.mock.calls.filter((call) =>
+      String(call[0]).includes('openspec init'),
+    );
+    expect(initCalls).toHaveLength(1);
+    expect(initCalls[0][0]).toContain('openspec init --tools claude,agents --force');
+  });
+
   it('never sets CODEGRAPH_NO_WATCH, which would outrank FORCE_WATCH and re-trigger the prompt', async () => {
     mockExecSuccess();
     const { initOpenspec } = await import('../../src/utils/tools.js');

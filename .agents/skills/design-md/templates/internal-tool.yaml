@@ -1,0 +1,43 @@
+id: internal-tool
+name: Internal Tool
+category: internal-tool
+intent:
+  mood: Functional and utilitarian — prioritizes efficiency over aesthetics
+  density: High density, compact layouts with maximum information per screen
+  philosophy: Tools for power users who value speed and keyboard shortcuts over visual delight
+dimensions:
+  colorTemp: 2
+  lightness: 2
+  density: 2
+  borderRadius: 2
+  tone: 1
+anchors:
+  colors:
+    primary: "#4A6CF7"
+    auxiliary:
+      - "#7C8DFF"
+  typography:
+    baseSize: "13px"
+    scale: 1.2
+  spacing:
+    unit: "4px"
+  radius:
+    base: "4px"
+structure:
+  requiredSections:
+    - colors
+    - typography
+    - spacing
+    - rounded
+    - elevation
+    - components
+    - breakpoints
+  componentTokens:
+    - button
+    - input
+    - table
+    - card
+    - sidebar
+    - modal
+    - badge
+    - tooltip

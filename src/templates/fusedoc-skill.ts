@@ -51,7 +51,7 @@ Resolve these **categories** against the host project; never assume a path:
 - dependency directories
 - frozen archives of historical records
 - recorded fixtures and snapshots — recorded output keeps its original voice
-- **this skill's own directory** — \`.claude/skills/fusedoc/\` — its calibration material quotes flawed prose deliberately
+- **this skill's own directory** — the directory containing this \`SKILL.md\` — its calibration material quotes flawed prose deliberately
 
 Put exclusion arguments **after** inclusion arguments so a later include cannot re-admit an excluded path. Do not follow a symbolic link into an excluded tree. Inspect an archived record only to understand an inbound citation — never to modernize its prose or its outbound links. Before reporting, verify the final change set contains no excluded path; report an accidental match rather than claiming a clean exclusion history.
 
