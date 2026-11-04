@@ -8,7 +8,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "docs/dsh.md"
   ],
   "engines": {
     "node": ">=18.0.0"
