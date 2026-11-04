@@ -22,3 +22,9 @@ Thumbs.db
 
 # Added by specfuse
 .grill-backup/
+
+# 外部参考资料（可能带分发限制，不入库）
+/external-docs/
+
+# 外部材料的 OCR 中间产物（临时，任务结束后清理）
+/.ocr-work/
