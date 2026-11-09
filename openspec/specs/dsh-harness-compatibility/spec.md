@@ -134,7 +134,7 @@ A verifiable dsh session SHALL expose the four shared skills in its catalog, SHA
 
 ### Requirement: Documentation states the dsh setup and mapping
 
-`README.md` and `docs/dsh.md` SHALL state the dsh version requirement (Node 24.9+), the `npx @deepseek-ai/dsh` launch forms, the `.agents/skills/` root, the command mapping, and the endpoint configuration needed to run the real-model verification. The documentation SHALL NOT contain credential values.
+`README.md` and `docs/dsh.md` SHALL state the dsh setup, command mapping, and generic endpoint configuration needed to run the real-model verification. Configuration examples SHALL use a model placeholder and SHALL NOT contain credential values, a personal environment file name, a vendor-specific credential variable, or a concrete versioned model id.
 
 #### Scenario: README documents the dsh root and entry points
 
@@ -144,9 +144,9 @@ A verifiable dsh session SHALL expose the four shared skills in its catalog, SHA
 #### Scenario: The dsh guide documents endpoint configuration
 
 - **WHEN** `docs/dsh.md` is inspected
-- **THEN** it states how `DEEPSEEK_BASE_URL` and `DEEPSEEK_API_KEY` map from an vendor-specific environment file, shows a `cordis.patch.yml` model entry for `your-model-id`, and names the `SPECFUSE_DSH_E2E=1` switch
+- **THEN** it states `DEEPSEEK_BASE_URL` and `DEEPSEEK_API_KEY` as the endpoint and credential variables, shows a `cordis.patch.yml` model entry with a placeholder model id, and names the `SPECFUSE_DSH_E2E=1` switch and `SPECFUSE_DSH_MODEL`
 
 #### Scenario: No credentials are committed
 
-- **WHEN** the change's files are searched for an Anthropic token, API key value, or the literal contents of `~/private.env`
-- **THEN** no credential value is present
+- **WHEN** `README.md`, `docs/dsh.md`, the real-model E2E source, and the dsh capability spec are searched for a credential value, a personal environment file name, a vendor-specific credential variable, or a concrete versioned model id
+- **THEN** none is present

@@ -53,17 +53,9 @@ npx @deepseek-ai/dsh web
 
 ## 配置模型端点
 
-dsh 的 DeepSeek 适配器读取 `DEEPSEEK_BASE_URL` 作为端点、`DEEPSEEK_API_KEY` 作为凭据。Anthropic 兼容网关的环境文件通常使用另外两个变量名，在启动 dsh 前做一次映射即可，不需要把密钥写入任何文件：
+dsh 的 DeepSeek 适配器读取 `DEEPSEEK_BASE_URL` 作为端点、`DEEPSEEK_API_KEY` 作为凭据。在你的 shell 或密钥管理工具中提供这两个变量，不要把值写入仓库。
 
-```bash
-set -a
-source ~/private.env          # 提供 SOURCE_BASE_URL 与 SOURCE_AUTH_TOKEN
-set +a
-export DEEPSEEK_BASE_URL="$SOURCE_BASE_URL"
-export DEEPSEEK_API_KEY="$SOURCE_AUTH_TOKEN"
-```
-
-模型目录与默认模型通过 `cordis.patch.yml` 覆盖。下面的文件声明一个模型并把它设为新会话默认值；端点与凭据仍来自环境：
+模型目录与默认模型通过 `cordis.patch.yml` 覆盖。下面的文件声明一个模型并把它设为新会话默认值；把 `your-model-id` 替换为端点实际提供的模型：
 
 ```yaml
 - id: llm-deepseek
@@ -92,17 +84,13 @@ DSH_HOME="$PWD/tmp/dsh-home" npx @deepseek-ai/dsh headless --patch ./cordis.patc
 
 `tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts` 用构建产物脚手架一个临时项目，再通过真实 dsh 进程验证：四个共享技能出现在模型目录中，两个入口技能不出现，`/specfuse` 在缺少需求时输出 `SPECFUSE_USAGE:`。
 
-该用例默认跳过。满足 Node 24.9+、端点可用（已导出 `DEEPSEEK_BASE_URL`/`DEEPSEEK_API_KEY`，或 `~/private.env` 提供 `SOURCE_*`）、`SPECFUSE_DSH_E2E=1` 三个条件时执行：
+该用例默认跳过。满足 Node 24.9+、`SPECFUSE_DSH_E2E=1`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_API_KEY` 和 `SPECFUSE_DSH_MODEL` 时执行：
 
 ```bash
-set -a; source ~/private.env; set +a
-SPECFUSE_DSH_E2E=1 \
-DEEPSEEK_BASE_URL="$SOURCE_BASE_URL" \
-DEEPSEEK_API_KEY="$SOURCE_AUTH_TOKEN" \
-npx vitest run tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts
+SPECFUSE_DSH_E2E=1 npx vitest run tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts
 ```
 
-用例优先使用已导出的 `DEEPSEEK_BASE_URL`/`DEEPSEEK_API_KEY`；两者都不存在时才读取 `~/private.env` 的 `SOURCE_BASE_URL`/`SOURCE_AUTH_TOKEN` 并映射。脚手架子进程使用独立的 `HOME`，因此不会改写你的 `~/.claude.json`；临时项目、`DSH_HOME` 与 `DSH_AGENTS_HOME` 都放在仓库的 `tmp/` 下，结束时删除。跳过时打印原因，不把缺失前提计为失败。
+用例只读取进程环境变量，不读取任何仓库内的环境文件；脚手架子进程使用独立的 `HOME`，因此不会改写你的 `~/.claude.json`；临时项目、`DSH_HOME` 与 `DSH_AGENTS_HOME` 都放在仓库的 `tmp/` 下，结束时删除。跳过时打印原因，不把缺失前提计为失败。
 
 ## 故障排查
 

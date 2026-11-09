@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import path from 'node:path';
 
 /**
@@ -22,40 +21,34 @@ import path from 'node:path';
  * dsh, but only dsh proves it accepts the policy, hides the entry skills from
  * the model, and injects the entry skill on user input.
  *
- * Gate: `SPECFUSE_DSH_E2E=1`, Node 24.9+, and an endpoint. The endpoint comes
- * from an already exported `DEEPSEEK_BASE_URL`/`DEEPSEEK_API_KEY` pair, or from
- * `~/private.env` via `SOURCE_BASE_URL`/`SOURCE_AUTH_TOKEN`. Values are
- * passed to the child process; nothing is written to disk.
+ * Gate: `SPECFUSE_DSH_E2E=1`, Node 24.9+, `DEEPSEEK_BASE_URL`,
+ * `DEEPSEEK_API_KEY`, and `SPECFUSE_DSH_MODEL`. Values come only from the
+ * process environment; nothing is read from disk or written to a credential
+ * file.
  */
 const ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
 const DIST = path.join(ROOT, 'dist', 'index.js');
-const ENV_FILE = path.join(homedir(), 'private.env');
-
-function parseEnvFile(content: string): Record<string, string> {
-  const values: Record<string, string> = {};
-  for (const raw of content.split('\n')) {
-    const line = raw.trim();
-    if (!line || line.startsWith('#')) continue;
-    const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
-    if (!match) continue;
-    let value = match[2].trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    values[match[1]] = value;
-  }
-  return values;
-}
 
 function nodeSupportsDsh(): boolean {
   const [major, minor] = process.versions.node.split('.').map(Number);
   return major > 24 || (major === 24 && minor >= 9);
 }
 
-function evaluateGate(): { enabled: boolean; reason: string; endpoint?: string; token?: string } {
+interface EnabledGate {
+  enabled: true;
+  endpoint: string;
+  token: string;
+  model: string;
+}
+
+interface DisabledGate {
+  enabled: false;
+  reason: string;
+}
+
+type Gate = EnabledGate | DisabledGate;
+
+function evaluateGate(): Gate {
   if (process.env.SPECFUSE_DSH_E2E !== '1') {
     return { enabled: false, reason: 'SPECFUSE_DSH_E2E is not 1' };
   }
@@ -66,31 +59,22 @@ function evaluateGate(): { enabled: boolean; reason: string; endpoint?: string; 
     return { enabled: false, reason: 'dist/index.js is missing; run `npm run build`' };
   }
 
-  if (process.env.DEEPSEEK_BASE_URL && process.env.DEEPSEEK_API_KEY) {
-    return {
-      enabled: true,
-      reason: 'enabled',
-      endpoint: process.env.DEEPSEEK_BASE_URL,
-      token: process.env.DEEPSEEK_API_KEY,
-    };
+  const endpoint = process.env.DEEPSEEK_BASE_URL;
+  const token = process.env.DEEPSEEK_API_KEY;
+  const model = process.env.SPECFUSE_DSH_MODEL;
+  if (!endpoint || !token || !model) {
+    const missing = [
+      ...(endpoint ? [] : ['DEEPSEEK_BASE_URL']),
+      ...(token ? [] : ['DEEPSEEK_API_KEY']),
+      ...(model ? [] : ['SPECFUSE_DSH_MODEL']),
+    ];
+    return { enabled: false, reason: `missing ${missing.join(', ')}` };
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:/-]*$/.test(model)) {
+    return { enabled: false, reason: 'SPECFUSE_DSH_MODEL contains unsupported characters' };
   }
 
-  if (!existsSync(ENV_FILE)) {
-    return {
-      enabled: false,
-      reason: `neither DEEPSEEK_BASE_URL/DEEPSEEK_API_KEY nor ${ENV_FILE} is available`,
-    };
-  }
-  const values = parseEnvFile(readFileSync(ENV_FILE, 'utf-8'));
-  const endpoint = values.SOURCE_BASE_URL;
-  const token = values.SOURCE_AUTH_TOKEN;
-  if (!endpoint || !token) {
-    return {
-      enabled: false,
-      reason: `${ENV_FILE} does not define SOURCE_BASE_URL and SOURCE_AUTH_TOKEN`,
-    };
-  }
-  return { enabled: true, reason: 'enabled', endpoint, token };
+  return { enabled: true, endpoint, token, model };
 }
 
 /**
@@ -112,10 +96,15 @@ if (!GATE.enabled) {
   console.log(`[fuseqa] skipping real dsh E2E: ${GATE.reason}`);
 }
 
-describe.skipIf(!GATE.enabled)('a real dsh session uses the scaffolded pipeline', () => {
+// The suite factory runs even when the gate is closed; hooks and test bodies
+// do not. The assertion narrows the value only for the path that can use it.
+const SUITE = GATE.enabled ? describe : describe.skip;
+SUITE('a real dsh session uses the scaffolded pipeline', () => {
+  const gate = GATE as EnabledGate;
   let project: string;
   let dshHome: string;
   let env: NodeJS.ProcessEnv;
+
 
   beforeAll(() => {
     project = path.join(ROOT, 'tmp', `e2e-dsh-model-${process.pid}-${Date.now()}`, 'project');
@@ -180,8 +169,8 @@ describe.skipIf(!GATE.enabled)('a real dsh session uses the scaffolded pipeline'
       PATH: pathWithStub,
       DSH_HOME: dshHome,
       DSH_AGENTS_HOME: agentsHome,
-      DEEPSEEK_BASE_URL: GATE.endpoint,
-      DEEPSEEK_API_KEY: GATE.token,
+      DEEPSEEK_BASE_URL: gate.endpoint,
+      DEEPSEEK_API_KEY: gate.token,
     });
 
     writeFileSync(
@@ -190,78 +179,155 @@ describe.skipIf(!GATE.enabled)('a real dsh session uses the scaffolded pipeline'
         '- id: llm-deepseek',
         '  config:',
         '    models:',
-        '      - id: your-model-id',
+        '      - id: ' + JSON.stringify(gate.model),
         '- id: agent-default-model',
         '  config:',
         '    provider: deepseek-official',
-        '    model: your-model-id',
+        '    model: ' + JSON.stringify(gate.model),
         '',
       ].join('\n'),
     );
+    const patch = readFileSync(path.join(project, 'cordis.patch.yml'), 'utf-8');
+    expect(patch).toContain(`id: ${JSON.stringify(gate.model)}`);
+    expect(patch).toContain(`model: ${JSON.stringify(gate.model)}`);
   });
 
   afterAll(() => {
     if (project) rmSync(path.dirname(project), { recursive: true, force: true });
   });
 
-  function runDsh(task: string): { status: number; stdout: string; stderr: string } {
-    const result = spawnSync(
-      'npx',
-      [
-        '--yes',
-        '@deepseek-ai/dsh',
-        'headless',
-        '--patch',
-        './cordis.patch.yml',
-        task,
-      ],
-      { cwd: project, env, encoding: 'utf-8', timeout: 240_000 },
-    );
-    if (result.error) throw result.error;
-    return { status: result.status ?? -1, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
+  type DshRun = { status: number; stdout: string; stderr: string };
+
+  /**
+   * Runs dsh without blocking the worker thread. `spawnSync` would hold the
+   * event loop for the whole model call, and vitest's worker RPC times out
+   * after 60 seconds even when the case itself has a longer budget.
+   */
+  function runDsh(task: string): Promise<DshRun> {
+    return new Promise((resolve, reject) => {
+      const child = spawn(
+        'npx',
+        [
+          '--yes',
+          '@deepseek-ai/dsh',
+          'headless',
+          '--patch',
+          './cordis.patch.yml',
+          task,
+        ],
+        { cwd: project, env, detached: process.platform !== 'win32' },
+      );
+
+      let stdout = '';
+      let stderr = '';
+      let timedOut = false;
+      let settled = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        if (child.pid === undefined) {
+          child.kill('SIGKILL');
+          return;
+        }
+        try {
+          process.kill(-child.pid, 'SIGKILL');
+        } catch {
+          child.kill('SIGKILL');
+        }
+      }, 240_000);
+      const settle = (action: () => void) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        action();
+      };
+
+      child.stdout?.on('data', (chunk: Buffer) => {
+        stdout += chunk.toString();
+      });
+      child.stderr?.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+      });
+      child.on('error', (error) => {
+        settle(() => reject(error));
+      });
+      child.on('close', (code) => {
+        settle(() => {
+          if (timedOut) {
+            reject(new Error(`dsh timed out after 240s\nstdout:\n${stdout}\nstderr:\n${stderr}`));
+            return;
+          }
+          resolve({ status: code ?? -1, stdout, stderr });
+        });
+      });
+    });
+  }
+
+  /**
+   * One retry absorbs model non-determinism. The skill body that requests the
+   * exact line is guarded separately by the composer tests; this case is the
+   * real-process smoke test, not a deterministic assertion about sampling.
+   */
+  async function runDshWithRetry(task: string, accept: (run: DshRun) => boolean): Promise<DshRun> {
+    const first = await runDsh(task);
+    if (first.status !== 0 || accept(first)) return first;
+    return runDsh(task);
   }
 
   it(
     'lists the shared skills and hides the entry skills from the catalog',
-    () => {
-      const run = runDsh(
+    async () => {
+      const parseLines = (stdout: string) =>
+        stdout
+          .split('\n')
+          .map((line) => line.replace(/^[-*`\s]+|`+$/g, '').trim())
+          .filter(Boolean);
+      const expected = ['design-md', 'fusedoc', 'fusereview', 'fuseqa', 'catalog-canary'];
+      const run = await runDshWithRetry(
         'Output only the skill names available in this session, one per line, and nothing else.',
+        (candidate) => {
+          const lines = parseLines(candidate.stdout);
+          return (
+            expected.every((skill) => lines.includes(skill)) &&
+            !lines.includes('specfuse') &&
+            !lines.includes('specfuse-full')
+          );
+        },
       );
       expect(run.status, run.stderr).toBe(0);
 
-      const lines = run.stdout
-        .split('\n')
-        .map((line) => line.replace(/^[-*`\s]+|`+$/g, '').trim())
-        .filter(Boolean);
-
-      for (const skill of ['design-md', 'fusedoc', 'fusereview', 'fuseqa', 'catalog-canary']) {
+      const lines = parseLines(run.stdout);
+      for (const skill of expected) {
         expect(lines, `catalog is missing ${skill}`).toContain(skill);
       }
       expect(lines, 'specfuse must not be model-visible').not.toContain('specfuse');
       expect(lines, 'specfuse-full must not be model-visible').not.toContain('specfuse-full');
     },
-    300_000,
+    600_000,
   );
 
   it(
     'reaches the /specfuse entry skill and stops on missing requirement text',
-    () => {
-      const run = runDsh('/specfuse');
+    async () => {
+      const usage = 'SPECFUSE_USAGE: /specfuse <requirement description>';
+      const run = await runDshWithRetry('/specfuse', (candidate) =>
+        candidate.stdout.includes(usage),
+      );
       expect(run.status, run.stderr).toBe(0);
-      expect(run.stdout).toContain('SPECFUSE_USAGE: /specfuse <requirement description>');
+      expect(run.stdout).toContain(usage);
     },
-    300_000,
+    600_000,
   );
 
   it(
     'reaches the /specfuse-full entry skill and stops on missing requirement text',
-    () => {
-      const run = runDsh('/specfuse-full');
-      expect(run.status, run.stderr).toBe(0);
-      expect(run.stdout).toContain(
-        'SPECFUSE_FULL_USAGE: /specfuse-full <requirement description>',
+    async () => {
+      const usage = 'SPECFUSE_FULL_USAGE: /specfuse-full <requirement description>';
+      const run = await runDshWithRetry('/specfuse-full', (candidate) =>
+        candidate.stdout.includes(usage),
       );
+      expect(run.status, run.stderr).toBe(0);
+      expect(run.stdout).toContain(usage);
     },
-    300_000,
+    600_000,
   );
 });

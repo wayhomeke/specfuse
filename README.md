@@ -202,14 +202,10 @@ npm run lint       # eslint，零告警
 npx tsc --noEmit   # 类型检查
 ```
 
-真实 dsh e2e 默认跳过。在 Node 24.9+ 且 `~/private.env` 可用时，先映射端点再显式开启：
+真实 dsh e2e 默认跳过。设置 Node 24.9+、`SPECFUSE_DSH_E2E=1`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_API_KEY` 和 `SPECFUSE_DSH_MODEL` 后执行：
 
 ```bash
-set -a; source ~/private.env; set +a
-SPECFUSE_DSH_E2E=1 \
-DEEPSEEK_BASE_URL="$SOURCE_BASE_URL" \
-DEEPSEEK_API_KEY="$SOURCE_AUTH_TOKEN" \
-npx vitest run tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts
+SPECFUSE_DSH_E2E=1 npx vitest run tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts
 ```
 
 生成设计模板预览页面（输出到 `docs/samples/`）：
