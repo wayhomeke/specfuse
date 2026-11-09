@@ -445,12 +445,11 @@ are dsh behavior: only a real dsh process shows that the frontmatter policy is
 accepted and that the entry skills are hidden from the model.
 
 **Gate, recorded rather than assumed:** the real-model case self-skips unless
-`SPECFUSE_DSH_E2E=1`, Node 24.9+, and an endpoint are present. The endpoint is
-an exported `DEEPSEEK_BASE_URL`/`DEEPSEEK_API_KEY` pair, or the
-`SOURCE_BASE_URL`/`SOURCE_AUTH_TOKEN` pair in `~/private.env` when the
-explicit pair is absent. The skip is printed so an unexecuted case never reads
-as a pass. The scaffold runs with a scratch `HOME`; no credential value is
-written to disk.
+`SPECFUSE_DSH_E2E=1`, Node 24.9+, `DEEPSEEK_BASE_URL`, `DEEPSEEK_API_KEY`, and
+`SPECFUSE_DSH_MODEL` are present. The skip is printed so an unexecuted case
+never reads as a pass. The test reads only process environment variables; it
+reads no repository-named environment file. The scaffold runs with a scratch
+`HOME`; no credential value is written to disk.
 
 ## Addition — 2026-11-04 (change: add-dsh-harness-compatibility, extended readiness)
 
@@ -477,3 +476,29 @@ second setup step the scaffolder does not run.
 | What changed | The scaffold subprocess now uses a scratch `HOME`/`XDG_CONFIG_HOME` and asserts the trust write lands there; `git init` and scaffold status are asserted; a `catalog-canary` skill proves dsh scans the scratch project; child environments are scrubbed of `KEY`/`SECRET`/`TOKEN`/`PASSWORD`/`CREDENTIAL` before the two `DEEPSEEK_*` values are injected. |
 | Why the original was wrong | It inherited the developer's real `HOME`, so `scaffold()` appended a trust entry to `~/.claude.json`; and it ignored setup failures, which could let dsh fall back to the repository's own `.agents/skills` and pass without exercising the scaffold. FuseReview found both before Verify. |
 | Status | Fixed and re-run: 3/3 real dsh cases pass under Node 24.22.2. |
+
+## Correction — 2026-11-09 (change: scrub-local-environment-details)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/dsh-harness-compatibility/dsh-real-model.test.ts` |
+| What changed | The gate reads only `DEEPSEEK_BASE_URL`, `DEEPSEEK_API_KEY`, and `SPECFUSE_DSH_MODEL`; the runner uses async `spawn` instead of blocking `spawnSync`; one retry absorbs model sampling variance. |
+| Why the original was wrong | It read a personal environment file and mapped vendor credential variables into the provider variables, so it could not run unchanged on another machine and published private environment details. `spawnSync` also held the vitest worker past its RPC timeout during long model calls, and one sample omitted the exact usage line. |
+| Status | Generic gate and async runner verified; 3/3 real dsh cases pass. |
+
+## Addition — 2026-11-09 (change: scrub-local-environment-details)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/public-surface-hygiene/package-surface.test.ts` (1 case) |
+| Capability | `public-surface-hygiene` |
+| Traces to | spec `public-surface-hygiene` / Scenarios "Scanned surfaces", "No credential values are committed" |
+| Shape | Package artifact — `npm pack --dry-run`; shipped file list plus the shipped README and dsh guide |
+
+Covers: `README.md`, `docs/dsh.md`, and `dist/index.js` are in the package file
+list, and the shipped README and guide scan clean under the same prohibited
+patterns as the repository guard.
+
+**Why this cannot be a unit test:** the repository guard reads files from disk,
+but only the package manager applies the `files` allowlist. A missing
+`docs/dsh.md` or a stale shipped README is invisible to a repository scan.
