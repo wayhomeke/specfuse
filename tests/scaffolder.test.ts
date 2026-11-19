@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync, readdirSync, cpSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, mkdirSync, writeFileSync, readdirSync, cpSync, statSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { scaffold } from '../src/scaffolder.js';
@@ -553,7 +553,7 @@ describe('OpenSpec readiness reporting — success path', () => {
 // E2E cases get from their spawned env. Restored in afterEach rather than in the
 // test body: a body-level restore is skipped when the test fails, and this one
 // would then leak a fake HOME into every later test.
-describe('trust write tolerates a malformed ~/.claude.json', () => {
+describe('trust write safety for ~/.claude.json', () => {
   let tmpDir: string;
   let realHome: string | undefined;
 
@@ -569,22 +569,148 @@ describe('trust write tolerates a malformed ~/.claude.json', () => {
     if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('self-heals a falsy projects field rather than silently skipping the write', async () => {
+  const setupHome = (content?: string): string => {
     const home = path.join(tmpDir, 'home');
     mkdirSync(home, { recursive: true });
-    // Parseable but malformed: a falsy scalar where an object belongs. The
-    // function's own comment says it starts fresh on malformed input.
-    writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ projects: 0, kept: 'unchanged' }));
+    if (content !== undefined) writeFileSync(path.join(home, '.claude.json'), content);
     process.env.HOME = home;
+    return home;
+  };
 
-    const target = path.join(tmpDir, 'project');
+  const trustPath = (home: string): string => path.join(home, '.claude.json');
+  const targetOf = (name: string): string => path.resolve(path.join(tmpDir, name));
+
+  it('self-heals a falsy projects field rather than silently skipping the write', async () => {
+    // Parseable but malformed: a falsy scalar where an object belongs.
+    // Falsy projects self-heals; a truthy non-object container is preserved.
+    const home = setupHome(JSON.stringify({ projects: 0, kept: 'unchanged' }));
+    const target = targetOf('project');
+
     await captureScaffold(baseConfig({ targetDir: target }));
 
-    const written = JSON.parse(readFileSync(path.join(home, '.claude.json'), 'utf-8'));
+    const written = JSON.parse(readFileSync(trustPath(home), 'utf-8'));
     expect(typeof written.projects).toBe('object');
-    expect(written.projects[path.resolve(target)].hasTrustDialogAccepted).toBe(true);
+    expect(written.projects[target].hasTrustDialogAccepted).toBe(true);
     // Unknown keys must survive the read-modify-write round trip.
     expect(written.kept).toBe('unchanged');
+  });
+
+  it('preserves invalid JSON byte for byte and warns without exposing contents', async () => {
+    const malformed = '{"userSetting":"keep me",';
+    const home = setupHome(malformed);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await captureScaffold(baseConfig({ targetDir: targetOf('invalid-project') }));
+
+      expect(readFileSync(trustPath(home), 'utf-8')).toBe(malformed);
+      const message = warn.mock.calls.flat().join(' ');
+      expect(message).toContain('.claude.json');
+      expect(message).toContain('left unchanged');
+      expect(message).not.toContain('keep me');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('preserves a non-object root and warns', async () => {
+    const home = setupHome('[]');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await captureScaffold(baseConfig({ targetDir: targetOf('array-project') }));
+
+      expect(readFileSync(trustPath(home), 'utf-8')).toBe('[]');
+      expect(warn.mock.calls.flat().join(' ')).toContain('.claude.json');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('preserves a truthy non-object projects field and warns', async () => {
+    const malformed = JSON.stringify({ projects: 'not-an-object', kept: 'value' });
+    const home = setupHome(malformed);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await captureScaffold(baseConfig({ targetDir: targetOf('string-projects') }));
+
+      expect(readFileSync(trustPath(home), 'utf-8')).toBe(malformed);
+      expect(warn.mock.calls.flat().join(' ')).toContain('.claude.json');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('creates a missing file with the trust entry', async () => {
+    const home = setupHome();
+    const target = targetOf('missing-project');
+
+    await captureScaffold(baseConfig({ targetDir: target }));
+
+    const written = JSON.parse(readFileSync(trustPath(home), 'utf-8'));
+    expect(written.projects[target].hasTrustDialogAccepted).toBe(true);
+  });
+
+  it('merges a valid file without losing unknown keys or other projects', async () => {
+    const home = setupHome(
+      JSON.stringify({
+        kept: 'value',
+        projects: { '/other/project': { hasTrustDialogAccepted: true } },
+      }),
+    );
+    const target = targetOf('valid-project');
+
+    await captureScaffold(baseConfig({ targetDir: target }));
+
+    const written = JSON.parse(readFileSync(trustPath(home), 'utf-8'));
+    expect(written.kept).toBe('value');
+    expect(written.projects['/other/project'].hasTrustDialogAccepted).toBe(true);
+    expect(written.projects[target].hasTrustDialogAccepted).toBe(true);
+  });
+
+  it('preserves a numeric target project entry and warns', async () => {
+    const target = targetOf('numeric-entry');
+    const malformed = JSON.stringify({ projects: { [target]: 5 }, kept: 'value' });
+    const home = setupHome(malformed);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await captureScaffold(baseConfig({ targetDir: target }));
+
+      expect(readFileSync(trustPath(home), 'utf-8')).toBe(malformed);
+      expect(warn.mock.calls.flat().join(' ')).toContain('.claude.json');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('preserves an array target project entry and warns', async () => {
+    const target = targetOf('array-entry');
+    const malformed = JSON.stringify({
+      projects: { [target]: [{ hasTrustDialogAccepted: true }] },
+      kept: 'value',
+    });
+    const home = setupHome(malformed);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await captureScaffold(baseConfig({ targetDir: target }));
+
+      expect(readFileSync(trustPath(home), 'utf-8')).toBe(malformed);
+      expect(warn.mock.calls.flat().join(' ')).toContain('.claude.json');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('skips and warns when the trust path is a directory', async () => {
+    const home = setupHome();
+    mkdirSync(path.join(home, '.claude.json'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await captureScaffold(baseConfig({ targetDir: targetOf('directory-project') }));
+
+      expect(statSync(path.join(home, '.claude.json')).isDirectory()).toBe(true);
+      expect(warn.mock.calls.flat().join(' ')).toContain('could not be read');
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 

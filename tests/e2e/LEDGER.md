@@ -502,3 +502,20 @@ patterns as the repository guard.
 **Why this cannot be a unit test:** the repository guard reads files from disk,
 but only the package manager applies the `files` allowlist. A missing
 `docs/dsh.md` or a stale shipped README is invisible to a repository scan.
+
+## Addition — 2026-11-18 (change: preserve-unparseable-claude-json)
+
+| Field | Content |
+|---|---|
+| Case | `tests/e2e/preserve-unparseable-claude-json/trust-list.test.ts` (1 case) |
+| Capability | `trust-list-safety` |
+| Traces to | spec `trust-list-safety` / Scenarios "Invalid JSON is preserved", "The warning does not expose contents", "Scaffolding completes with the warning" |
+| Shape | CLI — built `dist/index.js` through a symlinked bin shim, scratch HOME with an invalid `~/.claude.json` |
+
+Covers: the built CLI leaves the invalid file byte-identical, writes a warning
+to stderr that names the path and does not include the file contents, and exits
+zero.
+
+**Why this cannot be a unit test:** the unit suite calls `scaffold()` in-process
+and spies `console.warn`. Only the built CLI, invoked through the package's
+symlinked bin path, shows the real stderr stream and exit status together.

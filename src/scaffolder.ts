@@ -45,21 +45,66 @@ interface ClaudeJson {
   [key: string]: unknown;
 }
 
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function warnTrustSkipped(claudeJsonPath: string, reason: string): void {
+  console.warn(
+    `Skipping Claude Code trust registration: ${claudeJsonPath} ${reason}. ` +
+      'The file was left unchanged; fix or remove it and rerun the scaffold.',
+  );
+}
+
 async function trustDirectory(absPath: string): Promise<void> {
   const claudeJsonPath = path.join(os.homedir(), '.claude.json');
   let data: ClaudeJson = {};
+  let raw: string | undefined;
+
   try {
-    const raw = await readFile(claudeJsonPath, 'utf-8');
-    data = JSON.parse(raw) as ClaudeJson;
-  } catch {
-    // file missing or malformed — start fresh
+    raw = await readFile(claudeJsonPath, 'utf-8');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // Missing file: create a fresh one below.
+      raw = undefined;
+    } else {
+      warnTrustSkipped(claudeJsonPath, 'could not be read');
+      return;
+    }
   }
-  // `if (!…)`, not `??=`: this tolerated any falsy value (a parseable but
-  // malformed file) before the type narrowing, and `??=` fires only on
-  // null/undefined — substituting it silently dropped the self-heal for
-  // `projects: 0`, and then threw assigning a property on a number.
+
+  if (raw !== undefined) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      warnTrustSkipped(claudeJsonPath, 'is not valid JSON');
+      return;
+    }
+    if (!isJsonObject(parsed)) {
+      warnTrustSkipped(claudeJsonPath, 'has a non-object JSON root');
+      return;
+    }
+    data = parsed as ClaudeJson;
+    // `if (!…)`, not `??=`: this tolerated any falsy value (a parseable but
+    // malformed file) before the type narrowing, and `??=` fires only on
+    // null/undefined — substituting it silently dropped the self-heal for
+    // `projects: 0`. A truthy non-object container is preserved instead.
+    if (!data.projects) {
+      data.projects = {};
+    } else if (!isJsonObject(data.projects)) {
+      warnTrustSkipped(claudeJsonPath, 'has a non-object projects field');
+      return;
+    }
+  }
+
   if (!data.projects) data.projects = {};
-  if (!data.projects[absPath]) data.projects[absPath] = {};
+  const existing = data.projects[absPath];
+  if (existing !== undefined && !isJsonObject(existing)) {
+    warnTrustSkipped(claudeJsonPath, 'has a non-object entry for the target project');
+    return;
+  }
+  if (!existing) data.projects[absPath] = {};
   data.projects[absPath].hasTrustDialogAccepted = true;
   await writeFile(claudeJsonPath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
 }
